@@ -75,7 +75,7 @@ function ResultsDrawer({
               isLoading={isLoading}
               error={error}
               nearUser={true}
-              onViewDetails={() => onViewDetails("facilty-1")}
+              onViewDetails={onViewDetails}
             />
 
             {/* FACILITIES IN LGA */}

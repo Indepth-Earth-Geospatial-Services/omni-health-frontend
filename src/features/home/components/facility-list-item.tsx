@@ -8,7 +8,7 @@ interface FacilityListItemProps {
   nearUser: boolean;
   isLoading: boolean;
   error: string;
-  onViewDetails: (facility: string) => Promise<void>;
+  onViewDetails: (facility: string) => void;
 }
 
 function FacilityListItem(props: FacilityListItemProps) {
@@ -88,7 +88,7 @@ function FacilityListItem(props: FacilityListItemProps) {
                 {/* 07:00am - 6.00pm */}
               </span>
               <button
-                onClick={onViewDetails}
+                onClick={() => onViewDetails("facility-id")}
                 className="text-primary cursor-pointer"
               >
                 View Details <ChevronRight size={12} />
