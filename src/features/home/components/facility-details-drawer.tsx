@@ -19,11 +19,18 @@ import Overview from "./overview";
 
 function FacilityDetailsDrawer() {
   const [snap, setSnap] = useState<string | number | null>(1.1);
+  const [isOpen, setIsOpen] = useState(true);
+
+  // Close drawer function
+  // make it false to close
+  const handleClose = () => {
+    setIsOpen(true);
+  };
+
   return (
     <Drawer
-      open={true}
-      // onOpenChange={setState}
-      // defaultOpen={true}
+      open={isOpen}
+      onOpenChange={setIsOpen}
       snapPoints={[0.3, 0.4, 0.8, 1.1, 1.2]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
@@ -44,7 +51,11 @@ function FacilityDetailsDrawer() {
                     className="size-5 object-cover"
                   />
                 </Button>
-                <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
+                <Button
+                  onClick={handleClose}
+                  className="rounded-full bg-[#E2E4E9]"
+                  size="icon-sm"
+                >
                   <X size={20} color="black" />
                 </Button>
               </div>
