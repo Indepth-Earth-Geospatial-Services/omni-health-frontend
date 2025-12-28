@@ -230,7 +230,7 @@ export default function SearchResultsDrawer({
                                                     <Clock size={14} />
                                                     <span>{facility.openingTime} - {facility.closingTime}</span>
                                                 </div>
-                                                <Link href="/" className="text-primary font-medium hover:underline">View Details</Link>
+                                                <Link href="/overview" className="text-primary font-medium hover:underline">View Details</Link>
                                             </div>
                                         </div>
                                     </div>
