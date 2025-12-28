@@ -34,6 +34,7 @@ function FacilityDetailsDrawer({
       snapPoints={[0.3, 0.4, 0.8, 1.1, 1.2]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
+      modal={false}
     >
       <DrawerContent className="flex h-full">
         <div className="flex h-full flex-1 flex-col">

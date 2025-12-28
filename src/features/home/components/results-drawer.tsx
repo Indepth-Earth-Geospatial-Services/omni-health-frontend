@@ -40,6 +40,7 @@ function ResultsDrawer({
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
       dismissible={false}
+      modal={false}
     >
       <DrawerContent className="flex h-full">
         <div className="flex h-full flex-1 flex-col p-5">
@@ -83,14 +84,12 @@ function ResultsDrawer({
               facility={facility}
               isLoading={isLoading}
               error={error}
-              nearUser={true}
               onViewDetails={() => onViewDetails("facilty-1")}
             />
             <FacilityListItem
               facility={facility}
               isLoading={isLoading}
               error={error}
-              nearUser={true}
               onViewDetails={() => onViewDetails("facilty-1")}
             />
             {/* HACK: TO MAKE ALL ITEMS SHOW PROPERLY */}

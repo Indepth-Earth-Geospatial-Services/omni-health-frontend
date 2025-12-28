@@ -5,14 +5,14 @@ import { NearestFacilityResponse } from "../types/apiResponse";
 
 interface FacilityListItemProps {
   facility: NearestFacilityResponse | null;
-  nearUser: boolean;
+  nearUser?: boolean;
   isLoading: boolean;
   error: string;
   onViewDetails: (facility: string) => void;
 }
 
 function FacilityListItem(props: FacilityListItemProps) {
-  const { onViewDetails, nearUser, facility, isLoading, error } = props;
+  const { onViewDetails, nearUser = false, facility, isLoading, error } = props;
   if (isLoading || Object.keys(facility || {}).length === null)
     return (
       <div className="flex -scale-50 items-center justify-center">
