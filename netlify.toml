@@ -1,6 +1,10 @@
 [build]
-  command = "pnpm build"
+  command = "pnpm run build"
   publish = ".next"
+
+# Install pnpm first, then Next.js plugin
+[[plugins]]
+  package = "@netlify/plugin-pnpm"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
