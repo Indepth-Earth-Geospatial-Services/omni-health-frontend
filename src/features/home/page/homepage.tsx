@@ -147,7 +147,7 @@ function HomePage() {
 
   return (
     <main className="mx-auto h-full max-h-dvh">
-      <section className="fixed inset-0 left-1/2 h-full max-w-120 -translate-x-1/2">
+      <section className="fixed inset-0 h-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
         <MapComponent />
       </section>
       <section>
