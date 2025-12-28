@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 @theme inline {
+  --color-primary: #51a199;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -31,7 +32,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
+  /* --color-primary: var(--primary); */
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -66,7 +67,7 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-2: oklch(60.488% 0.10705 184.202);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
@@ -115,10 +116,121 @@
 }
 
 @layer base {
+  /*  MOBILE BOUNDARY */
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-black text-white;
+    @apply h-dvh bg-white font-sans text-black *:mx-auto *:max-w-120!;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari and Opera */
+  }
+}
+
+@layer components {
+  b {
+    @apply font-medium! text-[#0A0D14]!;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+}
+/* styles override for radix drawer component */
+[data-slot="drawer-content"] {
+  @apply rounded-t-[32px];
+}
+[data-slot="drawer-overlay"] {
+  @apply hidden;
+}
+
+.loader {
+  position: relative;
+  width: 85px;
+  height: 50px;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(#333 50px, transparent 0),
+    linear-gradient(#333 50px, transparent 0),
+    linear-gradient(#333 50px, transparent 0),
+    linear-gradient(#333 50px, transparent 0),
+    linear-gradient(#333 50px, transparent 0),
+    linear-gradient(#333 50px, transparent 0);
+  background-position:
+    0px center,
+    15px center,
+    30px center,
+    45px center,
+    60px center,
+    75px center,
+    90px center;
+  animation: rikSpikeRoll 0.65s linear infinite alternate;
+}
+@keyframes rikSpikeRoll {
+  0% {
+    background-size: 10px 3px;
+  }
+  16% {
+    background-size:
+      10px 50px,
+      10px 3px,
+      10px 3px,
+      10px 3px,
+      10px 3px,
+      10px 3px;
+  }
+  33% {
+    background-size:
+      10px 30px,
+      10px 50px,
+      10px 3px,
+      10px 3px,
+      10px 3px,
+      10px 3px;
+  }
+  50% {
+    background-size:
+      10px 10px,
+      10px 30px,
+      10px 50px,
+      10px 3px,
+      10px 3px,
+      10px 3px;
+  }
+  66% {
+    background-size:
+      10px 3px,
+      10px 10px,
+      10px 30px,
+      10px 50px,
+      10px 3px,
+      10px 3px;
+  }
+  83% {
+    background-size:
+      10px 3px,
+      10px 3px,
+      10px 10px,
+      10px 30px,
+      10px 50px,
+      10px 3px;
+  }
+  100% {
+    background-size:
+      10px 3px,
+      10px 3px,
+      10px 3px,
+      10px 10px,
+      10px 30px,
+      10px 50px;
   }
 }
