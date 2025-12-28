@@ -1,32 +1,30 @@
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock, MousePointer2, Users } from "lucide-react";
 import Image from "next/image";
+import { NearestFacilityResponse } from "../types/apiResponse";
 
 interface FacilityListItemProps {
+  facility: NearestFacilityResponse | null;
   nearUser: boolean;
-  facilityName: string;
-  image: string;
-  address: string;
-  faciltiyType: string;
-  distance: number;
-  ratio: string;
-  openingHours: string;
-  closingHours: string;
-  getDetails: () => Promise<void>;
+  isLoading: boolean;
+  error: string;
+  onViewDetails: (facility: string) => Promise<void>;
 }
 
-function FacilityListItem({
-  nearUser,
-  facilityName,
-  address,
-  image,
-  distance,
-  ratio,
-  faciltiyType,
-  openingHours,
-  closingHours,
-  getDetails,
-}: FacilityListItemProps) {
+function FacilityListItem(props: FacilityListItemProps) {
+  const { onViewDetails, nearUser, facility, isLoading, error } = props;
+  if (isLoading || Object.keys(facility || {}).length === null)
+    return (
+      <div className="flex -scale-50 items-center justify-center">
+        <div className="loader"></div>
+      </div>
+    );
+  if (error)
+    return (
+      <div className="flex items-center justify-center text-red-700">
+        {error}
+      </div>
+    );
   return (
     <div className="w-full text-left">
       {nearUser && (
@@ -57,18 +55,19 @@ function FacilityListItem({
           {/* HEADER */}
           <div className="space-y-1">
             <h4 className="text-[15px] font-medium">
-              Shammah Christian Hospital
+              {facility?.facility_name}
             </h4>
-            <p className="text-[11px]">74 Queen’s Drive, Port Harcourt</p>
+            <p className="text-[11px]">{facility?.address}</p>
           </div>
 
           {/* FACILTY INFO */}
           <div className="text-[11px] text-[#868C98]">
             <div className="border-b border-[#E2E4E9] pb-2">
-              <h6 className="text-primary">Hospital</h6>
+              <h6 className="text-primary">{facility?.facility_category}</h6>
               <div className="mt-1 flex flex-wrap gap-2.5 *:flex *:items-center *:gap-1">
                 <p>
-                  <MousePointer2 size={12} /> Distance: <b>0.8km</b>
+                  <MousePointer2 size={12} /> Distance:{" "}
+                  <b>{facility?.road_distance_meters}m</b>
                 </p>
                 <p>
                   <Users size={12} /> Ratio: <b>1:32</b>
@@ -79,9 +78,19 @@ function FacilityListItem({
             <div className="mt-2 flex flex-wrap justify-between *:flex *:items-center *:gap-1">
               <span>
                 <Clock size={12} />
-                07:00am - 6.00pm
+                {
+                  facility?.working_hours[
+                    new Date()
+                      .toLocaleDateString("en-Us", { weekday: "long" })
+                      .toLowerCase()
+                  ]
+                }
+                {/* 07:00am - 6.00pm */}
               </span>
-              <button className="text-primary cursor-pointer">
+              <button
+                onClick={onViewDetails}
+                className="text-primary cursor-pointer"
+              >
                 View Details <ChevronRight size={12} />
               </button>
             </div>

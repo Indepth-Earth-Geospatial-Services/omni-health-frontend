@@ -16,14 +16,21 @@ import { useState } from "react";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Overview from "./overview";
-
-function FacilityDetailsDrawer() {
+interface FacilityDetailsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  facilityId: string | null;
+}
+function FacilityDetailsDrawer({
+  isOpen,
+  onClose,
+  facilityId,
+}: FacilityDetailsProps) {
   const [snap, setSnap] = useState<string | number | null>(1.1);
   return (
     <Drawer
-      open={true}
-      // onOpenChange={setState}
-      // defaultOpen={true}
+      open={isOpen}
+      onOpenChange={onClose}
       snapPoints={[0.3, 0.4, 0.8, 1.1, 1.2]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
@@ -44,7 +51,11 @@ function FacilityDetailsDrawer() {
                     className="size-5 object-cover"
                   />
                 </Button>
-                <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
+                <Button
+                  onClick={onClose}
+                  className="rounded-full bg-[#E2E4E9]"
+                  size="icon-sm"
+                >
                   <X size={20} color="black" />
                 </Button>
               </div>

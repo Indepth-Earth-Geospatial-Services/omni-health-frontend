@@ -1,29 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 interface Location {
   lat: number;
   lng: number;
 }
+
 interface UseUserLocationReturn {
   location: Location | null;
-  isloading: boolean;
+  isLoading: boolean;
   error: string | null;
   requestLocation: () => void;
 }
 
 export function useUserLocation(): UseUserLocationReturn {
   const [location, setLocation] = useState<Location | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasRequestedRef = useRef(false); // Prevent double requests
 
-  function onLocationSuccess(position: GeolocationPosition) {
+  const onLocationSuccess = useCallback((position: GeolocationPosition) => {
+    console.log("Location success:", position.coords);
     setLocation({
       lat: position.coords.latitude,
       lng: position.coords.longitude,
     });
     setIsLoading(false);
-  }
-  function onLocationError(err: GeolocationPositionError) {
+    setError(null);
+  }, []);
+
+  const onLocationError = useCallback((err: GeolocationPositionError) => {
+    console.error("Location error:", err);
     switch (err.code) {
       case err.PERMISSION_DENIED:
         setError("Location permission denied. Please enable location access.");
@@ -38,9 +44,10 @@ export function useUserLocation(): UseUserLocationReturn {
         setError("An unknown error occurred.");
     }
     setIsLoading(false);
-  }
+  }, []);
 
-  function requestLocation() {
+  const requestLocation = useCallback(() => {
+    console.log("Requesting location...");
     setIsLoading(true);
     setError(null);
 
@@ -49,18 +56,25 @@ export function useUserLocation(): UseUserLocationReturn {
       setIsLoading(false);
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       onLocationSuccess,
       onLocationError,
       {
         enableHighAccuracy: true,
-        timeout: 10000, // 10 seconds
-        maximumAge: 300000, // Accept catched location up to 5 minutes old
+        timeout: 15000,
+        maximumAge: 300000, // 5 minutes
       },
     );
-  }
+  }, [onLocationSuccess, onLocationError]);
 
   useEffect(() => {
-    requestLocation();
-  }, []);
+    // Only request once on mount
+    if (!hasRequestedRef.current) {
+      hasRequestedRef.current = true;
+      requestLocation();
+    }
+  }, [requestLocation]);
+
+  return { isLoading, error, requestLocation, location };
 }

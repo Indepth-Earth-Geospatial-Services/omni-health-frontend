@@ -5,24 +5,41 @@ import { cn } from "@/lib/utils";
 import { MapPin, Star } from "lucide-react";
 import { useState } from "react";
 import FacilityListItem from "./facility-list-item";
+import { NearestFacilityResponse } from "../types/apiResponse";
 
 type Filters = "Distance" | "Ratings";
 
+interface ResultsDrawerProps {
+  isOpen: boolean;
+  isLoading: boolean;
+  error: string;
+  facility: NearestFacilityResponse | null;
+  onClose: () => void;
+  onViewDetails: (facilityId: string) => void;
+}
 const filters = [
   { name: "Distance", icon: <MapPin size={14} /> },
   { name: "Ratings", icon: <Star size={14} /> },
 ] as const;
-function ResultsDrawer() {
+
+function ResultsDrawer({
+  isOpen,
+  facility,
+  isLoading,
+  error,
+  onClose,
+  onViewDetails,
+}: ResultsDrawerProps) {
   const [activeFilter, setActiveFilter] = useState<Filters>("Distance");
   const [snap, setSnap] = useState<number | string | null>(0.8);
   return (
     <Drawer
-      open={true}
-      // onOpenChange={setState}
-      // defaultOpen={true}
-      snapPoints={[0.8, 1.1, 1.2]}
+      open={isOpen}
+      onOpenChange={onClose}
+      snapPoints={[0.3, 0.4, 0.8, 1.1, 1.2]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
+      dismissible={false}
     >
       <DrawerContent className="flex h-full">
         <div className="flex h-full flex-1 flex-col p-5">
@@ -50,15 +67,32 @@ function ResultsDrawer() {
             </div>
           </div>
           {/* BODY */}
-          <div className="mt-4 grid gap-y-3 overflow-y-auto">
-            <FacilityListItem />
-            <FacilityListItem />
-            <FacilityListItem />
-            <FacilityListItem />
-            <FacilityListItem />
-            <FacilityListItem />
-            <FacilityListItem />
-            <FacilityListItem />
+          <div className="scrollbar-hide mt-4 grid gap-y-3 overflow-y-auto">
+            {/* NEAREST FACILITY */}
+
+            <FacilityListItem
+              facility={facility}
+              isLoading={isLoading}
+              error={error}
+              nearUser={true}
+              onViewDetails={() => onViewDetails("facilty-1")}
+            />
+
+            {/* FACILITIES IN LGA */}
+            <FacilityListItem
+              facility={facility}
+              isLoading={isLoading}
+              error={error}
+              nearUser={true}
+              onViewDetails={() => onViewDetails("facilty-1")}
+            />
+            <FacilityListItem
+              facility={facility}
+              isLoading={isLoading}
+              error={error}
+              nearUser={true}
+              onViewDetails={() => onViewDetails("facilty-1")}
+            />
             {/* HACK: TO MAKE ALL ITEMS SHOW PROPERLY */}
             <div className="h-40"></div>
           </div>
