@@ -2,12 +2,12 @@
 import MapComponent from "@/features/home/components/map";
 import ResultsDrawer from "../components/results-drawer";
 import FacilityDetailsDrawer from "../components/facility-details-drawer";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUserLocation } from "../hooks/useUserLocation";
 import axios from "axios";
 import { NearestFacilityResponse } from "../types/apiResponse";
 
-function HomePage() {
+export default function HomePage() {
   // TODO MOVE STATE GLOBAL
   const [isResultsOpen, setIsResultsOpen] = useState(true);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -36,6 +36,20 @@ function HomePage() {
     setSelectedFacilityId(null);
     setIsResultsOpen(true);
   };
+
+  const limitedLGAFacilities = useMemo(() => {
+    if (!LGAFacilities) return null;
+
+    const entries = Object.entries(LGAFacilities);
+    // Only take first 20 facilities
+    const limited = entries.slice(0, 20);
+
+    return Object.fromEntries(limited) as Record<
+      number,
+      NearestFacilityResponse
+    >;
+  }, [LGAFacilities]);
+
   useEffect(() => {
     if (isLoading || !location?.lat || !location?.lng) return;
 
@@ -99,7 +113,7 @@ function HomePage() {
           facility={nearestFacilities}
           isLoading={isFetching}
           error={fetchError}
-          LGAFacility={LGAFacilities}
+          LGAFacility={limitedLGAFacilities}
         />
         <FacilityDetailsDrawer
           isOpen={isDetailsOpen}
@@ -110,5 +124,3 @@ function HomePage() {
     </main>
   );
 }
-
-export default HomePage;
