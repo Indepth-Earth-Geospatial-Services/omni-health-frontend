@@ -168,7 +168,7 @@ function HomePage() {
 
     const entries = Object.entries(LGAFacilities);
     // Only take first 20 facilities
-    const limited = entries.slice(0, 20);
+    const limited = entries.slice(0, 90);
 
     return Object.fromEntries(limited) as Record<
       number,
@@ -207,7 +207,7 @@ function HomePage() {
         const lgaFacilities = lgaData.data;
         if (lgaFacilities && typeof lgaFacilities === "object") {
           const entries = Object.entries(lgaFacilities);
-          const limited = entries.slice(0, 20);
+          const limited = entries.slice(0, 80);
           setLGAFacilities(
             Object.fromEntries(limited) as Record<
               number,
