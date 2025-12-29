@@ -178,11 +178,11 @@ function HomePage() {
         // Fetch both in parallel with Promise.all
         const [nearestData, lgaData] = await Promise.all([
           axios.get(
-            `/api/backend/facilities/detect-location?lat=${location.lat}&lon=${location.lng}`,
+            `/api/backend/facilities/nearest?lat=${location.lat}&lon=${location.lng}`,
             { signal: abortController.signal },
           ),
           axios.get(
-            `/api/backend/facilities/nearest?lat=${location.lat}&lon=${location.lng}`,
+            `/api/backend/facilities/detect-location?lat=${location.lat}&lon=${location.lng}`,
             { signal: abortController.signal },
           ),
         ]);
