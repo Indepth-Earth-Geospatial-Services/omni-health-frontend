@@ -42,7 +42,7 @@ export default function HomePage() {
 
     const entries = Object.entries(LGAFacilities);
     // Only take first 20 facilities
-    const limited = entries.slice(0, 20);
+    const limited = entries.slice(0, 80);
 
     return Object.fromEntries(limited) as Record<
       number,
