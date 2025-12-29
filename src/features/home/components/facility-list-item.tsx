@@ -1,5 +1,12 @@
 import { cn } from "@/lib/utils";
-import { ChevronRight, Clock, MousePointer2, Users } from "lucide-react";
+import {
+  ChevronRight,
+  Clock,
+  ImageOff,
+  MousePointer2,
+  PictureInPicture,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
 import { NearestFacilityResponse } from "../types/apiResponse";
 
@@ -42,12 +49,15 @@ function FacilityListItem(props: FacilityListItemProps) {
       >
         {/* image */}
         <div className="relative size-29.5 overflow-hidden rounded-xl">
-          <Image
+          {/* <Image
             fill
             src={"/img/facilities/shammah.jpg"}
             className="size-full object-cover"
             alt="facility cover image"
-          />
+          /> */}
+          <div className="flex h-full items-center justify-center">
+            <ImageOff />
+          </div>
         </div>
 
         {/* DETAILS */}
@@ -67,10 +77,14 @@ function FacilityListItem(props: FacilityListItemProps) {
               <div className="mt-1 flex flex-wrap gap-2.5 *:flex *:items-center *:gap-1">
                 <p>
                   <MousePointer2 size={12} /> Distance:{" "}
-                  <b>{facility?.road_distance_meters}m</b>
+                  <b>
+                    {facility?.road_distance_meters
+                      ? `${facility?.road_distance_meters}m`
+                      : "N/A"}
+                  </b>
                 </p>
                 <p>
-                  <Users size={12} /> Ratio: <b>1:32</b>
+                  <Users size={12} /> Rating: <b>N/A</b>
                 </p>
               </div>
             </div>
@@ -88,7 +102,11 @@ function FacilityListItem(props: FacilityListItemProps) {
                 {/* 07:00am - 6.00pm */}
               </span>
               <button
-                onClick={() => onViewDetails("facility-id")}
+                onClick={() =>
+                  onViewDetails(
+                    facility.facility_id || `facility-${facility.hfr_id}`,
+                  )
+                }
                 className="text-primary cursor-pointer"
               >
                 View Details <ChevronRight size={12} />

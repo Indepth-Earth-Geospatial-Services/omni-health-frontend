@@ -13,6 +13,7 @@ interface ResultsDrawerProps {
   isOpen: boolean;
   isLoading: boolean;
   error: string;
+  LGAFacility: Record<number, NearestFacilityResponse>;
   facility: NearestFacilityResponse | null;
   onClose: () => void;
   onViewDetails: (facilityId: string) => void;
@@ -29,6 +30,7 @@ function ResultsDrawer({
   error,
   onClose,
   onViewDetails,
+  LGAFacility,
 }: ResultsDrawerProps) {
   const [activeFilter, setActiveFilter] = useState<Filters>("Distance");
   const [snap, setSnap] = useState<number | string | null>(0.8);
@@ -80,18 +82,18 @@ function ResultsDrawer({
             />
 
             {/* FACILITIES IN LGA */}
-            <FacilityListItem
-              facility={facility}
-              isLoading={isLoading}
-              error={error}
-              onViewDetails={() => onViewDetails("facilty-1")}
-            />
-            <FacilityListItem
-              facility={facility}
-              isLoading={isLoading}
-              error={error}
-              onViewDetails={() => onViewDetails("facilty-1")}
-            />
+            {/* FACILITIES IN LGA */}
+            {LGAFacility &&
+              Object.values(LGAFacility).map((facilityData, index) => (
+                <FacilityListItem
+                  key={index}
+                  facility={facilityData}
+                  isLoading={isLoading}
+                  error={error}
+                  onViewDetails={onViewDetails}
+                />
+              ))}
+
             {/* HACK: TO MAKE ALL ITEMS SHOW PROPERLY */}
             <div className="h-40"></div>
           </div>

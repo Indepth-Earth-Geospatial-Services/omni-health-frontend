@@ -18,8 +18,10 @@ function HomePage() {
   const [isFetching, setIsFetching] = useState(true);
   const [nearestFacilities, setNearestFacilities] =
     useState<NearestFacilityResponse | null>(null);
-  const [LGAFacilities, setLGAFacilities] =
-    useState<Array<NearestFacilityResponse> | null>(null);
+  const [LGAFacilities, setLGAFacilities] = useState<Record<
+    number,
+    NearestFacilityResponse
+  > | null>(null);
 
   const { error, isLoading, location, requestLocation } = useUserLocation();
 
@@ -34,116 +36,41 @@ function HomePage() {
     setSelectedFacilityId(null);
     setIsResultsOpen(true);
   };
-
   useEffect(() => {
-    // Skip if still loading location or no location yet
-    if (isLoading) {
-      console.log("⏳ Still loading location...");
-      return;
-    }
-
-    if (!location?.lat || !location?.lng) {
-      console.log("❌ No location available yet");
-      return;
-    }
-
-    console.log("✅ Location available, fetching facilities...");
+    if (isLoading || !location?.lat || !location?.lng) return;
 
     const abortController = new AbortController();
 
-    async function fetchNearestFacilities() {
+    async function fetchAllData() {
       setIsFetching(true);
       setFetchError("");
-
       try {
-        const { data } = await axios.get(
-          `/api/backend/facilities/nearest?lat=${location?.lat}&lon=${location?.lng}`,
-          {
-            signal: abortController.signal,
-          },
-        );
-
-        console.log("✅ Facilities fetched:", data);
-        setNearestFacilities(data);
+        // Fetch both in parallel
+        const [nearestData, lgaData] = await Promise.all([
+          axios.get(
+            `/api/backend/facilities/nearest?lat=${location.lat}&lon=${location.lng}`,
+            { signal: abortController.signal },
+          ),
+          axios.get(
+            `/api/backend/facilities/detect-location?lat=${location.lat}&lon=${location.lng}&limit=20`,
+            { signal: abortController.signal },
+          ),
+        ]);
+        console.log("NEAREST", nearestData);
+        console.log("LGA", lgaData);
+        setNearestFacilities(nearestData.data);
+        setLGAFacilities(lgaData.data);
       } catch (error: any) {
-        if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
-          console.log("🚫 Request cancelled");
-          return;
-        }
-
-        console.error("❌ Fetch error:", error);
-        setFetchError(
-          error.message || "An Error Occurred! Please refresh and try again",
-        );
+        if (error.name === "CanceledError") return;
+        setFetchError(error.message || "An Error Occurred!");
       } finally {
         setIsFetching(false);
       }
     }
 
-    fetchNearestFacilities();
-
-    return () => {
-      abortController.abort();
-    };
+    fetchAllData();
+    return () => abortController.abort();
   }, [location?.lat, location?.lng, isLoading]);
-
-  // useEffect(() => {
-  //   // Skip if still loading location or no location yet
-  //   if (isLoading) {
-  //     console.log("⏳ Still loading location...");
-  //     return;
-  //   }
-
-  //   if (!location?.lat || !location?.lng) {
-  //     console.log("❌ No location available yet");
-  //     return;
-  //   }
-
-  //   console.log("✅ Location available,  fetching LGA facilities...");
-
-  //   const abortController = new AbortController();
-
-  //   async function fetchLGAFacilities() {
-  //     setIsFetching(true);
-  //     setFetchError("");
-
-  //     try {
-  //       // const { data } = await axios.get(
-  //       //   `/api/backend/facilities/detect-location?lat=${location?.lat}&lon=${location?.lng}`,
-  //       //   {
-  //       //     signal: abortController.signal,
-  //       //   },
-  //       // );
-  //       const { data } = await axios.get(
-  //         `/api/backend/facilities`,
-  //         {
-  //           signal: abortController.signal,
-  //         },
-  //       );
-
-  //       console.log("✅ LGAFACILITIES fetched:", data);
-  //       setLGAFacilities(data);
-  //     } catch (error: any) {
-  //       if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
-  //         console.log("🚫 Request cancelled");
-  //         return;
-  //       }
-
-  //       console.error("❌ Fetch error:", error);
-  //       setFetchError(
-  //         error.message || "An Error Occurred! Please refresh and try again",
-  //       );
-  //     } finally {
-  //       setIsFetching(false);
-  //     }
-  //   }
-
-  //   fetchLGAFacilities();
-
-  //   return () => {
-  //     abortController.abort();
-  //   };
-  // }, [location?.lat, location?.lng, isLoading]);
 
   return (
     <main className="mx-auto h-full max-h-dvh">
@@ -172,6 +99,7 @@ function HomePage() {
           facility={nearestFacilities}
           isLoading={isFetching}
           error={fetchError}
+          LGAFacility={LGAFacilities}
         />
         <FacilityDetailsDrawer
           isOpen={isDetailsOpen}
