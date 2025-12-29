@@ -82,7 +82,6 @@ function ResultsDrawer({
             />
 
             {/* FACILITIES IN LGA */}
-            {/* FACILITIES IN LGA */}
             {LGAFacility &&
               Object.values(LGAFacility).map((facilityData, index) => (
                 <FacilityListItem
