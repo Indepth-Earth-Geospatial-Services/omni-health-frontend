@@ -162,19 +162,8 @@ function HomePage() {
     setIsResultsOpen(true);
   };
 
-  // SOLUTION 1: Memoize and limit the LGA facilities to first 20
-  const limitedLGAFacilities = useMemo(() => {
-    if (!LGAFacilities) return null;
-
-    const entries = Object.entries(LGAFacilities);
-    // Only take first 20 facilities
-    const limited = entries.slice(0, 90);
-
-    return Object.fromEntries(limited) as Record<
-      number,
-      NearestFacilityResponse
-    >;
-  }, [LGAFacilities]);
+  // Memoize LGA facilities - no limiting, just optimize re-renders
+  const memoizedLGAFacilities = useMemo(() => LGAFacilities, [LGAFacilities]);
 
   useEffect(() => {
     if (isLoading || !location?.lat || !location?.lng) return;
@@ -184,42 +173,35 @@ function HomePage() {
     async function fetchAllData() {
       setIsFetching(true);
       setFetchError("");
+
       try {
-        // SOLUTION 2: Fetch only nearest facility first for faster initial load
-        const nearestData = await axios.get(
-          `/api/backend/facilities/nearest?lat=${location.lat}&lon=${location.lng}`,
-          { signal: abortController.signal },
+        // Fetch both in parallel with Promise.all
+        const [nearestData, lgaData] = await Promise.all([
+          axios.get(
+            `/api/backend/facilities/nearest?lat=${location.lat}&lon=${location.lng}`,
+            { signal: abortController.signal },
+          ),
+          axios.get(
+            `/api/backend/facilities/detect-location?lat=${location.lat}&lon=${location.lng}`,
+            { signal: abortController.signal },
+          ),
+        ]);
+
+        console.log("NEAREST DATA:", nearestData.data);
+        console.log("LGA DATA:", lgaData.data);
+        console.log("LGA DATA TYPE:", typeof lgaData.data);
+        console.log(
+          "LGA DATA KEYS:",
+          lgaData.data ? Object.keys(lgaData.data).length : 0,
         );
 
         setNearestFacilities(nearestData.data);
-        setIsFetching(false); // Set to false after first important data loads
-
-        // SOLUTION 3: Fetch LGA data separately (non-blocking)
-        const lgaData = await axios.get(
-          `/api/backend/facilities/detect-location?lat=${location.lat}&lon=${location.lng}&limit=20`,
-          { signal: abortController.signal },
-        );
-
-        console.log("NEAREST", nearestData);
-        console.log("LGA", lgaData);
-
-        // SOLUTION 4: Limit the data before setting state
-        const lgaFacilities = lgaData.data;
-        if (lgaFacilities && typeof lgaFacilities === "object") {
-          const entries = Object.entries(lgaFacilities);
-          const limited = entries.slice(0, 80);
-          setLGAFacilities(
-            Object.fromEntries(limited) as Record<
-              number,
-              NearestFacilityResponse
-            >,
-          );
-        } else {
-          setLGAFacilities(lgaData.data);
-        }
+        setLGAFacilities(lgaData.data);
       } catch (error: any) {
         if (error.name === "CanceledError") return;
+        console.error("FETCH ERROR:", error);
         setFetchError(error.message || "An Error Occurred!");
+      } finally {
         setIsFetching(false);
       }
     }
@@ -257,7 +239,7 @@ function HomePage() {
           facility={nearestFacilities}
           isLoading={isFetching}
           error={fetchError}
-          LGAFacility={limitedLGAFacilities}
+          LGAFacility={memoizedLGAFacilities}
         />
 
         <FacilityDetailsDrawer
