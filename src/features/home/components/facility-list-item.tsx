@@ -4,34 +4,19 @@ import {
   Clock,
   ImageOff,
   MousePointer2,
-  PictureInPicture,
   Users,
 } from "lucide-react";
-import Image from "next/image";
-import { NearestFacilityResponse } from "../types/apiResponse";
+import { Facility } from "../types/apiResponse";
 
 interface FacilityListItemProps {
-  facility: NearestFacilityResponse | null;
+  facility: Facility | null;
   nearUser?: boolean;
-  isLoading: boolean;
-  error: string;
   onViewDetails: (facility: string) => void;
 }
 
 function FacilityListItem(props: FacilityListItemProps) {
-  const { onViewDetails, nearUser = false, facility, isLoading, error } = props;
-  if (isLoading || Object.keys(facility || {}).length === null)
-    return (
-      <div className="flex -scale-50 items-center justify-center">
-        <div className="loader"></div>
-      </div>
-    );
-  if (error)
-    return (
-      <div className="flex items-center justify-center text-red-700">
-        {error}
-      </div>
-    );
+  const { onViewDetails, nearUser = false, facility } = props;
+
   return (
     <div className="w-full text-left">
       {nearUser && (

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useUserStore } from "../store/userStore";
 
 interface Location {
   lat: number;
@@ -16,6 +17,8 @@ export function useUserLocation(): UseUserLocationReturn {
   const [location, setLocation] = useState<Location | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const setUserLocation = useUserStore((state) => state.setUserLocation);
+
   const hasRequestedRef = useRef(false); // Prevent double requests
 
   const onLocationSuccess = useCallback((position: GeolocationPosition) => {
@@ -23,6 +26,10 @@ export function useUserLocation(): UseUserLocationReturn {
     setLocation({
       lat: position.coords.latitude,
       lng: position.coords.longitude,
+    });
+    setUserLocation({
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
     });
     setIsLoading(false);
     setError(null);

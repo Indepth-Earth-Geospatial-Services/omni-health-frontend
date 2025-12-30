@@ -1,4 +1,4 @@
-export interface NearestFacilityResponse {
+export interface Facility {
   address: string;
   average_rating: number;
   avg_daily_patients: number;
