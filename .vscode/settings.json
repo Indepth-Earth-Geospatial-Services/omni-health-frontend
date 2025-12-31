@@ -1,0 +1,32 @@
+{
+  "tailwindCSS.experimental.classRegex": [
+    [
+      "cva\\(([^)]*)\\)",
+      "[\"'`]([^\"'`]*).*?[\"'`]"
+    ],
+    [
+      "cn\\(([^)]*)\\)",
+      "(?:'|\"|`)([^']*)(?:'|\"|`)"
+    ]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "classList",
+    "containerClassName"
+  ],
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "css.validate": false,
+  "tailwindCSS.emmetCompletions": true,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay"
+}
