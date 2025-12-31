@@ -1,9 +1,9 @@
 "use client";
 import { Mail, Phone } from "lucide-react";
-import FacilityCapacity from "./facility-capacity";
-import StaffInventoryCard from "./staff-inventory-card";
-import FacilityDetails from "./facility-details";
 import { Facility } from "../types";
+import FacilityDetails from "./facility-details";
+import FacilityStatCard from "./facility-stat-card";
+import StaffInventoryCard from "./staff-inventory-card";
 
 interface OverviewProps {
   facility: Facility | null;
@@ -49,9 +49,9 @@ function Overview({ facility }: OverviewProps) {
       {/* BODY */}
       <div className="mt-[23.74px] border-t border-[#E2E4E9] px-5">
         <div className="mt-[24.26px] grid grid-cols-3 divide-x divide-[#E2E4E9] text-center">
-          <FacilityCapacity attr="Staff" value={totalStaff} />
-          <FacilityCapacity attr="Beds" value={0} />
-          <FacilityCapacity
+          <FacilityStatCard attr="Staff" value={totalStaff} />
+          <FacilityStatCard attr="Beds" value={0} />
+          <FacilityStatCard
             attr="Specialists"
             value={facility.specialists?.length || 0}
           />

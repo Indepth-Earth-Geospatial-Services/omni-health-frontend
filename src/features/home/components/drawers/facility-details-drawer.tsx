@@ -1,6 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import compass from "@assets/img/icons/svg/compass-rose.svg";
 import exportIcon from "@assets/img/icons/svg/Export.svg";
 import {
   Calendar,
@@ -12,23 +14,24 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import compass from "@assets/img/icons/svg/compass-rose.svg";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Overview from "./overview";
-import axios from "axios";
-import { useFacility } from "../hooks/useFacilities";
+import { Dispatch, SetStateAction, useState } from "react";
+import { useFacility } from "../../hooks/useFacilities";
+import { DrawerState } from "../../pages/homepage";
+import FacilityStats from "../facility-stats";
+import Overview from "../overview";
 
 interface FacilityDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   facilityId: string | null;
+  onShowDirections: () => void;
 }
 
 function FacilityDetailsDrawer({
   isOpen,
   onClose,
   facilityId,
+  onShowDirections,
 }: FacilityDetailsProps) {
   const [snap, setSnap] = useState<string | number | null>(1.1);
   const {
@@ -114,6 +117,7 @@ function FacilityDetailsDrawer({
 
               <div className="mt-3 space-x-3">
                 <Button
+                  onClick={onShowDirections}
                   size="sm"
                   className="bg-primary rounded-full text-[11px]"
                 >
@@ -157,16 +161,16 @@ function FacilityDetailsDrawer({
                   <TabsContent value="overview">
                     <Overview facility={facilityDetails} />
                   </TabsContent>
-                  <TabsContent className="flex justify-center" value="stats">
-                    Not Available
+                  <TabsContent className="mx-5" value="stats">
+                    <FacilityStats />
                   </TabsContent>
                 </div>
               </Tabs>
-              <div className="h-12"></div>
+              <div className="h-15"></div>
             </div>
 
-            <div className="fixed -bottom-8 z-50 flex w-full justify-center px-5">
-              <Button size="lg" className="bg-primary grow rounded-full">
+            <div className="fixed -bottom-10 z-50 flex w-full justify-center px-5">
+              <Button size="lg" className="bg-primary h-13 grow rounded-full">
                 <Calendar size={20} />
                 Request Appointment
               </Button>

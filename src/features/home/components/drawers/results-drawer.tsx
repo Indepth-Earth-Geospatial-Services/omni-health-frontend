@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import { MapPin, Star } from "lucide-react";
-import { useState } from "react";
-import FacilityListItem from "./facility-list-item";
-import { useUserStore } from "../store/userStore";
-import { useLGAFacilities, useNearestFacility } from "../hooks/useFacilities";
+import { useMemo, useState } from "react";
+import FacilityListItem from "../facility-list-item";
+import { useUserStore } from "../../store/userStore";
+import {
+  useLGAFacilities,
+  useNearestFacility,
+} from "../../hooks/useFacilities";
 
 type Filters = "Distance" | "Ratings";
 
@@ -39,18 +42,20 @@ function ResultsDrawer({ isOpen, onClose, onViewDetails }: ResultsDrawerProps) {
 
   console.log("LGA FACILITIES", LGAFacilities);
 
-  const otherFacilities = LGAFacilities
-    ? Object.values(LGAFacilities).filter(
-        (facility) => facility.facility_id !== nearestFacility?.facility_id,
-      )
-    : [];
+  const sortedFacilities = useMemo(() => {
+    if (!LGAFacilities) return [];
 
-  const sortedFacilities = [...otherFacilities].sort((a, b) => {
-    if (activeFilter === "Distance") {
-      return (a.road_distance_meters || 0) - (b.road_distance_meters || 0);
-    }
-    return (b.average_rating || 0) - (a.average_rating || 0); // Ratings - highest first
-  });
+    const filtered = Object.values(LGAFacilities).filter(
+      (facility) => facility.facility_id !== nearestFacility?.facility_id,
+    );
+
+    return filtered.sort((a, b) => {
+      if (activeFilter === "Distance") {
+        return (a.road_distance_meters || 0) - (b.road_distance_meters || 0);
+      }
+      return (b.average_rating || 0) - (a.average_rating || 0);
+    });
+  }, [LGAFacilities, nearestFacility?.facility_id, activeFilter]);
 
   const isLoading = isLoadingNearestFacility || isLoadingLGAFacilities;
   const hasError = nearestFacilityError || LGAFacilitiesError;

@@ -1,9 +1,9 @@
-function FacilityCapacity({
+function FacilityStatCard({
   attr,
   value,
 }: {
-  attr: "Staff" | "Beds" | "Specialists";
-  value: number;
+  attr: "Staff" | "Beds" | "Specialists" | "Ratings" | "Dr:Patient";
+  value: number | string;
 }) {
   return (
     <div className="*:block">
@@ -13,4 +13,4 @@ function FacilityCapacity({
   );
 }
 
-export default FacilityCapacity;
+export default FacilityStatCard;

@@ -1,15 +1,18 @@
 "use client";
-import MapComponent from "@/features/home/components/map";
+import MapComponent from "@/features/home/components/map-component";
 import { useState } from "react";
-import FacilityDetailsDrawer from "../components/facility-details-drawer";
-import ResultsDrawer from "../components/results-drawer";
+import FacilityDetailsDrawer from "../components/drawers/facility-details-drawer";
+import ResultsDrawer from "../components/drawers/results-drawer";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { useFacilityStore } from "../store/facilityStore";
 import { useUserStore } from "../store/userStore";
+import DirectionDrawer from "../components/drawers/direction-drawer";
+import DynamicMap from "../components/dynamic-map";
+
+export type DrawerState = "results" | "details" | "directions" | null;
 
 export default function HomePage() {
-  const [isResultsOpen, setIsResultsOpen] = useState(true);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [activeDrawer, setActiveDrawer] = useState<DrawerState>("results");
   const setSelectedFacilityId = useFacilityStore(
     (state) => state.setSelectedFacility,
   );
@@ -21,58 +24,47 @@ export default function HomePage() {
 
   const handleViewDetails = (facilityId: string) => {
     setSelectedFacilityId(facilityId);
-    setIsDetailsOpen(true);
-    setIsResultsOpen(false);
+    setActiveDrawer("details");
   };
 
   const handleCloseDetails = () => {
-    setIsDetailsOpen(false);
     setSelectedFacilityId(null);
-    setIsResultsOpen(true);
+    setActiveDrawer("results");
   };
 
-  // const limitedLGAFacilities = useMemo(() => {
-  //   if (!LGAFacilities) return null;
+  const handleShowDirections = () => {
+    setActiveDrawer("directions");
+  };
 
-  //   const entries = Object.entries(LGAFacilities);
-  //   // Only take first 20 facilities
-  //   const limited = entries.slice(0, 80);
-
-  //   return Object.fromEntries(limited) as Record<
-  //     number,
-  //     NearestFacilityResponse
-  //   >;
-  // }, [LGAFacilities]);
+  const handleCloseDirections = () => {
+    setActiveDrawer("results");
+  };
 
   return (
     <main className="mx-auto h-full max-h-dvh">
       <section className="fixed inset-0 h-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
-        <MapComponent />
+        <DynamicMap
+          isLoading={isLoading}
+          error={error}
+          requestLocation={requestLocation}
+        />
       </section>
-      <section>
-        {isLoading && (
-          <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 shadow">
-            Getting your location...
-          </div>
-        )}
-        {error && !isLoading && (
-          <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded bg-red-100 px-4 py-2 text-red-700 shadow">
-            {error}
-            <button onClick={requestLocation} className="ml-2 underline">
-              Retry
-            </button>
-          </div>
-        )}
 
+      <section>
         <ResultsDrawer
-          isOpen={isResultsOpen}
-          onClose={() => setIsResultsOpen(false)}
+          isOpen={activeDrawer === "results"}
+          onClose={() => setActiveDrawer(null)}
           onViewDetails={handleViewDetails}
         />
         <FacilityDetailsDrawer
-          isOpen={isDetailsOpen}
+          isOpen={activeDrawer === "details"}
           onClose={handleCloseDetails}
           facilityId={selectedFacilityId}
+          onShowDirections={handleShowDirections}
+        />
+        <DirectionDrawer
+          isOpen={activeDrawer === "directions"}
+          onClose={handleCloseDirections}
         />
       </section>
     </main>

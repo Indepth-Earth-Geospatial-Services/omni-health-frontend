@@ -4,7 +4,6 @@ import { handleApiError } from "@/lib/utils";
 
 class ApiClient {
   public instance: AxiosInstance;
-
   constructor() {
     this.instance = axios.create({
       baseURL: config.API_BASE_URL,

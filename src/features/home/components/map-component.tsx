@@ -9,7 +9,7 @@ function MapComponent() {
       initialViewState={{
         longitude: 7.0498,
         latitude: 4.8156,
-        zoom: 13,
+        zoom: 15,
       }}
       style={{ width: "100%", height: "100dvh" }}
       mapStyle="mapbox://styles/mapbox/streets-v12"
