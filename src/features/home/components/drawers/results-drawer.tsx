@@ -15,7 +15,7 @@ type Filters = "Distance" | "Ratings";
 
 interface ResultsDrawerProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onViewDetails: (facilityId: string) => void;
 }
 const filters = [
@@ -23,7 +23,7 @@ const filters = [
   { name: "Ratings", icon: <Star size={14} /> },
 ] as const;
 
-function ResultsDrawer({ isOpen, onClose, onViewDetails }: ResultsDrawerProps) {
+function ResultsDrawer({ isOpen, onViewDetails }: ResultsDrawerProps) {
   const [activeFilter, setActiveFilter] = useState<Filters>("Distance");
   const [snap, setSnap] = useState<number | string | null>(0.8);
   const userLocation = useUserStore((state) => state.userLocation);
@@ -63,7 +63,6 @@ function ResultsDrawer({ isOpen, onClose, onViewDetails }: ResultsDrawerProps) {
   return (
     <Drawer
       open={isOpen}
-      onOpenChange={onClose}
       snapPoints={[0.3, 0.4, 0.8, 1.1, 1.2]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}

@@ -1,0 +1,113 @@
+"use client";
+import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { X } from "lucide-react";
+import { useState } from "react";
+import { useFacility } from "../../hooks/useFacilities";
+import { useRouter } from "next/navigation";
+import {
+  AppointmentStep1Data,
+  AppointmentStep2Data,
+  AppointmentStep3Data,
+  AppointmentStep4Data,
+} from "../../schemas/appointment.schema";
+import AppointmentStep1 from "../appointment-step-1";
+import { AppointmentData, AppointmentStepData } from "../../types";
+
+interface FacilityDetailsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  facilityId: string | null;
+}
+
+function RequestAppointmentDrawer({
+  isOpen,
+  onClose,
+  facilityId,
+}: FacilityDetailsProps) {
+  const [snap, setSnap] = useState<string | number | null>(0.7);
+  const {
+    isLoading,
+    data: facilityDetails,
+    error,
+    refetch,
+  } = useFacility(facilityId);
+
+  const [requestAppointmentFormData, setRequestAppointmentFormData] =
+    useState<AppointmentData>();
+  const [currentStep, setCurrentStep] = useState(1);
+  const router = useRouter();
+
+  function handleNextStep(
+    formData: AppointmentStepData,
+    step: keyof AppointmentData,
+  ) {
+    setRequestAppointmentFormData((prev) => ({ ...prev, [step]: formData }));
+    setCurrentStep((prev) => {
+      if (prev === 4) return 4;
+      return prev + 1;
+    });
+    // TODO DECOUPLE THIS LOGIC WHEN API IS READY
+    if (currentStep === 4) {
+      router.replace("/");
+    }
+  }
+
+  return (
+    <Drawer
+      open={isOpen}
+      onOpenChange={onClose}
+      snapPoints={[0.4, 0.7]}
+      activeSnapPoint={snap}
+      setActiveSnapPoint={setSnap}
+      modal={false}
+    >
+      <DrawerContent className="flex h-full">
+        {isLoading && (
+          <div className="flex h-full items-center justify-center">
+            <div className="loader"></div>
+          </div>
+        )}
+        {error && (
+          <div className="flex h-full items-center justify-center p-5 text-center">
+            <div>
+              <p className="text-red-500">{error.message}</p>
+              <Button onClick={() => refetch()} className="mt-4">
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+        {facilityDetails && (
+          <div className="flex h-full flex-1 flex-col pt-3">
+            {/* HEADER */}
+            <div className="px-5">
+              <div className="flex justify-between gap-x-2">
+                <h2 className="flex flex-col text-[19px] font-medium">
+                  <span>Request Appointment</span>
+                  <span className="text-[13px] font-normal text-[#868C98]">
+                    {facilityDetails.facility_name}
+                  </span>
+                </h2>
+                <div className="shrink-0">
+                  <Button
+                    onClick={onClose}
+                    className="rounded-full bg-[#E2E4E9]"
+                    size="icon-sm"
+                  >
+                    <X size={20} color="black" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* BODY */}
+            {currentStep === 1 && <AppointmentStep1 onNext={handleNextStep} />}
+          </div>
+        )}
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+export default RequestAppointmentDrawer;

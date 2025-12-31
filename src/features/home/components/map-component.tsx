@@ -19,7 +19,7 @@ function MapComponent() {
       <Marker longitude={7.0498} latitude={4.8156} color="red" />
 
       {/* Add navigation controls */}
-      <NavigationControl position="top-right" />
+      <NavigationControl position="bottom-right" />
     </Map>
   );
 }

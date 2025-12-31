@@ -1,18 +1,18 @@
 "use client";
-import MapComponent from "@/features/home/components/map-component";
-import { useState } from "react";
-import FacilityDetailsDrawer from "../components/drawers/facility-details-drawer";
-import ResultsDrawer from "../components/drawers/results-drawer";
-import { useUserLocation } from "../hooks/useUserLocation";
-import { useFacilityStore } from "../store/facilityStore";
-import { useUserStore } from "../store/userStore";
 import DirectionDrawer from "../components/drawers/direction-drawer";
+import FacilityDetailsDrawer from "../components/drawers/facility-details-drawer";
+import RequestAppointmentDrawer from "../components/drawers/request-appointment-drawer";
+import ResultsDrawer from "../components/drawers/results-drawer";
 import DynamicMap from "../components/dynamic-map";
-
-export type DrawerState = "results" | "details" | "directions" | null;
+import { useUserLocation } from "../hooks/useUserLocation";
+import { useDrawerStore } from "../store/drawerStore";
+import { useFacilityStore } from "../store/facilityStore";
 
 export default function HomePage() {
-  const [activeDrawer, setActiveDrawer] = useState<DrawerState>("results");
+  const activeDrawer = useDrawerStore((state) => state.activeDrawer);
+  const openResults = useDrawerStore((state) => state.openResults);
+  const openDetails = useDrawerStore((state) => state.openDetails);
+  const openDirections = useDrawerStore((state) => state.openDirections);
   const setSelectedFacilityId = useFacilityStore(
     (state) => state.setSelectedFacility,
   );
@@ -24,22 +24,24 @@ export default function HomePage() {
 
   const handleViewDetails = (facilityId: string) => {
     setSelectedFacilityId(facilityId);
-    setActiveDrawer("details");
+    openDetails();
   };
 
   const handleCloseDetails = () => {
     setSelectedFacilityId(null);
-    setActiveDrawer("results");
+    openResults();
   };
 
   const handleShowDirections = () => {
-    setActiveDrawer("directions");
+    openDirections();
   };
 
   const handleCloseDirections = () => {
-    setActiveDrawer("results");
+    openResults();
   };
-
+  const handleCloseRequestAppointment = () => {
+    openDetails();
+  };
   return (
     <main className="mx-auto h-full max-h-dvh">
       <section className="fixed inset-0 h-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
@@ -53,18 +55,25 @@ export default function HomePage() {
       <section>
         <ResultsDrawer
           isOpen={activeDrawer === "results"}
-          onClose={() => setActiveDrawer(null)}
           onViewDetails={handleViewDetails}
         />
+
         <FacilityDetailsDrawer
           isOpen={activeDrawer === "details"}
           onClose={handleCloseDetails}
           facilityId={selectedFacilityId}
           onShowDirections={handleShowDirections}
         />
+
         <DirectionDrawer
           isOpen={activeDrawer === "directions"}
           onClose={handleCloseDirections}
+        />
+
+        <RequestAppointmentDrawer
+          isOpen={activeDrawer === "requesetAppointment"}
+          onClose={handleCloseRequestAppointment}
+          facilityId={selectedFacilityId}
         />
       </section>
     </main>

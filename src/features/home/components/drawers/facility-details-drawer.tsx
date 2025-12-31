@@ -14,11 +14,11 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { useFacility } from "../../hooks/useFacilities";
-import { DrawerState } from "../../pages/homepage";
 import FacilityStats from "../facility-stats";
 import Overview from "../overview";
+import { useDrawerStore } from "../../store/drawerStore";
 
 interface FacilityDetailsProps {
   isOpen: boolean;
@@ -40,6 +40,13 @@ function FacilityDetailsDrawer({
     error,
     refetch,
   } = useFacility(facilityId);
+  const openRequestAppointment = useDrawerStore(
+    (state) => state.openRequestAppointment,
+  );
+
+  const handleOpenRequestAppointment = () => {
+    openRequestAppointment();
+  };
   return (
     <Drawer
       open={isOpen}
@@ -50,11 +57,13 @@ function FacilityDetailsDrawer({
       modal={false}
     >
       <DrawerContent className="flex h-full">
-        {isLoading ? (
+        {isLoading && (
           <div className="flex h-full items-center justify-center">
             <div className="loader"></div>
           </div>
-        ) : error ? (
+        )}
+
+        {error && (
           <div className="flex h-full items-center justify-center p-5 text-center">
             <div>
               <p className="text-red-500">{error.message}</p>
@@ -63,8 +72,10 @@ function FacilityDetailsDrawer({
               </Button>
             </div>
           </div>
-        ) : facilityDetails ? (
-          <div className="flex h-full flex-1 flex-col">
+        )}
+
+        {Object.values(facilityDetails || []).length !== 0 && (
+          <div className="flex h-full flex-1 flex-col pt-3">
             {/* HEADER */}
             <div className="px-5">
               <div className="flex justify-between gap-x-2">
@@ -170,13 +181,17 @@ function FacilityDetailsDrawer({
             </div>
 
             <div className="fixed -bottom-10 z-50 flex w-full justify-center px-5">
-              <Button size="lg" className="bg-primary h-13 grow rounded-full">
+              <Button
+                onClick={handleOpenRequestAppointment}
+                size="lg"
+                className="bg-primary h-13 grow rounded-full"
+              >
                 <Calendar size={20} />
                 Request Appointment
               </Button>
             </div>
           </div>
-        ) : null}
+        )}
       </DrawerContent>
     </Drawer>
   );
