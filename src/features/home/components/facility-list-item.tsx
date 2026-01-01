@@ -11,7 +11,7 @@ import { Facility } from "../types/apiResponse";
 interface FacilityListItemProps {
   facility: Facility | null;
   nearUser?: boolean;
-  onViewDetails: (facility: string) => void;
+  onViewDetails?: (facility: string) => void;
 }
 
 function FacilityListItem(props: FacilityListItemProps) {
@@ -86,16 +86,18 @@ function FacilityListItem(props: FacilityListItemProps) {
                 }
                 {/* 07:00am - 6.00pm */}
               </span>
-              <button
-                onClick={() =>
-                  onViewDetails(
-                    facility.facility_id || `facility-${facility.hfr_id}`,
-                  )
-                }
-                className="text-primary cursor-pointer"
-              >
-                View Details <ChevronRight size={12} />
-              </button>
+              {onViewDetails && (
+                <button
+                  onClick={() =>
+                    onViewDetails(
+                      facility.facility_id || `facility-${facility.hfr_id}`,
+                    )
+                  }
+                  className="text-primary cursor-pointer"
+                >
+                  View Details <ChevronRight size={12} />
+                </button>
+              )}
             </div>
           </div>
         </div>

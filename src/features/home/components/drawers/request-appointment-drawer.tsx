@@ -13,6 +13,8 @@ import {
 } from "../../schemas/appointment.schema";
 import AppointmentStep1 from "../appointment-step-1";
 import { AppointmentData, AppointmentStepData } from "../../types";
+import AppointmentStep2 from "../appointment-step-2";
+import AppointmentStep3 from "../appointment-step-3";
 
 interface FacilityDetailsProps {
   isOpen: boolean;
@@ -25,7 +27,12 @@ function RequestAppointmentDrawer({
   onClose,
   facilityId,
 }: FacilityDetailsProps) {
-  const [snap, setSnap] = useState<string | number | null>(0.7);
+  const [requestAppointmentFormData, setRequestAppointmentFormData] =
+    useState<AppointmentData>();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [snap, setSnap] = useState<string | number | null>(0.9);
+
+  const router = useRouter();
   const {
     isLoading,
     data: facilityDetails,
@@ -33,10 +40,12 @@ function RequestAppointmentDrawer({
     refetch,
   } = useFacility(facilityId);
 
-  const [requestAppointmentFormData, setRequestAppointmentFormData] =
-    useState<AppointmentData>();
-  const [currentStep, setCurrentStep] = useState(1);
-  const router = useRouter();
+  function handlePreviousStep() {
+    setCurrentStep((prev) => {
+      if (prev > 1) return prev - 1;
+      return prev;
+    });
+  }
 
   function handleNextStep(
     formData: AppointmentStepData,
@@ -52,12 +61,12 @@ function RequestAppointmentDrawer({
       router.replace("/");
     }
   }
-
+  console.log(requestAppointmentFormData);
   return (
     <Drawer
       open={isOpen}
       onOpenChange={onClose}
-      snapPoints={[0.4, 0.7]}
+      snapPoints={[0.4, 0.7, 0.9]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
       modal={false}
@@ -79,7 +88,7 @@ function RequestAppointmentDrawer({
           </div>
         )}
         {facilityDetails && (
-          <div className="flex h-full flex-1 flex-col pt-3">
+          <div className="flex h-full flex-1 flex-col overflow-auto pt-3">
             {/* HEADER */}
             <div className="px-5">
               <div className="flex justify-between gap-x-2">
@@ -102,7 +111,28 @@ function RequestAppointmentDrawer({
             </div>
 
             {/* BODY */}
-            {currentStep === 1 && <AppointmentStep1 onNext={handleNextStep} />}
+            <div className="relative grid w-full overflow-y-auto px-5 pb-3">
+              {currentStep === 1 && (
+                <AppointmentStep1
+                  initialValues={requestAppointmentFormData?.step1}
+                  onNext={handleNextStep}
+                />
+              )}
+              {currentStep === 2 && (
+                <AppointmentStep2
+                  onBack={handlePreviousStep}
+                  onNext={handleNextStep}
+                />
+              )}
+              {currentStep === 3 && (
+                <AppointmentStep3
+                  onBack={handlePreviousStep}
+                  onNext={handleNextStep}
+                  initialValues={requestAppointmentFormData?.step3}
+                />
+              )}
+              <div className="h-20"></div>
+            </div>
           </div>
         )}
       </DrawerContent>

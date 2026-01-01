@@ -43,8 +43,8 @@ export default function HomePage() {
     openDetails();
   };
   return (
-    <main className="mx-auto h-full max-h-dvh">
-      <section className="fixed inset-0 h-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
+    <main className="mx-auto h-full max-h-dvh w-full">
+      <section className="fixed inset-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
         <DynamicMap
           isLoading={isLoading}
           error={error}

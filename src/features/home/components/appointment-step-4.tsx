@@ -19,7 +19,7 @@ interface AppointmentStep1Prop {
   initialValues: AppointmentStep1Data;
 }
 
-function AppointmentStep1({ onNext, initialValues }: AppointmentStep1Prop) {
+function AppointmentStep4({ onNext, initialValues }: AppointmentStep1Prop) {
   const form = useForm<AppointmentStep1Data>({
     resolver: zodResolver(appointmentStep1Schema),
     defaultValues: initialValues || {
@@ -125,4 +125,4 @@ function AppointmentStep1({ onNext, initialValues }: AppointmentStep1Prop) {
   );
 }
 
-export default AppointmentStep1;
+export default AppointmentStep4;
