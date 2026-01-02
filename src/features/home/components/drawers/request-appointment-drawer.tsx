@@ -4,17 +4,12 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useFacility } from "../../hooks/useFacilities";
-import { useRouter } from "next/navigation";
-import {
-  AppointmentStep1Data,
-  AppointmentStep2Data,
-  AppointmentStep3Data,
-  AppointmentStep4Data,
-} from "../../schemas/appointment.schema";
-import AppointmentStep1 from "../appointment-step-1";
 import { AppointmentData, AppointmentStepData } from "../../types";
+import AppointmentStep1 from "../appointment-step-1";
 import AppointmentStep2 from "../appointment-step-2";
 import AppointmentStep3 from "../appointment-step-3";
+import AppointmentStep4 from "../appointment-step-4";
+import AppointmentStep5 from "../appointment-step-5";
 
 interface FacilityDetailsProps {
   isOpen: boolean;
@@ -32,7 +27,6 @@ function RequestAppointmentDrawer({
   const [currentStep, setCurrentStep] = useState(1);
   const [snap, setSnap] = useState<string | number | null>(0.9);
 
-  const router = useRouter();
   const {
     isLoading,
     data: facilityDetails,
@@ -56,12 +50,22 @@ function RequestAppointmentDrawer({
       if (prev === 4) return 4;
       return prev + 1;
     });
-    // TODO DECOUPLE THIS LOGIC WHEN API IS READY
-    if (currentStep === 4) {
-      router.replace("/");
-    }
   }
-  console.log(requestAppointmentFormData);
+
+  function onSubmit(
+    formData: AppointmentStepData,
+    step: keyof AppointmentData,
+  ) {
+    setCurrentStep(5);
+    setRequestAppointmentFormData((prev) => ({ ...prev, [step]: formData }));
+    const formEntries = { ...requestAppointmentFormData, [step]: formData };
+    console.log(formEntries);
+
+    // TODO REPLACE WITH ACTUAL AJAX CALL
+  }
+  //  const handleDone = ()=>{
+  //   setCurrentStep()
+  //  }
   return (
     <Drawer
       open={isOpen}
@@ -131,6 +135,14 @@ function RequestAppointmentDrawer({
                   initialValues={requestAppointmentFormData?.step3}
                 />
               )}
+              {currentStep === 4 && (
+                <AppointmentStep4
+                  handleSubmit={onSubmit}
+                  onBack={handlePreviousStep}
+                />
+              )}
+
+              {currentStep === 5 && <AppointmentStep5 />}
               <div className="h-20"></div>
             </div>
           </div>

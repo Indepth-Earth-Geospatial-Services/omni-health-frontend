@@ -53,28 +53,36 @@ export default function HomePage() {
       </section>
 
       <section>
-        <ResultsDrawer
-          isOpen={activeDrawer === "results"}
-          onViewDetails={handleViewDetails}
-        />
+        {activeDrawer === "results" && (
+          <ResultsDrawer
+            isOpen={activeDrawer === "results"}
+            onViewDetails={handleViewDetails}
+          />
+        )}
 
-        <FacilityDetailsDrawer
-          isOpen={activeDrawer === "details"}
-          onClose={handleCloseDetails}
-          facilityId={selectedFacilityId}
-          onShowDirections={handleShowDirections}
-        />
+        {activeDrawer === "details" && (
+          <FacilityDetailsDrawer
+            isOpen={activeDrawer === "details"}
+            onClose={handleCloseDetails}
+            facilityId={selectedFacilityId}
+            onShowDirections={handleShowDirections}
+          />
+        )}
 
-        <DirectionDrawer
-          isOpen={activeDrawer === "directions"}
-          onClose={handleCloseDirections}
-        />
+        {activeDrawer === "directions" && (
+          <DirectionDrawer
+            isOpen={activeDrawer === "directions"}
+            onClose={handleCloseDirections}
+          />
+        )}
 
-        <RequestAppointmentDrawer
-          isOpen={activeDrawer === "requesetAppointment"}
-          onClose={handleCloseRequestAppointment}
-          facilityId={selectedFacilityId}
-        />
+        {activeDrawer === "requesetAppointment" && (
+          <RequestAppointmentDrawer
+            isOpen={activeDrawer === "requesetAppointment"}
+            onClose={handleCloseRequestAppointment}
+            facilityId={selectedFacilityId}
+          />
+        )}
       </section>
     </main>
   );

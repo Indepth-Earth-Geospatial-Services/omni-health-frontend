@@ -5,12 +5,12 @@ import { useFacilityStore } from "../store/facilityStore";
 import { AppointmentData, AppointmentStepData } from "../types";
 import FacilityListItem from "./facility-list-item";
 
-interface AppointmentStep1Prop {
+interface AppointmentStep2Prop {
   onNext: (formData: AppointmentStepData, key: keyof AppointmentData) => void;
   onBack: () => void;
 }
 
-function AppointmentStep2({ onNext, onBack }: AppointmentStep1Prop) {
+function AppointmentStep2({ onNext, onBack }: AppointmentStep2Prop) {
   const facilityId = useFacilityStore((state) => state.selectedFacility);
 
   const { isLoading, error, data: facilityDetails } = useFacility(facilityId);

@@ -19,6 +19,7 @@ import { useFacility } from "../../hooks/useFacilities";
 import FacilityStats from "../facility-stats";
 import Overview from "../overview";
 import { useDrawerStore } from "../../store/drawerStore";
+import { useFacilityStore } from "../../store/facilityStore";
 
 interface FacilityDetailsProps {
   isOpen: boolean;
@@ -34,12 +35,15 @@ function FacilityDetailsDrawer({
   onShowDirections,
 }: FacilityDetailsProps) {
   const [snap, setSnap] = useState<string | number | null>(1.1);
+  const autoFacilityID = useFacilityStore((s) => s.selectedFacility);
+
   const {
     isLoading,
     data: facilityDetails,
     error,
     refetch,
-  } = useFacility(facilityId);
+  } = useFacility(facilityId || autoFacilityID);
+
   const openRequestAppointment = useDrawerStore(
     (state) => state.openRequestAppointment,
   );
