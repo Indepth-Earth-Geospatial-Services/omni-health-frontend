@@ -115,7 +115,7 @@ function AppointmentStep1({ onNext, initialValues }: AppointmentStep1Prop) {
           />
         </FieldGroup>
 
-        <div className="mt-12 flex w-full justify-center px-5">
+        <div className="mt-12 flex w-full justify-center px-5 pb-3">
           <Button className="bg-primary h-12 grow rounded-full">
             Continue
           </Button>

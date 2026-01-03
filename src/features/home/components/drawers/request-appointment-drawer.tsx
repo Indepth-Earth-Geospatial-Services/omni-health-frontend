@@ -10,6 +10,7 @@ import AppointmentStep2 from "../appointment-step-2";
 import AppointmentStep3 from "../appointment-step-3";
 import AppointmentStep4 from "../appointment-step-4";
 import AppointmentStep5 from "../appointment-step-5";
+import { StepProgressBar } from "../step-progress-bar";
 
 interface FacilityDetailsProps {
   isOpen: boolean;
@@ -63,9 +64,7 @@ function RequestAppointmentDrawer({
 
     // TODO REPLACE WITH ACTUAL AJAX CALL
   }
-  //  const handleDone = ()=>{
-  //   setCurrentStep()
-  //  }
+
   return (
     <Drawer
       open={isOpen}
@@ -92,10 +91,10 @@ function RequestAppointmentDrawer({
           </div>
         )}
         {facilityDetails && (
-          <div className="flex h-full flex-1 flex-col overflow-auto pt-3">
+          <div className="flex h-full flex-1 flex-col pt-3">
             {/* HEADER */}
             <div className="px-5">
-              <div className="flex justify-between gap-x-2">
+              <div className="mb-4 flex justify-between gap-x-2">
                 <h2 className="flex flex-col text-[19px] font-medium">
                   <span>Request Appointment</span>
                   <span className="text-[13px] font-normal text-[#868C98]">
@@ -112,10 +111,16 @@ function RequestAppointmentDrawer({
                   </Button>
                 </div>
               </div>
+              {currentStep < 5 && (
+                <StepProgressBar currentStep={currentStep} maxStep={4} />
+              )}
             </div>
 
             {/* BODY */}
-            <div className="relative grid w-full overflow-y-auto px-5 pb-3">
+            <div
+              key={`step-${currentStep}`}
+              className="relative mt-4 grid w-full overflow-y-auto px-5 pb-3"
+            >
               {currentStep === 1 && (
                 <AppointmentStep1
                   initialValues={requestAppointmentFormData?.step1}

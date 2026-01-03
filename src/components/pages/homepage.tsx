@@ -1,12 +1,12 @@
 "use client";
-import DirectionDrawer from "../components/drawers/direction-drawer";
-import FacilityDetailsDrawer from "../components/drawers/facility-details-drawer";
-import RequestAppointmentDrawer from "../components/drawers/request-appointment-drawer";
-import ResultsDrawer from "../components/drawers/results-drawer";
-import DynamicMap from "../components/dynamic-map";
-import { useUserLocation } from "../hooks/useUserLocation";
-import { useDrawerStore } from "../store/drawerStore";
-import { useFacilityStore } from "../store/facilityStore";
+import DirectionDrawer from "../../features/home/components/drawers/direction-drawer";
+import FacilityDetailsDrawer from "../../features/home/components/drawers/facility-details-drawer";
+import RequestAppointmentDrawer from "../../features/home/components/drawers/request-appointment-drawer";
+import ResultsDrawer from "../../features/home/components/drawers/results-drawer";
+import DynamicMap from "../../features/home/components/dynamic-map";
+import { useUserLocation } from "../../features/home/hooks/useUserLocation";
+import { useDrawerStore } from "../../features/home/store/drawerStore";
+import { useFacilityStore } from "../../features/home/store/facilityStore";
 
 export default function HomePage() {
   const activeDrawer = useDrawerStore((state) => state.activeDrawer);

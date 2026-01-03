@@ -73,7 +73,7 @@ function AppointmentStep4({ handleSubmit, onBack }: AppointmentStep4Prop) {
           </p>
         </FieldGroup>
 
-        <div className="mt-10 flex justify-between gap-3">
+        <div className="mt-10 flex justify-between gap-3 pb-3">
           <Button
             onClick={onBack}
             className="h-12 grow rounded-full border border-[#E2E4E9] bg-[#F6F8FA] text-black"

@@ -42,7 +42,7 @@ function AppointmentStep5() {
       </div>
 
       {/* BOOKING DETAILS */}
-      <div className="mt-24 space-y-1 rounded-3xl border border-[#E2E4E9] bg-[#F6F8FA] p-3">
+      <div className="mt-20 space-y-1 rounded-3xl border border-[#E2E4E9] bg-[#F6F8FA] p-3">
         <h5 className="text-[15px] text-[#868C98]">Booking ID</h5>
 
         <button

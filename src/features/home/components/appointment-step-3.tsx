@@ -323,7 +323,7 @@ function AppointmentStep3({
           </FieldSet>
         </FieldGroup>
 
-        <div className="sticky flex gap-3">
+        <div className="sticky flex gap-3 pb-3">
           <Button
             type="button"
             onClick={onBack}
