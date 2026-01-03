@@ -1,7 +1,7 @@
-import CompareFacilities from "@/components/pages/compare-facilities";
+import CompareFacilitiesPage from "@/components/pages/compare-facilities-page";
 
-function CompareFacilitiesPage() {
-  return <CompareFacilities />;
+function Page() {
+  return <CompareFacilitiesPage />;
 }
 
-export default CompareFacilitiesPage;
+export default Page;
