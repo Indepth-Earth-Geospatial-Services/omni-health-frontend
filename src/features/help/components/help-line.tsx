@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 function HelpLine({
   title,
   value,
@@ -10,7 +12,7 @@ function HelpLine({
   const href = title === "Helpline" ? `tel:${value}` : `mailto:${value}`;
 
   return (
-    <a
+    <Link
       href={href}
       className="flex h-20 items-center gap-2 rounded-3xl border border-[#E2E4E9] bg-white p-4 transition-colors hover:bg-gray-50"
     >
@@ -21,7 +23,7 @@ function HelpLine({
         <h4 className="text-[15px] font-normal">{title}</h4>
         <p className="text-[#868C98]">{value}</p>
       </div>
-    </a>
+    </Link>
   );
 }
 
