@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useFacility } from "../../hooks/useFacilities";
@@ -75,6 +75,7 @@ function RequestAppointmentDrawer({
       modal={false}
     >
       <DrawerContent className="flex h-full">
+        <DrawerTitle className="sr-only">Book Appointment</DrawerTitle>
         {isLoading && (
           <div className="flex h-full items-center justify-center">
             <div className="loader"></div>

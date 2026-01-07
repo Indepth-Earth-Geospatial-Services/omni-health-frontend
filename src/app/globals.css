@@ -121,7 +121,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply h-dvh bg-white font-sans text-black *:mx-auto *:max-w-120!;
+    @apply bg-white font-sans text-black;
   }
 }
 

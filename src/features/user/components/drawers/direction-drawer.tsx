@@ -1,5 +1,5 @@
 "use client";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useState } from "react";
 import { useUserStore } from "../../store/userStore";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,9 @@ function DirectionDrawer({ isOpen, onClose }: ResultsDrawerProps) {
       modal={false}
     >
       <DrawerContent className="flex h-full">
+        <DrawerTitle className="sr-only">
+          {!hasStartDirections ? "Directions to Facility" : "Active Navigation"}
+        </DrawerTitle>
         <div className="px-5 pt-8.5 pb-5">
           {!hasStartDirections ? (
             <>

@@ -1,5 +1,5 @@
 "use client";
-import FacilityListItem from "@/features/home/components/facility-list-item";
+import FacilityListItem from "@/features/user/components/facility-list-item";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { FilterComponent } from "../shared/filter-component";

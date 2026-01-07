@@ -1,4 +1,4 @@
-import FacilityStatCard from "@/features/home/components/facility-stat-card";
+import FacilityStatCard from "@/features/user/components/facility-stat-card";
 import { Car, MousePointer2, Star } from "lucide-react";
 
 function FacilityRatingsCard() {

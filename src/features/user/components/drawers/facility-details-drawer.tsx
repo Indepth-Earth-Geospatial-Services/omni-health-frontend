@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
 import exportIcon from "@assets/img/icons/svg/Export.svg";
@@ -61,6 +61,7 @@ function FacilityDetailsDrawer({
       modal={false}
     >
       <DrawerContent className="flex h-full">
+        <DrawerTitle className="sr-only">Facility Details</DrawerTitle>
         {isLoading && (
           <div className="flex h-full items-center justify-center">
             <div className="loader"></div>

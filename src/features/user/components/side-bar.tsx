@@ -1,8 +1,8 @@
 "use client";
-import logo from "@assets/img/icons/svg/logo.svg";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import profileImage from "@assets/img/facilities/shammah.jpg";
-import Image from "next/image";
+import logo from "@assets/img/icons/svg/logo.svg";
 import {
   GitCompareArrows,
   Info,
@@ -11,9 +11,8 @@ import {
   Menu,
   UserRound,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
 
 const navLinks = [
   {
@@ -37,36 +36,27 @@ const navLinks = [
     href: "/help",
   },
 ] as const;
+
 function SideBar() {
-  const [isSideBarOpen, setIsSideBarOpen] = useState(false);
   return (
     <>
-      {/* OVERLAY */}
-      {isSideBarOpen && (
-        <div
-          onClick={() => setIsSideBarOpen(false)}
-          className="fixed z-90 h-dvh w-dvw bg-[#0000004D]"
-        ></div>
-      )}
-
       {/* TRIGGER */}
-      <button
-        onClick={() => setIsSideBarOpen(true)}
-        className="absolute top-[59px] left-5 z-10 flex size-12 items-center justify-center rounded-full bg-white shadow-[0_24px_56px_-4px_#585C5F29]"
-      >
-        <Menu size={20} />
-      </button>
+      <Sheet>
+        <SheetTrigger asChild>
+          <button className="absolute top-[59px] left-5 z-10 flex size-12 items-center justify-center rounded-full bg-white shadow-[0_24px_56px_-4px_#585C5F29]">
+            <Menu size={20} />
+          </button>
+        </SheetTrigger>
 
-      {/* SIDEBAR */}
-      <aside
-        className={cn(
-          "fixed z-100 flex h-dvh w-[80dvw] flex-col bg-white px-5 pb-4.5 transition-all duration-300",
-          !isSideBarOpen && "w-0 px-0",
-        )}
-      >
-        {isSideBarOpen && (
-          <>
-            <Link href="/" className="mt-10 flex h-[57px] items-center gap-3">
+        <SheetContent
+          side="left"
+          className="flex h-dvh w-[80dvw] flex-col border-0 bg-white p-0 px-5 pb-4.5"
+        >
+          <div className="flex h-full flex-col">
+            <Link
+              href="/user"
+              className="mt-10 flex h-[57px] items-center gap-3"
+            >
               <Image src={logo} alt="logo" />
               <h1 className="text-primary text-[19px] font-normal">
                 RVS-HealthCare
@@ -105,17 +95,17 @@ function SideBar() {
               ))}
             </ul>
 
-            <div className="mt-auto">
+            <div className="mt-auto pb-4.5">
               <Button
                 variant="ghost"
-                className="text-[15px] font-normal text-[#E11414]"
+                className="h-12 w-full justify-start gap-3 text-[15px] font-normal text-[#E11414]"
               >
-                <LogOut /> Log out
+                <LogOut size={24} /> Log out
               </Button>
             </div>
-          </>
-        )}
-      </aside>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
