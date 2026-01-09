@@ -1,5 +1,9 @@
 // hooks/useFacilities.ts
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { facilityService } from "../services/facility.service";
 import { Coordinates } from "../types";
 
@@ -35,15 +39,27 @@ export const useLGAFacilities = (
   coordinates: Coordinates | null | undefined,
   options = {},
 ) => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: coordinates
       ? facilityKeys.lgaFacilities(coordinates.latitude, coordinates.longitude)
       : ["lgaFacilities", "no-coords"],
-    queryFn: () => {
+    queryFn: ({ pageParam = 1 }) => {
       if (!coordinates) {
         throw new Error("Coordinates are required to fetch LGA facilities");
       }
-      return facilityService.getLGAFacilities(coordinates);
+      return facilityService.getLGAFacilities({
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        page: pageParam,
+        limit: 10,
+      });
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
     },
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,

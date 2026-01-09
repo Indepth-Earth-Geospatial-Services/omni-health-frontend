@@ -34,16 +34,22 @@ class FacilityService {
   async getLGAFacilities({
     latitude,
     longitude,
+    limit = 10,
+    page = 1,
   }: {
     latitude: number;
     longitude: number;
-  }): Promise<Record<number, Facility>> {
+    limit?: number;
+    page?: number;
+  }): Promise<{ message: string; facilities: Array<Facility> }> {
     const response = await apiClient.get(
       this.ENDPOINTS.FACILITIES_AROUND_USER_LGA,
       {
         params: {
           lat: latitude,
           lon: longitude,
+          limit,
+          page,
         },
       },
     );

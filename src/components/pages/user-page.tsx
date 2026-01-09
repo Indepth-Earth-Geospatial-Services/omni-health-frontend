@@ -9,6 +9,7 @@ import DynamicMap from "../../features/user/components/dynamic-map";
 import { useUserLocation } from "../../features/user/hooks/useUserLocation";
 import { useDrawerStore } from "../../features/user/store/drawerStore";
 import { useFacilityStore } from "../../features/user/store/facilityStore";
+import { useUserStore } from "@/features/user/store/userStore";
 
 export default function UserPage() {
   const activeDrawer = useDrawerStore((state) => state.activeDrawer);
@@ -22,7 +23,9 @@ export default function UserPage() {
     (state) => state.selectedFacility,
   );
 
-  const { error, isLoading, location, requestLocation } = useUserLocation();
+  const { requestLocation } = useUserLocation();
+  const locationError = useUserStore((state) => state.locationError);
+  const isLoadingPosition = useUserStore((state) => state.isLoadingPosition);
 
   const handleViewDetails = (facilityId: string) => {
     setSelectedFacilityId(facilityId);
@@ -50,8 +53,8 @@ export default function UserPage() {
       <RequestLocationCard />
       <section className="fixed inset-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
         <DynamicMap
-          isLoading={isLoading}
-          error={error}
+          isLoading={isLoadingPosition}
+          error={locationError}
           requestLocation={requestLocation}
         />
       </section>
@@ -61,7 +64,7 @@ export default function UserPage() {
           <ResultsDrawer
             isOpen={activeDrawer === "results"}
             onViewDetails={handleViewDetails}
-            isGettingLocation={isLoading}
+            isGettingLocation={isLoadingPosition}
           />
         )}
 
