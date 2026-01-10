@@ -1,9 +1,8 @@
-import { apiClient } from "../lib/client";
 import {
-  Facility,
   GetLGAFacilities,
   GetNearestFacility,
-} from "../types/apiResponse";
+} from "../features/user/types/apiResponse";
+import { apiClient } from "../lib/client";
 
 class FacilityService {
   private ENDPOINTS = {

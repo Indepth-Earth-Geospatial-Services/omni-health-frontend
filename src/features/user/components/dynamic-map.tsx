@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useDrawerStore } from "../store/drawerStore";
 import DirectionsCard from "./directions-card";
 import LocationCard from "./location-card";
@@ -42,4 +43,4 @@ function DynamicMap({ isLoading, error, requestLocation }: DynamicMapProp) {
   );
 }
 
-export default DynamicMap;
+export default memo(DynamicMap);

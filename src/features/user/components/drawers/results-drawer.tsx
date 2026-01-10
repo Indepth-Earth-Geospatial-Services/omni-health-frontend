@@ -257,7 +257,10 @@ function ResultsDrawer({
   const [activeFilter, setActiveFilter] = useState("Distance");
   const [snap, setSnap] = useState<number | string | null>(0.8);
   const router = useRouter();
-  const { ref, inView } = useInView();
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: "50px",
+  });
   // Store
   const userLocation = useUserStore((state) => state.userLocation);
 
@@ -318,9 +321,12 @@ function ResultsDrawer({
     sortedFacilities.length === 0;
 
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    const timer = setTimeout(() => {
+      if (inView && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
@@ -339,17 +345,22 @@ function ResultsDrawer({
 
         <div className="flex h-full flex-1 flex-col p-5">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-[19px] font-normal">
-              HealthCare Facilities near you
-            </h1>
-            <div>
-              <FilterCard />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h1 className="text-[19px] font-normal">
+                HealthCare Facilities near you
+              </h1>
+              <div>
+                <FilterCard />
+              </div>
             </div>
+            <h2 className="text-[15px] text-[#868C98]">
+              Medical Facilities within your LGA
+            </h2>
           </div>
 
           {/* Content */}
-          <div className="scrollbar-hide mt-4 grid gap-y-3 overflow-y-auto">
+          <div className="scrollbar-hide mt-2 grid gap-y-3 overflow-y-auto">
             {/* Nearest Facility Section */}
             {!isLoadingNearestFacility && (
               <>
@@ -391,7 +402,7 @@ function ResultsDrawer({
                     {/* Load More Trigger */}
                     <div
                       ref={ref}
-                      className="flex h-2 items-center justify-center"
+                      className="flex h-5 items-center justify-center"
                     >
                       {isFetchingNextPage && (
                         <div className="text-gray-500">

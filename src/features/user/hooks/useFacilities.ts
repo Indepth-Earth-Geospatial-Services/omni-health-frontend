@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { facilityService } from "../services/facility.service";
+import { facilityService } from "../../../services/facility.service";
 import { Coordinates } from "../types";
 
 export const facilityKeys = {

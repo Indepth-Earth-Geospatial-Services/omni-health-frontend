@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import profileImage from "@assets/img/facilities/shammah.jpg";
 import logo from "@assets/img/icons/svg/logo.svg";
 import {
@@ -37,13 +38,19 @@ const navLinks = [
   },
 ] as const;
 
-function SideBar() {
+function SideBar({ className }: { className?: string }) {
   return (
     <>
       {/* TRIGGER */}
       <Sheet>
         <SheetTrigger asChild>
-          <button className="absolute top-[59px] left-5 z-10 flex size-12 items-center justify-center rounded-full bg-white shadow-[0_24px_56px_-4px_#585C5F29]">
+          {/* absolute top-[59px] left-5 */}
+          <button
+            className={cn(
+              "flex size-12 items-center justify-center rounded-full bg-white shadow-[0_24px_56px_-4px_#585C5F29]",
+              className,
+            )}
+          >
             <Menu size={20} />
           </button>
         </SheetTrigger>
