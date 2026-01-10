@@ -39,10 +39,12 @@ function FacilityDetailsDrawer({
 
   const {
     isLoading,
-    data: facilityDetails,
+    data: facilityDetailsData,
     error,
     refetch,
   } = useFacility(facilityId || autoFacilityID);
+
+  const facilityDetails = facilityDetailsData?.facility;
 
   const openRequestAppointment = useDrawerStore(
     (state) => state.openRequestAppointment,

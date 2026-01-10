@@ -1,5 +1,9 @@
 import { apiClient } from "../lib/client";
-import { Facility } from "../types/apiResponse";
+import {
+  Facility,
+  GetLGAFacilities,
+  GetNearestFacility,
+} from "../types/apiResponse";
 
 class FacilityService {
   private ENDPOINTS = {
@@ -20,7 +24,7 @@ class FacilityService {
   }: {
     latitude: number;
     longitude: number;
-  }): Promise<Facility> {
+  }): Promise<GetNearestFacility> {
     const response = await apiClient.get(this.ENDPOINTS.NEAREST_FACILITY, {
       params: {
         lat: latitude,
@@ -41,7 +45,7 @@ class FacilityService {
     longitude: number;
     limit?: number;
     page?: number;
-  }): Promise<{ message: string; facilities: Array<Facility> }> {
+  }): Promise<GetLGAFacilities> {
     const response = await apiClient.get(
       this.ENDPOINTS.FACILITIES_AROUND_USER_LGA,
       {
@@ -56,7 +60,7 @@ class FacilityService {
 
     return response.data;
   }
-  async getFacility(id: string): Promise<Facility> {
+  async getFacility(id: string): Promise<GetNearestFacility> {
     const response = await apiClient.get(`${this.ENDPOINTS.HOME}/${id}`);
     return response.data;
   }

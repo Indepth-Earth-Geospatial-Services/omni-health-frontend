@@ -43,16 +43,26 @@ export const useLGAFacilities = (
     queryKey: coordinates
       ? facilityKeys.lgaFacilities(coordinates.latitude, coordinates.longitude)
       : ["lgaFacilities", "no-coords"],
-    queryFn: ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1 }) => {
       if (!coordinates) {
         throw new Error("Coordinates are required to fetch LGA facilities");
       }
-      return facilityService.getLGAFacilities({
+
+      const response = await facilityService.getLGAFacilities({
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         page: pageParam,
         limit: 10,
       });
+
+      // Transform to the format getNextPageParam expects
+      return {
+        facilities: response.facilities,
+        page: response.pagination.current_page,
+        limit: response.pagination.limit,
+        totalPages: response.pagination.total_pages,
+        totalCount: response.pagination.total_records,
+      };
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {

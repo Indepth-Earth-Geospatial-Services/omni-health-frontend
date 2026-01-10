@@ -265,7 +265,7 @@ function ResultsDrawer({
   const {
     isLoading: isLoadingNearestFacility,
     error: nearestFacilityError,
-    data: nearestFacility,
+    data: nearestFacilityData,
     refetch: refetchNearestFacility,
   } = useNearestFacility(userLocation);
 
@@ -279,8 +279,9 @@ function ResultsDrawer({
     isFetchingNextPage,
     refetch: refetchLGAFacilities,
   } = useLGAFacilities(userLocation);
-
+  console.log(LGAFacilitiesData);
   // Derived values
+  const nearestFacility = nearestFacilityData?.facility;
   const isLoading =
     isLoadingNearestFacility || isLoadingLGAFacilities || isGettingLocation;
   const hasNearestFacilityError = !!nearestFacilityError;
