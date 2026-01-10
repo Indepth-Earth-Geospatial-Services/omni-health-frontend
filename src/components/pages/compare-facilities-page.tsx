@@ -21,7 +21,7 @@ function CompareFacilitiesPage() {
           </p>
         </div>
       </div>
-      <EmptyState />
+      {/* <EmptyState /> */}
       {/* <SearchFacilityDropdown /> */}
       {/* <FacilityFilterCard /> */}
       {/* <FacilityRatingsCard /> */}

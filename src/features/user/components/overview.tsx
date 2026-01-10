@@ -15,7 +15,7 @@ function Overview({ facility }: OverviewProps) {
   }
 
   // Calculate total staff
-  const totalStaff = facility.total_doctors || 0;
+  const totalStaff = facility?.specialists.length || 0;
 
   // Extract working hours (using Monday as default, or first available day)
   const workingHoursText =
@@ -61,10 +61,7 @@ function Overview({ facility }: OverviewProps) {
         <div className="mt-6">
           <h3 className="mb-3 text-[19px]">Staff Inventory</h3>
           <div className="grid grid-cols-2 gap-3">
-            <StaffInventoryCard
-              staff="Doctors"
-              number={facility.total_doctors || 0}
-            />
+            <StaffInventoryCard staff="Doctors" number={0} />
             <StaffInventoryCard staff="Nurses" number={0} />
             <StaffInventoryCard staff="Pharmacists" number={0} />
             <StaffInventoryCard staff="Lab Technicians" number={0} />

@@ -11,8 +11,12 @@ function AppointmentStep5() {
   const [copied, setCopied] = useState(false);
   const facilityId = useFacilityStore((state) => state.selectedFacility);
 
-  const { data: facilityDetails, isLoading, error } = useFacility(facilityId);
-
+  const {
+    data: facilityDetailsData,
+    isLoading,
+    error,
+  } = useFacility(facilityId);
+  const facilityDetails = facilityDetailsData.facility;
   const openDetails = useDrawerStore((state) => state.openDetails);
 
   const handleCopy = async () => {

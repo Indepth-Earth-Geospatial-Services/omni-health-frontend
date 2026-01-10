@@ -30,11 +30,11 @@ function RequestAppointmentDrawer({
 
   const {
     isLoading,
-    data: facilityDetails,
+    data: facilityDetailsData,
     error,
     refetch,
   } = useFacility(facilityId);
-
+  const facilityDetails = facilityDetailsData.facility;
   function handlePreviousStep() {
     setCurrentStep((prev) => {
       if (prev > 1) return prev - 1;

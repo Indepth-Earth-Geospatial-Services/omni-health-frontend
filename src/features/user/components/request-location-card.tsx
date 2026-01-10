@@ -12,10 +12,12 @@ import {
 import { MapPin, AlertCircle } from "lucide-react";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { useEffect, useState } from "react";
+import { useUserStore } from "../store/userStore";
 
 function LocationHandler() {
-  const { permissionState, requestLocation, isLoading } = useUserLocation();
+  const { permissionState, requestLocation } = useUserLocation();
   const [open, setOpen] = useState(false);
+  const isLoading = useUserStore((state) => state.isLoadingPosition);
 
   useEffect(() => {
     if (permissionState === "prompt" || permissionState === "denied") {

@@ -22,9 +22,7 @@ function FacilitiesPage() {
       {/* <SearchBar filter={true} /> */}
       <FilterComponent onApplyFilters={handleFilter} />
 
-      <div className="mt-4">
-        <FacilityListItem />
-      </div>
+      <div className="mt-4">{/* <FacilityListItem /> */}</div>
     </main>
   );
 }
