@@ -63,7 +63,7 @@ export default function Navbar() {
               size="lg"
               className="bg-transparent border hover:border-none font-semibold transition-all hover:scale-105 rounded-full py-6 text-[18px]"
             >
-              <Link href="/register-facility">Explore Facility</Link>
+              <Link href="/user">Explore Facility</Link>
             </Button>
           </div>
         </div>
