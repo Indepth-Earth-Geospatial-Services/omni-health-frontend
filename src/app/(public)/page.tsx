@@ -1,11 +1,5 @@
-import Link from "next/link";
+import LandingPage from "@/features/landing-page/Landing-page";
 
-function Page() {
-  return (
-    <div>
-      <Link href="/user">Navigate to User Page</Link>
-    </div>
-  );
+export default function Page() {
+  return <LandingPage />;
 }
-
-export default Page;
