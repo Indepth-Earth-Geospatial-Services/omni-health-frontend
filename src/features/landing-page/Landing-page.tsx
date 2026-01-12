@@ -9,14 +9,14 @@ import Footer from "./components/desktop/Footer";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <Header />
       <HeroSection />
       <Stats />
       <DemoSection />
       <Trust />
       <Transparency />
-      <div className="py-50">
+      <div className="py-24 sm:py-32 md:py-40 lg:py-50">
         <Testimonials />
       </div>
       <Footer />

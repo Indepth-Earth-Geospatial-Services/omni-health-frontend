@@ -95,23 +95,23 @@ function TestimonialCard({ name, location, image, testimonial, rating, delay = 0
 
 export default function Testimonials() {
     return (
-        <section className="py-16 md:py-20 bg-primary">
-            <div className="container mx-auto px-4">
+        <section className="py-12 sm:py-16 md:py-20 bg-primary overflow-x-hidden">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Section Header */}
                 <ScrollReveal direction="up">
-                    <h2 className="text-3xl md:text-4xl lg:text-4xl font-medium text-center text-white mb-3">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-medium text-center text-white mb-3">
                         Hear from Those Who Trust Care Link
                     </h2>
                 </ScrollReveal>
 
                 <ScrollReveal direction="up" delay={200}>
-                    <p className="text-sm md:text-base text-center text-white/90 max-w-3xl mx-auto mb-12 md:mb-16">
+                    <p className="text-sm md:text-base text-center text-white/90 max-w-3xl mx-auto mb-8 sm:mb-12 md:mb-16 px-4">
                         Our patients experiences speak volumes. Hear how CareLink has provided compassionate, expert care and made a difference in their lives.
                     </p>
                 </ScrollReveal>
 
                 {/* Testimonials Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-6 lg:gap-8">
                     {TESTIMONIALS_DATA.map((testimonial, index) => (
                         <TestimonialCard
                             key={testimonial.id}
