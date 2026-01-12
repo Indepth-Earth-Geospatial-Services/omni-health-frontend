@@ -481,7 +481,7 @@ export function SearchResults({
               </div>
             ) : isError ? (
               // Error state
-              <div className="flex h-full flex-col items-center justify-center p-4">
+              <div className="flex h-full flex-col items-center p-4 pt-25">
                 <div className="rounded-full bg-red-100 p-3">
                   <X className="h-8 w-8 text-red-500" />
                 </div>
@@ -494,7 +494,7 @@ export function SearchResults({
               </div>
             ) : facilities.length === 0 && searchQuery ? (
               // No results
-              <div className="flex h-full flex-col items-center justify-center p-4">
+              <div className="flex h-full flex-col items-center justify-start p-4 pt-25">
                 <div className="rounded-full bg-gray-100 p-3">
                   <Search className="h-8 w-8 text-gray-400" />
                 </div>
@@ -505,7 +505,7 @@ export function SearchResults({
               </div>
             ) : !searchQuery ? (
               // Empty search state
-              <div className="flex h-full flex-col items-center justify-center p-4">
+              <div className="flex h-full flex-col items-center p-4 pt-25">
                 <div className="rounded-full bg-blue-50 p-3">
                   <Search className="text-primary h-8 w-8" />
                 </div>
