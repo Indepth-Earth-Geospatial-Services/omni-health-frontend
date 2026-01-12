@@ -11,7 +11,7 @@ function FacilitiesPage() {
   return (
     <main className="h-dvh p-5">
       <div className="mb-3 flex items-start gap-3">
-        <Link href="/">
+        <Link href="/user">
           <ArrowLeft size={24} />
         </Link>
         <div>
