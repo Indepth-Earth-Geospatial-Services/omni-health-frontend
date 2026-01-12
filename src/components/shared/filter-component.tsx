@@ -92,11 +92,13 @@ const filterCategories: FilterCategory[] = [
 interface FilterComponentProps {
   onApplyFilters?: (filters: Record<string, string[]>) => void;
   includeFilter?: boolean;
+  className?: string;
 }
 
 export function FilterComponent({
   onApplyFilters,
   includeFilter = true,
+  className,
 }: FilterComponentProps) {
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
@@ -145,12 +147,12 @@ export function FilterComponent({
   const selectedCount = getSelectedCount();
 
   return (
-    <div className="w-full">
+    <div className={cn("relative z-10 w-full", className)}>
       {/* Search Bar with Filter Button */}
       <div className="relative mb-6 w-full">
         <div className="relative w-full">
           <Input
-            className="h-12 rounded-full border border-[#E2E4E9] px-12 placeholder:text-[15px] placeholder:text-[#868C98]"
+            className="h-12 rounded-full border border-[#E2E4E9] bg-white px-12 placeholder:text-[15px] placeholder:text-[#868C98]"
             placeholder="Search for Facilities"
           />
 

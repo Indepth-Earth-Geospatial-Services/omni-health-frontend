@@ -1,4 +1,5 @@
-import { useDrawerStore } from "../store/drawerStore";
+import { memo } from "react";
+import { useDrawerStore } from "../store/drawer-store";
 import DirectionsCard from "./directions-card";
 import LocationCard from "./location-card";
 import MapComponent from "./map-component";
@@ -15,12 +16,12 @@ function DynamicMap({ isLoading, error, requestLocation }: DynamicMapProp) {
   return (
     <div className="w-full">
       {isLoading && (
-        <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 shadow">
+        <div className="fixed top-25 left-1/2 z-50 -translate-x-1/2 rounded bg-white px-4 py-2 shadow">
           Getting your location...
         </div>
       )}
       {error && !isLoading && (
-        <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded bg-red-100 px-4 py-2 text-red-700 shadow">
+        <div className="fixed top-25 left-1/2 z-50 -translate-x-1/2 rounded bg-red-100 px-4 py-2 text-red-700 shadow">
           {error}
           <button onClick={requestLocation} className="ml-2 underline">
             Retry
@@ -42,4 +43,4 @@ function DynamicMap({ isLoading, error, requestLocation }: DynamicMapProp) {
   );
 }
 
-export default DynamicMap;
+export default memo(DynamicMap);
