@@ -26,8 +26,8 @@ const menuItems = [
 // Replace these with your actual data
 const brandLogo = null; // Set to your image path/URL
 const adminProfile = {
-    name: "Dr. Sarah Johnson",
-    email: "sarah.j@omni.health",
+    name: "Dr. Brown Joshua",
+    email: "brown.j@omni.health",
     avatar: null, // Set to your avatar path/URL
 };
 
