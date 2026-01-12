@@ -55,7 +55,7 @@ export default function Navbar() {
             </h1>
           </Link>
 
-          {/* CTA Button - Hidden on mobile */}
+          {/* CTA Buttons - Hidden on mobile */}
           <div className="hidden md:flex gap-3 lg:gap-4 items-center">
             <div className="h-10 lg:h-12 w-px bg-white/40" aria-hidden="true" />
             <Button
@@ -64,6 +64,13 @@ export default function Navbar() {
               className="bg-transparent border hover:border-none font-semibold transition-all hover:scale-105 rounded-full py-4 lg:py-6 text-base lg:text-lg px-6 lg:px-8"
             >
               <Link href="/user">Explore Facility</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              className="bg-white text-primary hover:bg-white/90 font-semibold transition-all hover:scale-105 rounded-full py-4 lg:py-6 text-base lg:text-lg px-6 lg:px-8"
+            >
+              <Link href="/admin">Explore Admin</Link>
             </Button>
           </div>
         </div>
