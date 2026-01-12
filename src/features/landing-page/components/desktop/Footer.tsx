@@ -60,13 +60,29 @@ export default function Footer() {
                                 className="object-cover"
                             />
                             {/* Map Marker */}
-                            <div className="absolute left-[48.35%] top-[39.77%] w-5 h-9">
-                                <div className="relative w-full h-full">
-                                    <div className="absolute w-full h-full bg-[#FF4646] border border-[#D73534] rounded-b-full rounded-t-full"
-                                         style={{ borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%" }}
+                            <div className="absolute left-[48.35%] top-[39.77%]">
+                                <svg
+                                    width="32"
+                                    height="32"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                                        fill="#FF4646"
+                                        stroke="#D73534"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                     />
-                                    <div className="absolute left-1/2 top-[30%] w-2 h-2 bg-[#590000] rounded-full -translate-x-1/2" />
-                                </div>
+                                    <circle
+                                        cx="12"
+                                        cy="10"
+                                        r="3"
+                                        fill="#590000"
+                                    />
+                                </svg>
                             </div>
                         </div>
                     </div>

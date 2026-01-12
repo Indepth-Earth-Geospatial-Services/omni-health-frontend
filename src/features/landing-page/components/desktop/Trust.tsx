@@ -55,7 +55,7 @@ export default function Trust() {
                         <ScrollReveal key={item.id} direction="up" delay={index * 100}>
                             <div
                                 style={{ backgroundColor: item.theme }}
-                                className="p-8 md:p-10 flex items-start gap-4 md:gap-6 px-40"
+                                className="px-6 py-10 md:px-10 md:py-16 flex items-start gap-4 md:gap-6"
                             >
                                 {/* Number Badge */}
                                 <div className="shrink-0">
@@ -66,7 +66,7 @@ export default function Trust() {
 
                                 {/* Text Content */}
                                 <div className="flex-1">
-                                    <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-[#0A0D14] mb-2">
+                                    <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-[#0A0D14] mb-2">
                                         {item.title}
                                     </h3>
                                     <p className="text-sm md:text-base text-gray-600 leading-relaxed">

@@ -41,24 +41,24 @@ export default function HeroSection() {
             {/* Subheadline */}
             <div>
               <p className="text-white/90 md:text-xl lg:text-2xl mb-8 drop-shadow-lg">
-                Centralized, GIS-powered transparency for patients and healthcare providers
+                Centralized, GIS-powered transparency for patients <br /> and healthcare providers
               </p>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <Button
               asChild
               size="lg"
-              className="bg-primary text-white hover:bg-primary/90 font-semibold px-10 py-6 transition-all hover:scale-105 rounded-full text-[10px] md:text-[18px] w-64 md:w-80"
+              className="bg-primary text-white hover:bg-primary/90 font-semibold px-10 py-6 transition-all hover:scale-105 rounded-full text-[14px] md:text-[18px] w-64 md:w-80"
             >
               <Link href="/user">Explore Facilities near you</Link>
             </Button>
             <Button
               asChild
               size="lg"
-              className="bg-transparent border-white border-2 text-white hover:bg-white hover:text-primary font-semibold px-10 py-6 transition-all hover:scale-105 rounded-full text-[10px] md:text-[18px] w-64 md:w-80"
+              className="bg-transparent border-white border-2 text-white hover:bg-white hover:text-primary font-semibold px-10 py-6 transition-all hover:scale-105 rounded-full text-[14px] md:text-[18px] w-64 md:w-80"
             >
               <Link href="/user">Book Appointment</Link>
             </Button>
