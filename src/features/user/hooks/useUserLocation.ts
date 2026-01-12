@@ -1,10 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { useUserStore } from "../store/userStore";
-
-interface Location {
-  lat: number;
-  lng: number;
-}
+import { useCallback, useEffect, useState, useRef } from "react";
+import { useUserStore } from "../store/user-store";
 
 type PermissionState = "prompt" | "granted" | "denied" | "unsupported";
 
@@ -19,6 +14,9 @@ export function useUserLocation(): UseUserLocationReturn {
   const [permissionState, setPermissionState] =
     useState<PermissionState>("prompt");
   const setUserLocation = useUserStore((state) => state.setUserLocation);
+
+  // Use ref to store the permission result for cleanup
+  const permissionStatusRef = useRef<PermissionStatus | null>(null);
 
   const onLocationSuccess = useCallback(
     (position: GeolocationPosition) => {
@@ -70,42 +68,65 @@ export function useUserLocation(): UseUserLocationReturn {
       onLocationSuccess,
       onLocationError,
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 300000,
+        enableHighAccuracy: false,
+        timeout: 15000, // 15 secs
+        maximumAge: 300000, // 5mins
       },
     );
   }, [onLocationSuccess, onLocationError, setIsLoading, setError]);
 
   // Check permission state on mount
-  const checkPermissionState = useCallback(async () => {
-    if (!navigator.permissions) {
-      setPermissionState("unsupported");
-      return;
-    }
-
-    try {
-      const result = await navigator.permissions.query({ name: "geolocation" });
-      setPermissionState(result.state as PermissionState);
-
-      // Listen for permission changes
-      result.addEventListener("change", () => {
-        setPermissionState(result.state as PermissionState);
-      });
-
-      // If already granted, get location automatically
-      if (result.state === "granted") {
-        requestLocation();
+  useEffect(() => {
+    const checkPermissionState = async () => {
+      if (!navigator.permissions) {
+        setPermissionState("unsupported");
+        return;
       }
-    } catch (err) {
-      console.error("Permission query failed:", err);
-      setPermissionState("unsupported");
-    }
+
+      try {
+        // Use 'as any' because TypeScript doesn't recognize "geolocation" in PermissionName
+        const result = await navigator.permissions.query({
+          name: "geolocation" as any,
+        });
+        setPermissionState(result.state as PermissionState);
+
+        // Store for cleanup
+        permissionStatusRef.current = result;
+
+        // Listen for permission changes
+        const handlePermissionChange = () => {
+          setPermissionState(result.state as PermissionState);
+        };
+
+        result.addEventListener("change", handlePermissionChange);
+
+        // If already granted, get location automatically
+        if (result.state === "granted") {
+          requestLocation();
+        }
+
+        // Return cleanup function
+        return () => {
+          result.removeEventListener("change", handlePermissionChange);
+        };
+      } catch (err) {
+        console.error("Permission query failed:", err);
+        setPermissionState("unsupported");
+      }
+    };
+
+    checkPermissionState();
   }, [requestLocation]);
 
+  // Additional cleanup on unmount
   useEffect(() => {
-    checkPermissionState();
-  }, [checkPermissionState]);
+    return () => {
+      if (permissionStatusRef.current) {
+        // Remove all event listeners
+        permissionStatusRef.current.removeEventListener("change", () => {});
+      }
+    };
+  }, []);
 
   return {
     permissionState,

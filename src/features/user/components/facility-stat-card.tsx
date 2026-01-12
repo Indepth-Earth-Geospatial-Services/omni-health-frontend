@@ -2,7 +2,7 @@ function FacilityStatCard({
   attr,
   value,
 }: {
-  attr: "Staff" | "Beds" | "Specialists" | "Ratings" | "Dr:Patient";
+  attr: "Staff" | "Beds" | "Specialists" | "Ratings" | "Dr:Patient" | string;
   value: number | string;
 }) {
   return (

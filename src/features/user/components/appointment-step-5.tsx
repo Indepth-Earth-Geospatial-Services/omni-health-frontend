@@ -2,8 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { useFacility } from "../hooks/useFacilities";
-import { useDrawerStore } from "../store/drawerStore";
-import { useFacilityStore } from "../store/facilityStore";
+import { useDrawerStore } from "../store/drawer-store";
+import { useFacilityStore } from "../store/facility-store";
 import { useState } from "react";
 import { toast } from "sonner";
 
