@@ -5,7 +5,7 @@ type DrawerState =
   | "results"
   | "details"
   | "directions"
-  | "requesetAppointment"
+  | "requestAppointment"
   | null;
 
 interface DrawerStore {
@@ -29,7 +29,7 @@ export const useDrawerStore = create<DrawerStore>((set) => ({
   setActiveDrawer: (drawer) => set({ activeDrawer: drawer }),
   startDirections: () => set({ hasStartDirections: true }),
   endDirections: () => set({ hasStartDirections: false }),
-  openRequestAppointment: () => set({ activeDrawer: "requesetAppointment" }),
+  openRequestAppointment: () => set({ activeDrawer: "requestAppointment" }),
   openResults: () => set({ activeDrawer: "results" }),
   openDetails: () => set({ activeDrawer: "details" }),
   openDirections: () => set({ activeDrawer: "directions" }),

@@ -12,9 +12,9 @@ import {
 import { MapPin, AlertCircle } from "lucide-react";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { useEffect, useState } from "react";
-import { useUserStore } from "../store/userStore";
+import { useUserStore } from "../store/user-store";
 
-function LocationHandler() {
+function LocationHandlerFeedback() {
   const { permissionState, requestLocation } = useUserLocation();
   const [open, setOpen] = useState(false);
   const isLoading = useUserStore((state) => state.isLoadingPosition);
@@ -96,4 +96,4 @@ function LocationHandler() {
   );
 }
 
-export default LocationHandler;
+export default LocationHandlerFeedback;

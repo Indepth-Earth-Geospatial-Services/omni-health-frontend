@@ -9,7 +9,8 @@ function StaffInventoryCard({
     | "Pharmacists"
     | "Lab Technicians"
     | "Specialists"
-    | "Admin Staff";
+    | "Admin Staff"
+    | string;
 }) {
   return (
     <div className="flex h-35 flex-col items-center justify-center gap-y-2 rounded-2xl border border-[#E2E4E9] bg-[#F6F8FA] p-1 text-center">

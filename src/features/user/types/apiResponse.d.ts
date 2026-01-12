@@ -45,7 +45,7 @@ export interface Facility {
     sunday: string;
   };
 }
-export interface GetLGAFacilities {
+export interface FacilityArray {
   facilities: Array<Facility>;
   message: string;
   pagination: {
@@ -55,7 +55,12 @@ export interface GetLGAFacilities {
     limit: number;
   };
 }
-export interface GetNearestFacility {
+export interface OneFacility {
   message: string;
   facility: Facility;
 }
+export type GetLGAFacilities = FacilityArray;
+export type SearchFacilities = FacilityArray;
+export type GetAllFacilities = FacilityArray;
+export type GetFacility = OneFacility;
+export type GetNearestFacility = OneFacility;
