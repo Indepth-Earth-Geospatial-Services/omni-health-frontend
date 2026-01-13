@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 const menuItems = [
     { label: "Overview", icon: MailOpen, href: "/admin" },
     { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
-    { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
+    // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
     { label: "Staff", icon: UserCog, href: "/admin/staff" },
     { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
     { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
