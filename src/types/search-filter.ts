@@ -10,6 +10,13 @@ export interface FilterCategory {
   options: FilterOption[];
 }
 
+export interface FilterQuery {
+  category?: string[];
+  performance_tier?: string[];
+  service?: string[];
+  lga_name?: string[];
+}
+
 export interface SearchFilterStore {
   // Search state
   searchQuery: string;

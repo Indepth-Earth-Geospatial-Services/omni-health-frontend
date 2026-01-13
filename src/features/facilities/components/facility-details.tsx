@@ -1,7 +1,10 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FacilityStats from "@/features/user/components/facility-stats";
+import Overview from "@/features/user/components/overview";
+import { useDrawerStore } from "@/features/user/store/drawer-store";
+import { useFacility } from "@/hooks/useFacilities";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
 import exportIcon from "@assets/img/icons/svg/Export.svg";
 import {
@@ -12,30 +15,22 @@ import {
   Phone,
   Star,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
-import { useFacility } from "../../../../hooks/useFacilities";
-import FacilityStats from "../facility-stats";
-import Overview from "../overview";
-import { useDrawerStore } from "../../store/drawer-store";
-import { useFacilityStore } from "../../store/facility-store";
 
-interface FacilityDetailsProps {
-  isOpen: boolean;
-  onClose: () => void;
-  facilityId: string | null;
-  onShowDirections: () => void;
+import { useRouter } from "next/navigation";
+
+interface FacilityDetailsPageProps {
+  facilityId: string;
+  onShowDirections?: () => void;
 }
 
-function FacilityDetailsDrawer({
-  isOpen,
-  onClose,
+function FacilityDetails({
   facilityId,
   onShowDirections,
-}: FacilityDetailsProps) {
-  const [snap, setSnap] = useState<string | number | null>(1.1);
-  const autoFacilityID = useFacilityStore((s) => s.selectedFacility);
+}: FacilityDetailsPageProps) {
+  const router = useRouter();
   const openRequestAppointment = useDrawerStore(
     (state) => state.openRequestAppointment,
   );
@@ -45,7 +40,7 @@ function FacilityDetailsDrawer({
     data: facilityDetailsData,
     error,
     refetch,
-  } = useFacility(facilityId || autoFacilityID);
+  } = useFacility(facilityId);
 
   const facilityDetails = facilityDetailsData?.facility;
 
@@ -70,20 +65,28 @@ function FacilityDetailsDrawer({
     }
   };
 
+  const handleGoBack = () => {
+    router.back();
+  };
+
   // Loading state content
   const loadingContent = (
-    <div className="flex h-full items-center justify-center">
+    <div className="flex h-screen items-center justify-center">
       <div className="loader"></div>
     </div>
   );
 
   // Error state content
   const errorContent = (
-    <div className="flex h-full items-center justify-center p-5 text-center">
+    <div className="flex h-screen items-center justify-center p-5 text-center">
       <div>
         <p className="text-red-500">{error?.message || "An error occurred"}</p>
         <Button onClick={() => refetch()} className="mt-4">
           Retry
+        </Button>
+        <Button onClick={handleGoBack} variant="outline" className="mt-4 ml-4">
+          <ArrowLeft size={16} className="mr-2" />
+          Go Back
         </Button>
       </div>
     </div>
@@ -91,24 +94,26 @@ function FacilityDetailsDrawer({
 
   // Header section content
   const headerContent = (
-    <div className="px-5">
-      <div className="flex justify-between gap-x-2">
-        <h2 className="text-[19px] font-normal">{facilityName}</h2>
-        <div className="shrink-0 space-x-3">
-          <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
-            <Image src={exportIcon} alt="" className="size-5 object-cover" />
-          </Button>
+    <div className="px-5 pt-6">
+      <div className="flex items-center justify-between gap-x-2">
+        <div className="flex items-center gap-3">
           <Button
-            onClick={onClose}
+            onClick={handleGoBack}
             className="rounded-full bg-[#E2E4E9]"
             size="icon-sm"
           >
-            <X size={20} color="black" />
+            <ArrowLeft size={20} color="black" />
+          </Button>
+          <h2 className="text-[19px] font-normal">{facilityName}</h2>
+        </div>
+        <div className="shrink-0">
+          <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
+            <Image src={exportIcon} alt="" className="size-5 object-cover" />
           </Button>
         </div>
       </div>
 
-      <div className="text-[11px] font-normal text-[#868C98]">
+      <div className="mt-4 text-[11px] font-normal text-[#868C98]">
         <h6 className="text-primary">{facilityCategory}</h6>
         <div className="mt-1 flex flex-wrap gap-2.5 *:flex *:items-center *:gap-1">
           <p>
@@ -147,7 +152,7 @@ function FacilityDetailsDrawer({
   // Tabs content
   const tabsContent = (
     <Tabs defaultValue="overview" className="w-full flex-1">
-      <div className="sticky top-0 flex justify-center bg-white px-5">
+      <div className="sticky top-0 z-10 flex justify-center bg-white px-5 pt-4">
         <TabsList className="h-12.25 w-full max-w-90.5 rounded-full *:rounded-full *:text-[13px] *:text-[#343434]">
           <TabsTrigger value="overview">
             <CircleAlert size={16} />
@@ -173,7 +178,7 @@ function FacilityDetailsDrawer({
 
   // Footer button content
   const footerButtonContent = (
-    <div className="fixed -bottom-10 z-50 flex w-full justify-center px-5">
+    <div className="sticky bottom-0 z-50 flex w-full justify-center bg-white px-5 py-4">
       <Button
         onClick={handleRequestAppointment}
         size="lg"
@@ -186,37 +191,26 @@ function FacilityDetailsDrawer({
   );
 
   return (
-    <Drawer
-      open={isOpen}
-      onOpenChange={onClose}
-      snapPoints={[0.3, 0.4, 0.8, 1.1, 1.2]}
-      activeSnapPoint={snap}
-      setActiveSnapPoint={setSnap}
-      modal={false}
-    >
-      <DrawerContent className="flex h-full">
-        <DrawerTitle className="sr-only">Facility Details</DrawerTitle>
+    <div className="flex h-dvh flex-col bg-white pb-4">
+      {isLoading && loadingContent}
+      {isError && errorContent}
 
-        {isLoading && loadingContent}
-        {isError && errorContent}
+      {shouldShowContent && (
+        <>
+          {/* HEADER */}
+          {headerContent}
 
-        {shouldShowContent && (
-          <div className="flex h-full flex-1 flex-col pt-3">
-            {/* HEADER */}
-            {headerContent}
-
-            {/* BODY */}
-            <div className="scrollbar-hide mt-6 grid overflow-auto">
-              {tabsContent}
-              <div className="h-15"></div>
-            </div>
-
-            {/* {footerButtonContent} */}
+          {/* BODY */}
+          <div className="scrollbar-hide mt-4 flex-1 overflow-auto">
+            {tabsContent}
           </div>
-        )}
-      </DrawerContent>
-    </Drawer>
+
+          {/* FOOTER BUTTON - Uncomment if needed */}
+          {/* {footerButtonContent} */}
+        </>
+      )}
+    </div>
   );
 }
 
-export default FacilityDetailsDrawer;
+export default FacilityDetails;

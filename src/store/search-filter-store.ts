@@ -3,13 +3,13 @@ import { SearchFilterStore } from "@/types/search-filter";
 import { create } from "zustand";
 
 export const useSearchFilterStore = create<SearchFilterStore>((set) => ({
-  // Initial state
   searchQuery: "",
   isSearchExpanded: false,
   selectedFilters: {
     facilityType: [],
     performanceTier: [],
     serviceAvailability: [],
+    lga: [],
   },
   isFilterOpen: false,
 
@@ -38,6 +38,7 @@ export const useSearchFilterStore = create<SearchFilterStore>((set) => ({
         facilityType: [],
         performanceTier: [],
         serviceAvailability: [],
+        lga: [],
       },
     }),
 

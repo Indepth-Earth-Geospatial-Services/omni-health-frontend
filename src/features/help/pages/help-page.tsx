@@ -2,7 +2,7 @@ import FeedbackForm from "@/features/help/components/contact-form";
 import FAQ from "@/features/help/components/FAQ";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import Link from "next/link";
-import { Card } from "../ui/card";
+import { Card } from "../../../components/ui/card";
 import HelpLine from "@/features/help/components/help-line";
 
 function HelpPage() {

@@ -4,15 +4,15 @@ import SideBar from "@/features/user/components/side-bar";
 import { useUserStore } from "@/features/user/store/user-store";
 import { useSearchFilterStore } from "@/store/search-filter-store";
 import { useCallback } from "react";
-import DirectionDrawer from "../../features/user/components/drawers/direction-drawer";
-import FacilityDetailsDrawer from "../../features/user/components/drawers/facility-details-drawer";
-import RequestAppointmentDrawer from "../../features/user/components/drawers/request-appointment-drawer";
-import ResultsDrawer from "../../features/user/components/drawers/results-drawer";
-import DynamicMap from "../../features/user/components/dynamic-map";
-import { useUserLocation } from "../../features/user/hooks/useUserLocation";
-import { useDrawerStore } from "../../features/user/store/drawer-store";
-import { useFacilityStore } from "../../features/user/store/facility-store";
-import { SearchAndFilter } from "../shared/search-and-filter";
+import DirectionDrawer from "../components/drawers/direction-drawer";
+import FacilityDetailsDrawer from "../components/drawers/facility-details-drawer";
+import RequestAppointmentDrawer from "../components/drawers/request-appointment-drawer";
+import ResultsDrawer from "../components/drawers/results-drawer";
+import DynamicMap from "../components/dynamic-map";
+import { useUserLocation } from "../hooks/useUserLocation";
+import { useDrawerStore } from "../store/drawer-store";
+import { useFacilityStore } from "../store/facility-store";
+import { SearchAndFilter } from "../../../components/shared/search-and-filter";
 
 function UserPage() {
   const activeDrawer = useDrawerStore((state) => state.activeDrawer);
