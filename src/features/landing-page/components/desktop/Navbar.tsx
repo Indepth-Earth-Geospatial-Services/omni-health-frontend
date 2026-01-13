@@ -33,25 +33,25 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? "bg-primary/95 backdrop-blur-md shadow-lg py-2"
-        : "bg-transparent py-3 sm:py-4 top-20 "
+        : "bg-transparent py-3 sm:py-4 top-16 "
         }`}
       aria-label="Main navigation"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-            <div className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10">
+            <div className="relative h-10 w-10 sm:h-10 sm:w-10 md:h-16 md:w-16">
               <Image
-                src="/img/icons/svg/logo.svg"
+                src="/img/health-logo.png"
                 alt="RVS Healthcare Logo"
                 fill
                 className="object-contain transition-transform group-hover:scale-105 brightness-0 invert"
                 priority
               />
             </div>
-            <h1 className="text-white text-sm sm:text-base md:text-lg font-semibold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
-              RVS-HealthCare
+            <h1 className="text-white text-sm sm:text-base md:text-xl font-semibold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+              RSPHCMB
             </h1>
           </Link>
 

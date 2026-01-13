@@ -9,7 +9,7 @@ import Footer from "./components/desktop/Footer";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-white">
       <Header />
       <HeroSection />
       <Stats />
