@@ -232,8 +232,8 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
                         <Button
                             type="submit"
                             variant="default"
-                            size="default"
-                            className="px-8"
+                            size="xl"
+                            className="text-lg"
                         >
                             Submit
                             <ArrowRight size={18} />

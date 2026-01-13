@@ -77,7 +77,7 @@ const TableHeaders: React.FC<TableHeadersProps> = ({
                         <Button
                             onClick={onButtonClick}
                             variant="default"
-                            size="default"
+                            size="xl" className='text-lg'
                         >
                             {buttonIcon}
                             {buttonLabel}
