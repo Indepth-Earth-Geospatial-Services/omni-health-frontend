@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  images: {
+    remotePatterns: [
+      new URL("https://res.cloudinary.com/dhnrr0ny3/image/upload/**"),
+    ],
+  },
 };
 
 export default nextConfig;

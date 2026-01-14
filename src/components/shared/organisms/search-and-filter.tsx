@@ -1,24 +1,30 @@
 "use client";
 
 import { useSearchFilterStore } from "@/store/search-filter-store";
-import { SearchBar } from "./search-bar";
-import { FilterButton } from "./filter-button";
-import { ActiveFilters } from "./active-filters";
-import { FilterSheet } from "./filter-sheet";
-import { SearchResults } from "./search-Results";
-import { useCallback } from "react";
+import { SearchBar } from "../atoms/search-bar";
+import { FilterButton } from "../atoms/filter-button";
+import { ActiveFilters } from "../atoms/active-filters";
+import { FilterSheet } from "../molecules/filter-sheet";
+import { SearchResults } from "../molecules/search-results";
+import { useCallback, useEffect } from "react";
 import { useDrawerStore } from "@/features/user/store/drawer-store";
 import { useFacilityStore } from "@/features/user/store/facility-store";
+import { iso } from "zod";
+import { SelectedFilters } from "@/types/search-filter";
 
 interface SearchAndFilterProps {
-  onApplyFilters?: (filters: Record<string, string[]>) => void;
+  onApplyFilters?: (filters: SelectedFilters) => void;
   includeFilter?: boolean;
+  includeExpandedSearchFilter?: boolean;
+  includeSearchResults?: boolean;
   className?: string;
 }
 
 export function SearchAndFilter({
   onApplyFilters,
   includeFilter = false,
+  includeExpandedSearchFilter = false,
+  includeSearchResults = false,
   className,
 }: SearchAndFilterProps) {
   // Get state and actions from Zustand store
@@ -68,6 +74,11 @@ export function SearchAndFilter({
     [setSelectedFacilityId, openDetails, setIsSearchExpanded],
   );
 
+  useEffect(() => {
+    if (isFilterOpen) return;
+    onApplyFilters?.(selectedFilters);
+  }, [isFilterOpen, onApplyFilters, selectedFilters]);
+
   return (
     <div className={className}>
       {/* Search Bar with Filter Button */}
@@ -76,7 +87,7 @@ export function SearchAndFilter({
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            onFocus={handleSearchFocus}
+            // onFocus={handleSearchFocus}
             // HACK
             onClick={handleSearchFocus}
           />
@@ -93,32 +104,34 @@ export function SearchAndFilter({
       </div>
 
       {/* Active Filters Display */}
-      {includeFilter && (
-        <>
-          <ActiveFilters
-            selectedFilters={selectedFilters}
-            onRemoveFilter={handleRemoveFilter}
-          />
-
-          <FilterSheet
-            isOpen={isFilterOpen}
-            onOpenChange={setIsFilterOpen}
-            selectedFilters={selectedFilters}
-            onFilterChange={toggleFilter}
-            onApplyFilters={handleApplyFilters}
-            onClearAll={clearAllFilters}
-          />
-        </>
+      {includeFilter && selectedFilters && (
+        <ActiveFilters
+          selectedFilters={selectedFilters}
+          onRemoveFilter={handleRemoveFilter}
+        />
+      )}
+      {(includeFilter || includeExpandedSearchFilter) && (
+        <FilterSheet
+          isOpen={isFilterOpen}
+          onOpenChange={setIsFilterOpen}
+          selectedFilters={selectedFilters}
+          onFilterChange={toggleFilter}
+          onApplyFilters={handleApplyFilters}
+          onClearAll={clearAllFilters}
+        />
       )}
 
       {/* Expanded Search Results Panel */}
-      <SearchResults
-        isOpen={isSearchExpanded}
-        onClose={() => setIsSearchExpanded(false)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onViewDetails={handleViewDetails}
-      />
+      {includeSearchResults && (
+        <SearchResults
+          includeFilter={includeExpandedSearchFilter}
+          isOpen={isSearchExpanded}
+          onClose={() => setIsSearchExpanded(false)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onViewDetails={handleViewDetails}
+        />
+      )}
     </div>
   );
 }

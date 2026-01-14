@@ -239,7 +239,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Filter, Loader2, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { useInView } from "react-intersection-observer";
-import { Badge } from "../ui/badge";
+import { Badge } from "../../ui/badge";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface SearchResultsProps {
   isOpen: boolean;
@@ -263,6 +264,9 @@ export function SearchResults({
   const inputRef = useRef<HTMLInputElement>(null);
   const { ref: loadMoreRef, inView } = useInView();
 
+  // debounce searchquery
+  const debouncedSearchQuery = useDebounce(searchQuery, 300, 3);
+
   // Get filter state and actions
   const { selectedFilters, setIsFilterOpen, toggleFilter } =
     useSearchFilterStore();
@@ -282,9 +286,7 @@ export function SearchResults({
     hasNextPage,
     isFetchingNextPage,
     error,
-  } = useFacilitySearch(searchQuery, selectedFilters, {
-    enabled: isOpen && !!searchQuery.trim(),
-  });
+  } = useFacilitySearch({ name: debouncedSearchQuery, ...selectedFilters });
 
   // Auto-focus input when panel opens
   useEffect(() => {

@@ -3,9 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import { FILTERCATEGORIES } from "@/constants";
+import { SelectedFilters } from "@/types/search-filter";
 
 interface ActiveFiltersProps {
-  selectedFilters: Record<string, string[]>;
+  selectedFilters: SelectedFilters;
   onRemoveFilter: (category: string, value: string) => void;
   className?: string;
 }
@@ -27,7 +28,7 @@ export function ActiveFilters({
       {Object.entries(selectedFilters).map(([category, values]) =>
         values.map((value) => {
           const option = FILTERCATEGORIES.find(
-            (c) => c.title.toLowerCase().replace(/\s+/g, "_") === category,
+            (c) => c.storeKey === category,
           )?.options.find((o) => o.value === value);
 
           if (!option) return null;

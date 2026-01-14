@@ -1,4 +1,6 @@
+import { FilterQuery } from "@/types/search-filter";
 import {
+  GetAllFacilities,
   GetFacility,
   GetLGAFacilities,
   GetNearestFacility,
@@ -15,62 +17,68 @@ class FacilityService {
     NEAREST_FACILITY: "/facilities/nearest",
     SEARCH: "/facilities/search",
   };
+
   constructor() {
     this.getNearestFacility = this.getNearestFacility.bind(this);
     this.getFacility = this.getFacility.bind(this);
     this.getLGAFacilities = this.getLGAFacilities.bind(this);
+    this.getAllFacilities = this.getAllFacilities.bind(this);
+    this.searchFacilities = this.searchFacilities.bind(this);
   }
-  // async searchFacilities({
-  //   name,
-  //   limit = 10,
-  //   page = 1,
-  // }: {
-  //   name: string;
-  //   limit?: number;
-  //   page?: number;
-  // }): Promise<GetLGAFacilities> {
-  //   const response = await apiClient.get(this.ENDPOINTS.SEARCH, {
-  //     params: {
-  //       name, // The search query parameter
-  //       limit,
-  //       page,
-  //     },
-  //   });
 
-  //   return response.data;
-  // }
+  private addFilterParams(params: any, filters: FilterQuery): void {
+    if (filters.name && filters.name.length > 0) {
+      params.name = filters.name;
+    }
+    if (filters.category && filters.category.length > 0) {
+      params.category = filters.category.join(",");
+    }
+    if (filters.performance_tier && filters.performance_tier.length > 0) {
+      params.performance_tier = filters.performance_tier.join(",");
+    }
+    if (filters.service && filters.service.length > 0) {
+      params.service = filters.service.join(",");
+    }
+    if (filters.lga_name && filters.lga_name.length > 0) {
+      params.lga_name = filters.lga_name.join(",");
+    }
+  }
 
-  async searchFacilities({
-    name,
-    filters = {},
+  async getAllFacilities({
     limit = 10,
     page = 1,
+    filters = {},
   }: {
-    name: string;
-    filters?: {
-      facility_type?: string[];
-      performance_tier?: string[];
-      services?: string[];
-    };
     limit?: number;
     page?: number;
-  }): Promise<SearchFacilities> {
+    filters?: FilterQuery;
+  } = {}): Promise<GetAllFacilities> {
     const params: any = {
-      name,
       limit,
       page,
     };
 
-    // Add filter parameters if they exist
-    if (filters.facility_type && filters.facility_type.length > 0) {
-      params.facility_type = filters.facility_type.join(',');
-    }
-    if (filters.performance_tier && filters.performance_tier.length > 0) {
-      params.performance_tier = filters.performance_tier.join(',');
-    }
-    if (filters.services && filters.services.length > 0) {
-      params.services = filters.services.join(',');
-    }
+    this.addFilterParams(params, filters);
+
+    const response = await apiClient.get(this.ENDPOINTS.HOME, { params });
+    return response.data;
+  }
+
+  async searchFacilities({
+    filters = {},
+    limit = 10,
+    page = 1,
+  }: {
+    filters?: FilterQuery;
+    limit?: number;
+    page?: number;
+  }): Promise<SearchFacilities> {
+    const params: any = {
+      limit,
+      page,
+    };
+
+    this.addFilterParams(params, filters);
 
     const response = await apiClient.get(this.ENDPOINTS.SEARCH, {
       params,
@@ -78,7 +86,6 @@ class FacilityService {
 
     return response.data;
   }
-
 
   async getNearestFacility({
     latitude,
@@ -122,6 +129,7 @@ class FacilityService {
 
     return response.data;
   }
+
   async getFacility(id: string): Promise<GetFacility> {
     const response = await apiClient.get(`${this.ENDPOINTS.HOME}/${id}`);
     return response.data;

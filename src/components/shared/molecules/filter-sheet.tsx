@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/sheet";
 import { FILTERCATEGORIES } from "@/constants";
 import { cn } from "@/lib/utils";
+import { SelectedFilters } from "@/types/search-filter";
 
 interface FilterSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedFilters: Record<string, string[]>;
+  selectedFilters: SelectedFilters;
   onFilterChange: (category: string, value: string) => void;
   onApplyFilters: () => void;
   onClearAll: () => void;
@@ -35,8 +36,8 @@ export function FilterSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
 
-      <SheetContent className="p-5">
-        <SheetHeader>
+      <SheetContent className="overflow-auto px-5 pb-5">
+        <SheetHeader className="sticky top-0 bg-white pt-5">
           <SheetTitle className="text-[23px] font-medium text-[#111111]">
             Filters
           </SheetTitle>
@@ -44,9 +45,7 @@ export function FilterSheet({
 
         <div className="space-y-6">
           {FILTERCATEGORIES.map((category) => {
-            const categoryKey = category.title
-              .toLowerCase()
-              .replace(/\s+/g, "_");
+            const categoryKey = category.storeKey;
             return (
               <div key={category.title} className="space-y-3">
                 <h3 className="text-[15px] font-normal text-[##343434]">

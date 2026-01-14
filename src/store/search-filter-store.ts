@@ -1,16 +1,17 @@
-// store/searchFilterStore.ts
 import { SearchFilterStore } from "@/types/search-filter";
 import { create } from "zustand";
 
 export const useSearchFilterStore = create<SearchFilterStore>((set) => ({
-  // Initial state
   searchQuery: "",
   isSearchExpanded: false,
+
   selectedFilters: {
     facilityType: [],
     performanceTier: [],
     serviceAvailability: [],
+    lga: [],
   },
+
   isFilterOpen: false,
 
   // Actions
@@ -31,15 +32,20 @@ export const useSearchFilterStore = create<SearchFilterStore>((set) => ({
         },
       };
     }),
+  setIsFilterOpen: (open) => set({ isFilterOpen: open }),
 
   clearAllFilters: () =>
     set({
+      searchQuery: "",
+      isSearchExpanded: false,
+
       selectedFilters: {
         facilityType: [],
         performanceTier: [],
         serviceAvailability: [],
+        lga: [],
       },
-    }),
 
-  setIsFilterOpen: (open) => set({ isFilterOpen: open }),
+      isFilterOpen: false,
+    }),
 }));

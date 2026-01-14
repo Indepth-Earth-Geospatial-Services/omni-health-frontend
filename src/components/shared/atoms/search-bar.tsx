@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 
 interface SearchBarProps {
   value: string;
-  onChange: (value: string) => void;
-  onFocus: () => void;
+  onChange?: (value: string) => void;
+  onFocus?: () => void;
   onClick?: () => void;
   placeholder?: string;
   className?: string;
