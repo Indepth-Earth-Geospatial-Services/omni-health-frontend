@@ -35,27 +35,33 @@ const StaffList = () => {
     // Handle form submission
     const handleAddStaff = (staffData: {
         fullName: string;
-        staffId: string;
+        selectSex: string;
+        rank: string;
+        gl: string;
+        qualification: string;
+        firstAppt: string;
+        presentAppt: string;
+        dob: string;
+        stateOrigin: string;
+        yearsInStation: string;
         mobileNumber: string;
-        emailAddress: string;
-        address: string;
-        designation: string;
-        dateOfAppointment: string;
+        remark: string;
     }) => {
         const newStaff = {
             sno: staffs.length + 1,
             name: staffData.fullName,
-            sex: "",
-            rank: staffData.designation,
-            gl: "",
-            qualification: "",
-            dateOfFirstApp: staffData.dateOfAppointment,
+            sex: staffData.selectSex,
+            rank: staffData.rank,
+            gl: staffData.gl,
+            qualification: staffData.qualification,
+            dateOfFirstApp: staffData.firstAppt,
             confirmationOfAppt: "",
-            dateOfPresentApp: staffData.dateOfAppointment,
-            dateOfBirth: "",
-            lgaOfOrigin: "",
-            yearsInPresentStation: "",
-            phone: staffData.mobileNumber
+            dateOfPresentApp: staffData.presentAppt,
+            dateOfBirth: staffData.dob,
+            lgaOfOrigin: staffData.stateOrigin,
+            yearsInPresentStation: staffData.yearsInStation,
+            phone: staffData.mobileNumber,
+            remark: staffData.remark
         };
         setStaffs([...staffs, newStaff]);
         console.log('New staff added:', newStaff);
@@ -98,12 +104,13 @@ const StaffList = () => {
                                 <th className="p-4">Qualification</th>
                                 <th className="p-4">Date of 1st App</th>
                                 <th className="p-4">Confirmation</th>
-                                <th className="p-4">Date of Present App</th>
+                                <th className="p-4">Date of Present Appmt</th>
                                 <th className="p-4">Date of Birth</th>
                                 <th className="p-4">LGA of Origin</th>
                                 <th className="p-4">Years in Station</th>
                                 <th className="p-4">Phone Number</th>
-                                <th className="p-4 text-center">Actions</th>
+                                <th className="p-4">Remark</th>
+                                <th className="p-4 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">Actions</th>
                             </tr>
                         </thead>
 
@@ -157,7 +164,7 @@ const StaffList = () => {
                                         </td>
                                         <td className="p-4 text-sm text-slate-600">{item.rank}</td>
                                         <td className="p-4 text-sm text-slate-600">{item.gl}</td>
-                                        <td className="p-4 text-sm text-slate-600 max-w-xs truncate" title={item.qualification}>
+                                        <td className="p-4 text-sm text-slate-600 w-48 wrap-break-word whitespace-normal">
                                             {item.qualification}
                                         </td>
                                         <td className="p-4 text-sm text-slate-600">{item.dateOfFirstApp}</td>
@@ -171,8 +178,11 @@ const StaffList = () => {
                                         </td>
                                         <td className="p-4 text-sm text-slate-600">{item.yearsInPresentStation}</td>
                                         <td className="p-4 text-sm text-slate-600">{item.phone}</td>
+                                        <td className="p-4 text-sm text-slate-600">{item.remark}</td>
 
-                                        <td className="p-4">
+                                        {/* Facility, LGA, Status, email */}
+
+                                        <td className="p-4 sticky right-0 bg-white group-hover:bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
                                             <div className="flex items-center justify-center gap-2">
                                                 <button className="p-2 text-slate-400 hover:text-primary hover:bg-teal-50 rounded-lg transition-all">
                                                     <PenIcon size={18} />
@@ -195,8 +205,8 @@ const StaffList = () => {
                         onClick={handlePreviousPage}
                         disabled={currentPage === 1}
                         className={`px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg transition-colors flex items-center gap-2 ${currentPage === 1
-                                ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
-                                : 'text-slate-600 hover:bg-slate-50'
+                            ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
+                            : 'text-slate-600 hover:bg-slate-50'
                             }`}
                     >
                         <ChevronLeft size={16} /> Previous
@@ -208,8 +218,8 @@ const StaffList = () => {
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
                         className={`px-4 py-2 text-sm font-medium border border-slate-200 rounded-lg transition-colors flex items-center gap-2 ${currentPage === totalPages
-                                ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
-                                : 'text-slate-600 hover:bg-slate-50'
+                            ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
+                            : 'text-slate-600 hover:bg-slate-50'
                             }`}
                     >
                         Next <ChevronRight size={16} />

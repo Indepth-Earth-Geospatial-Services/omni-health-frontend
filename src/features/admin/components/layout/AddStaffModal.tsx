@@ -19,39 +19,43 @@ interface AddStaffModalProps {
 
 interface StaffFormData {
     fullName: string;
-    staffId: string;
+    selectSex: string;
+    rank: string;
+    gl: string;
+    qualification: string;
+    firstAppt: string;
+    presentAppt: string;
+    dob: string;
+    stateOrigin: string;
+    yearsInStation: string;
     mobileNumber: string;
-    emailAddress: string;
-    address: string;
-    designation: string;
-    dateOfAppointment: string;
+    remark: string,
 }
+
+//    Name
+// Sex	Rank	G/L	Qualification	Date of 1st App	Confirmation	Date of Present Appmt	Date of Birth	LGA of Origin	Years in Station	Phone Number	Remark	Actions
 
 const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit }) => {
     const [formData, setFormData] = useState<StaffFormData>({
         fullName: '',
-        staffId: '',
+        selectSex: '',
+        rank: '',
+        gl: '',
+        qualification: '',
+        firstAppt: '',
+        presentAppt: '',
+        dob: '',
+        stateOrigin: '',
+        yearsInStation: '',
         mobileNumber: '',
-        emailAddress: '',
-        address: '',
-        designation: '',
-        dateOfAppointment: ''
+        remark: '',
     });
 
-    const designations = [
-        'Doctor',
-        'Nurse',
-        'Lab Technician',
-        'Pharmacist',
-        'Radiologist',
-        'Surgeon',
-        'Cardiologist',
-        'Pediatrician',
-        'Neurologist',
-        'Anesthesiologist',
-        'Psychiatrist',
-        'Dentist'
-    ];
+
+    const selectSex = [
+        'M',
+        'F'
+    ]
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -64,15 +68,21 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
         // Reset form
         setFormData({
             fullName: '',
-            staffId: '',
+            selectSex: '',
+            rank: '',
+            gl: '',
+            qualification: '',
+            firstAppt: '',
+            presentAppt: '',
+            dob: '',
+            stateOrigin: '',
+            yearsInStation: '',
             mobileNumber: '',
-            emailAddress: '',
-            address: '',
-            designation: '',
-            dateOfAppointment: ''
+            remark: '',
         });
         onClose();
     };
+
 
     if (!isOpen) return null;
 
@@ -80,14 +90,14 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50"
                 onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4">
                 {/* Header */}
-                <div className="sticky top-0 bg-white  px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <div className="bg-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">New Staff</h2>
                         <p className="text-sm text-slate-500 mt-1">Provide details about the staff</p>
@@ -119,34 +129,41 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
                         />
                     </div>
 
-                    {/* Staff ID and Mobile Number */}
+                    {/* Sex  */}
                     <div className="grid grid-cols-2 gap-4">
+
                         <div>
-                            <label htmlFor="staffId" className="block text-sm font-medium text-slate-700 mb-2">
-                                Staff ID
+                            <label htmlFor="sex" className="block text-sm font-medium text-slate-700 mb-2">
+                                Sex
+                            </label>
+                            <Select
+                                value={formData.selectSex}
+                                onValueChange={(value) => setFormData(prev => ({ ...prev, selectSex: value }))}
+                            >
+                                <SelectTrigger className="bg-gray-100">
+                                    <SelectValue placeholder="Select Gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {selectSex.map((sex) => (
+                                        <SelectItem key={sex} value={sex}>
+                                            {sex}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <label htmlFor="rank" className="block text-sm font-medium text-slate-700 mb-2">
+                                Rank
                             </label>
                             <input
                                 type="text"
-                                id="staffId"
-                                name="staffId"
-                                value={formData.staffId}
+                                id="rank"
+                                name="rank"
+                                value={formData.rank}
                                 onChange={handleInputChange}
-                                placeholder="Enter Staff ID"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="mobileNumber" className="block text-sm font-medium text-slate-700 mb-2">
-                                Mobile Number
-                            </label>
-                            <input
-                                type="tel"
-                                id="mobileNumber"
-                                name="mobileNumber"
-                                value={formData.mobileNumber}
-                                onChange={handleInputChange}
-                                placeholder="Enter mobile number"
+                                placeholder="Enter Rank"
                                 required
                                 className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
                             />
@@ -156,69 +173,65 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
                     {/* Email Address and Address */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="emailAddress" className="block text-sm font-medium text-slate-700 mb-2">
-                                Email Address
+                            <label htmlFor="gl" className="block text-sm font-medium text-slate-700 mb-2">
+                                Enter Grade Level
                             </label>
                             <input
-                                type="email"
-                                id="emailAddress"
-                                name="emailAddress"
-                                value={formData.emailAddress}
+                                type="text"
+                                id="gl"
+                                name="gl"
+                                value={formData.gl}
                                 onChange={handleInputChange}
-                                placeholder="Enter email"
+                                placeholder="Enter Grade Level"
                                 required
                                 className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
                             />
                         </div>
+
                         <div>
-                            <label htmlFor="address" className="block text-sm font-medium text-slate-700 mb-2">
-                                Address
+                            <label htmlFor="qualification" className="block text-sm font-medium text-slate-700 mb-2">
+                                Qualification
                             </label>
                             <input
                                 type="text"
-                                id="address"
-                                name="address"
-                                value={formData.address}
+                                id="qualification"
+                                name="qualification"
+                                value={formData.qualification}
                                 onChange={handleInputChange}
-                                placeholder="General Checkup"
+                                placeholder="Enter Qualification"
                                 required
                                 className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
                             />
                         </div>
                     </div>
 
-                    {/* Designation and Date */}
+                    {/* Phone Number and Date */}
                     <div className="grid grid-cols-2 gap-4 ">
                         <div>
-                            <label htmlFor="designation" className="block text-sm font-medium text-slate-700 mb-2">
-                                Designation
+                            <label htmlFor="mobileNumber" className="block text-sm font-medium text-slate-700 mb-2">
+                                Phone Number
                             </label>
-                            <Select
-                                value={formData.designation}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, designation: value }))}
-                            >
-                                <SelectTrigger className="bg-gray-100">
-                                    <SelectValue placeholder="Select Designation" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {designations.map((designation) => (
-                                        <SelectItem key={designation} value={designation}>
-                                            {designation}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <input
+                                type="tel"
+                                id="mobileNumber"
+                                name="mobileNumber"
+                                value={formData.mobileNumber}
+                                onChange={handleInputChange}
+                                placeholder="Enter phone number"
+                                required
+                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
+                            />
                         </div>
                         <div>
-                            <label htmlFor="dateOfAppointment" className="block text-sm font-medium text-slate-700 mb-2">
-                                Date for Appointment
+                            <label htmlFor="firstAppt" className="block text-sm font-medium text-slate-700 mb-2">
+                                Date for First Appointment
                             </label>
                             <div className="relative">
                                 <input
                                     type="date"
-                                    id="dateOfAppointment"
-                                    name="dateOfAppointment"
-                                    value={formData.dateOfAppointment}
+                                    id="firstAppt"
+                                    name="firstAppt"
+                                    value={formData.firstAppt}
                                     onChange={handleInputChange}
                                     required
                                     className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
@@ -227,7 +240,95 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
                         </div>
                     </div>
 
+                    {/* Present Appointment and Date of Birth */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="presentAppt" className="block text-sm font-medium text-slate-700 mb-2">
+                                Date of Present Appointment
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    id="presentAppt"
+                                    name="presentAppt"
+                                    value={formData.presentAppt}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label htmlFor="dob" className="block text-sm font-medium text-slate-700 mb-2">
+                                Date of Birth
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    id="dob"
+                                    name="dob"
+                                    value={formData.dob}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* State of Origin and Years in Station */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="stateOrigin" className="block text-sm font-medium text-slate-700 mb-2">
+                                State/LGA of Origin
+                            </label>
+                            <input
+                                type="text"
+                                id="stateOrigin"
+                                name="stateOrigin"
+                                value={formData.stateOrigin}
+                                onChange={handleInputChange}
+                                placeholder="Enter State/LGA of Origin"
+                                required
+                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="yearsInStation" className="block text-sm font-medium text-slate-700 mb-2">
+                                Years in Present Station
+                            </label>
+                            <input
+                                type="number"
+                                id="yearsInStation"
+                                name="yearsInStation"
+                                value={formData.yearsInStation}
+                                onChange={handleInputChange}
+                                placeholder="Enter years"
+                                required
+                                min="0"
+                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Remark */}
+                    <div>
+                        <label htmlFor="remark" className="block text-sm font-medium text-slate-700 mb-2">
+                            Remark
+                        </label>
+                        <textarea
+                            id="remark"
+                            name="remark"
+                            value={formData.remark}
+                            onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
+                            placeholder="Enter any remarks (optional)"
+                            rows={3}
+                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100 resize-none"
+                        />
+                    </div>
+
                     {/* Submit Button */}
+
                     <div className="pt-4 flex justify-end">
                         <Button
                             type="submit"
