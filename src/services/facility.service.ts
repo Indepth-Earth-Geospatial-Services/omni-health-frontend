@@ -79,11 +79,9 @@ class FacilityService {
     };
 
     this.addFilterParams(params, filters);
-
     const response = await apiClient.get(this.ENDPOINTS.SEARCH, {
       params,
     });
-
     return response.data;
   }
 

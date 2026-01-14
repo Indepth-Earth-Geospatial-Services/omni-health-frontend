@@ -18,7 +18,7 @@ export const useFacilitySearch = (
     (filters.performanceTier && filters.performanceTier.length > 0) ||
     (filters.serviceAvailability && filters.serviceAvailability.length > 0) ||
     (filters.lga && filters.lga.length > 0) ||
-    (filters.name && filters.name.trim().length > 3);
+    (filters.name && filters.name.trim().length >= 3);
 
   return useInfiniteQuery({
     queryKey: searchKeys.search(filters),
@@ -47,7 +47,6 @@ export const useFacilitySearch = (
         page: pageParam,
         limit: 10,
       });
-
       return {
         facilities: response.facilities,
         page: response.pagination.current_page,
