@@ -19,7 +19,7 @@ function FacilityDetails({
   return (
     <div
       className={cn(
-        "flex h-11 items-center justify-between px-5 text-[15px] text-[#343434]",
+        "flex min-h-11 flex-wrap items-center justify-between gap-4 px-5 text-[15px] text-[#343434]",
         line === 1 ? "bg-[#F6F8FA]" : "bg-white",
       )}
     >
