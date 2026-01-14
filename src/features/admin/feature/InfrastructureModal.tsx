@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ArrowRight, X, } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
-interface InfrastructureModalModal {
+interface InfrastructureModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit?: (equipmentData: InfrastructureFormData) => void;
@@ -16,7 +16,7 @@ interface InfrastructureFormData {
 
 }
 
-const InfrastructureModal: React.FC<InfrastructureModalModal> = ({ isOpen, onClose, onSubmit }) => {
+const InfrastructureModal: React.FC<InfrastructureModalProps> = ({ isOpen, onClose, onSubmit }) => {
     const [formData, setFormData] = useState<InfrastructureFormData>({
         name: '',
         quantity: '',
@@ -75,7 +75,7 @@ const InfrastructureModal: React.FC<InfrastructureModalModal> = ({ isOpen, onClo
                     {/* Designation and Date */}
                     <div className="grid grid-cols-1 gap-4 ">
                         <div>
-                            <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
+                            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
                                 Facility Name
                             </label>
                             <input
@@ -84,7 +84,7 @@ const InfrastructureModal: React.FC<InfrastructureModalModal> = ({ isOpen, onClo
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                placeholder="Enter full name"
+                                placeholder="Enter Facility Name"
                                 required
                                 className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
                             />

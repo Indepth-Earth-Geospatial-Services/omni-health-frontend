@@ -21,7 +21,6 @@ interface EquipmentFormData {
     name: string;
     category: string;
     quantity: string;
-    designations: string;
 }
 
 const EquipmentModal: React.FC<EquipmentModalProps> = ({ isOpen, onClose, onSubmit }) => {
@@ -29,22 +28,17 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ isOpen, onClose, onSubm
         name: '',
         quantity: '',
         category: '',
-        designations: '',
     });
 
-    const designations = [
-        'Doctor',
-        'Nurse',
-        'Lab Technician',
-        'Pharmacist',
-        'Radiologist',
-        'Surgeon',
-        'Cardiologist',
-        'Pediatrician',
-        'Neurologist',
-        'Anesthesiologist',
-        'Psychiatrist',
-        'Dentist'
+    const categories = [
+        'Imaging',
+        'Life Support',
+        'Monitoring',
+        'Diagnostic',
+        'Surgical',
+        'Laboratory',
+        'Emergency',
+        'Therapeutic'
     ];
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -60,7 +54,6 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ isOpen, onClose, onSubm
             name: '',
             quantity: '',
             category: '',
-            designations: '',
         });
         onClose();
     };
@@ -96,9 +89,10 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ isOpen, onClose, onSubm
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Full Name */}
+
+                    {/* Name of Item Input*/}
                     <div>
-                        <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
+                        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
                             Name
                         </label>
                         <input
@@ -107,17 +101,16 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ isOpen, onClose, onSubm
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            placeholder="Enter full name"
+                            placeholder="Enter name"
                             required
                             className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
                         />
                     </div>
 
-
-                    {/* Designation and Date */}
+                    {/* quantity */}
                     <div className="grid grid-cols-2 gap-4 ">
                         <div>
-                            <label htmlFor="dateOfAppointment" className="block text-sm font-medium text-slate-700 mb-2">
+                            <label htmlFor="qauntity" className="block text-sm font-medium text-slate-700 mb-2">
                                 Quantity
                             </label>
                             <div className="relative">
@@ -132,21 +125,23 @@ const EquipmentModal: React.FC<EquipmentModalProps> = ({ isOpen, onClose, onSubm
                                 />
                             </div>
                         </div>
+
+                        {/* Select the Category */}
                         <div>
-                            <label htmlFor="designation" className="block text-sm font-medium text-slate-700 mb-2">
+                            <label htmlFor="category" className="block text-sm font-medium text-slate-700 mb-2">
                                 Category
                             </label>
                             <Select
-                                value={formData.designations}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, designations: value }))}
+                                value={formData.category}
+                                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
                             >
                                 <SelectTrigger className="bg-gray-100">
-                                    <SelectValue placeholder="Select Designation" />
+                                    <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {designations.map((designation) => (
-                                        <SelectItem key={designation} value={designation}>
-                                            {designation}
+                                    {categories.map((category) => (
+                                        <SelectItem key={category} value={category}>
+                                            {category}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

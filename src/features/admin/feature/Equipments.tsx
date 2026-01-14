@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronUp, ChevronDown, Lock, HelpCircle, ExternalLink, Plus, Activity, HeartCrack, LucideIcon, Hospital, } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Activity, HeartCrack, LucideIcon, Hospital, } from "lucide-react";
 import { Button } from '../components/ui/button';
 import EquipmentModal from "./EquipmentModal";
 import InfrastructureModal from "./InfrastructureModal";
@@ -20,6 +20,16 @@ export default function EquipmentsPage() {
         { item: "Oxygen Concentrator", category: "Life Support", quantity: "3", icon: HeartCrack },
         { item: "Patient Monitoring", category: "Monitoring", quantity: "3", icon: HeartCrack },
         { item: "Ultrasound Scanner", category: "Imaging", quantity: "3", icon: HeartCrack }
+    ]);
+
+    const [facilities, setFacilities] = useState<EquipmentProps[]>([
+        { item: "Operating Theatres", quantity: "3", icon: Hospital },
+        { item: "Emergency Bays", quantity: "3", icon: Hospital },
+        { item: "Consultation Rooms", quantity: "3", icon: Hospital },
+        { item: "ICU Beds", quantity: "3", icon: Hospital },
+        { item: "Dispensary", quantity: "3", icon: Hospital },
+        { item: "Laboratory", quantity: "3", icon: Hospital },
+        { item: "Ambulance", quantity: "3", icon: Hospital }
     ])
 
 
@@ -35,16 +45,6 @@ export default function EquipmentsPage() {
         quantity: string;
     }
 
-    const FACILITY_INFRASTRUCTURE: EquipmentProps[] = [
-        { item: "Operating Theatres", quantity: "3", icon: Hospital },
-        { item: "Emergency Bays", quantity: "3", icon: Hospital },
-        { item: "Consultation Rooms", quantity: "3", icon: Hospital },
-        { item: "ICU Beds", quantity: "3", icon: Hospital },
-        { item: "Dispensary", quantity: "3", icon: Hospital },
-        { item: "Laboratory", quantity: "3", icon: Hospital },
-        { item: "Ambulance", quantity: "3", icon: Hospital }
-    ];
-
     // Function to handle new equipment submission
     const handleAddEquipment = (data: { name: string; category: string; quantity: string }) => {
         const newEquipment: EquipmentProps = {
@@ -56,9 +56,9 @@ export default function EquipmentsPage() {
         setEquipments(prev => [...prev, newEquipment]);
     };
 
-    // Function to handle new equipment submission
+    // Function to handle new infrastructure submission
     const handleAddInfrastructure = (data: InfraData) => {
-        setEquipments(prev => [
+        setFacilities(prev => [
             ...prev,
             {
                 item: data.name,
@@ -176,9 +176,9 @@ export default function EquipmentsPage() {
                         {/*Facility Infrastructure Card Content */}
                         {isFacility && (
                             <div className="px-4 pb-4 pt-2 space-y-4">
-                                {/* Email Notifications */}
+                                {/* Facility Infrastructure Items */}
 
-                                {FACILITY_INFRASTRUCTURE.map(({ item, category, quantity, icon: Icon }) => (
+                                {facilities.map(({ item, category, quantity, icon: Icon }) => (
                                     <div key={item} className="flex items-center justify-between py-4 px-4 bg-white rounded-2xl border-2 border-slate-200">
                                         <div className="flex items-center ">
                                             <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
