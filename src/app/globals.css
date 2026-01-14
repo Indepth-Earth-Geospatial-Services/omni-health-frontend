@@ -150,7 +150,7 @@
   @apply rounded-t-[32px];
 }
 [data-slot="drawer-overlay"] {
-  @apply hidden;
+  @apply pointer-events-none! hidden!;
 }
 
 .loader {

@@ -1,11 +1,11 @@
-// hooks/useFacilities.ts
 import {
   useInfiniteQuery,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { facilityService } from "../services/facility.service";
-import { Coordinates } from "../types";
+import { Coordinates } from "../features/user/types";
+import { FilterQuery } from "@/types/search-filter";
 
 export const facilityKeys = {
   facility: (id: string) => ["facility", id] as const,
@@ -21,6 +21,42 @@ export const facilityKeys = {
       Math.round(latitude * 100) / 100,
       Math.round(longitude * 100) / 100,
     ] as const,
+  allFacilities: (filters?: any) => ["allFacilities", filters] as const,
+};
+
+export const useAllFacilities = (filters?: FilterQuery, options = {}) => {
+  return useInfiniteQuery({
+    queryKey: facilityKeys.allFacilities(filters),
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await facilityService.getAllFacilities({
+        page: pageParam,
+        limit: 10,
+        filters,
+      });
+
+      // Transform to the format getNextPageParam expects
+      return {
+        facilities: response.facilities,
+        page: response.pagination.current_page,
+        limit: response.pagination.limit,
+        totalPages: response.pagination.total_pages,
+        totalCount: response.pagination.total_records,
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: (failureCount, error) => {
+      return failureCount < 2;
+    },
+    ...options,
+  });
 };
 
 export const useFacility = (id: string, options = {}) => {

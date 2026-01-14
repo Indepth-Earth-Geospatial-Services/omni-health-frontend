@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { X } from "lucide-react";
 import { useState } from "react";
-import { useFacility } from "../../hooks/useFacilities";
+import { useFacility } from "../../../../hooks/useFacilities";
 import { AppointmentData, AppointmentStepData } from "../../types";
 import AppointmentStep1 from "../appointment-step-1";
 import AppointmentStep2 from "../appointment-step-2";

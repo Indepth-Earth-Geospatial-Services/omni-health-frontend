@@ -1,4 +1,4 @@
-import HelpPage from "@/components/pages/help-page";
+import HelpPage from "@/features/help/pages/help-page";
 
 function Page() {
   return <HelpPage />;

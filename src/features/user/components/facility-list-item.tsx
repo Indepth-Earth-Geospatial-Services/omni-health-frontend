@@ -122,7 +122,7 @@ interface FacilityListItemProps {
   facility: Facility | null;
   nearUser?: boolean;
   isLoading?: boolean;
-  onViewDetails?: (facility: string) => void;
+  onViewDetails?: (facilityID: string) => void;
 }
 
 function FacilityListItem(props: FacilityListItemProps) {

@@ -1,13 +1,13 @@
 "use client";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useState } from "react";
-import { useUserStore } from "../../store/userStore";
+import { useUserStore } from "../../store/user-store";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { Phone, X } from "lucide-react";
 import exportIcon from "@assets/img/icons/svg/Export.svg";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
-import { useDrawerStore } from "../../store/drawerStore";
+import { useDrawerStore } from "../../store/drawer-store";
 
 interface ResultsDrawerProps {
   isOpen: boolean;

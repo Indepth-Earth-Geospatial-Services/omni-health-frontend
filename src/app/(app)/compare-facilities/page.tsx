@@ -1,4 +1,4 @@
-import CompareFacilitiesPage from "@/components/pages/compare-facilities-page";
+import CompareFacilitiesPage from "@/features/compare-facilities/pages/compare-facilities-page";
 
 function Page() {
   return <CompareFacilitiesPage />;

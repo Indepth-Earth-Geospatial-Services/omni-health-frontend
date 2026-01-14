@@ -2,14 +2,14 @@ import FeedbackForm from "@/features/help/components/contact-form";
 import FAQ from "@/features/help/components/FAQ";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import Link from "next/link";
-import { Card } from "../ui/card";
+import { Card } from "../../../components/ui/card";
 import HelpLine from "@/features/help/components/help-line";
 
 function HelpPage() {
   return (
     <main className="h-dvh p-5">
       <div className="mb-3 flex items-center gap-3">
-        <Link href="/">
+        <Link href="/user">
           <ArrowLeft size={24} />
         </Link>
         <div>

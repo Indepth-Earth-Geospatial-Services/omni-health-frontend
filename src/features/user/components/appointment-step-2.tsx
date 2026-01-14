@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { useFacility } from "../hooks/useFacilities";
+import { useFacility } from "../../../hooks/useFacilities";
 import { AppointmentStep2Data } from "../schemas/appointment.schema";
-import { useFacilityStore } from "../store/facilityStore";
+import { useFacilityStore } from "../store/facility-store";
 import { AppointmentData, AppointmentStepData } from "../types";
 import FacilityListItem from "./facility-list-item";
 

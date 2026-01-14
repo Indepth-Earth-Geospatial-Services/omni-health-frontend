@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production" ? {
       exclude: ["error", "warn"],
     } : false,
+  images: {
+    remotePatterns: [
+      new URL("https://res.cloudinary.com/dhnrr0ny3/image/upload/**"),
+    ],
   },
 };
 

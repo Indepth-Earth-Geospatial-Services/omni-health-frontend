@@ -11,7 +11,7 @@ function CompareFacilitiesPage() {
   return (
     <main className="relative h-dvh px-5 pt-5">
       <div className="flex items-start gap-3">
-        <Link href="/">
+        <Link href="/user">
           <ArrowLeft size={24} />
         </Link>
         <div>
