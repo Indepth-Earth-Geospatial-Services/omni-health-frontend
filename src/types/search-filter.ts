@@ -8,6 +8,7 @@ export interface FilterOption {
 export interface FilterCategory {
   title: string;
   options: FilterOption[];
+  storeKey: string;
 }
 
 export interface FilterQuery {
@@ -15,6 +16,15 @@ export interface FilterQuery {
   performance_tier?: string[];
   service?: string[];
   lga_name?: string[];
+  name?: string;
+}
+
+export interface SelectedFilters {
+  facilityType?: string[];
+  performanceTier?: string[];
+  serviceAvailability?: string[];
+  lga?: string[];
+  name?: string;
 }
 
 export interface SearchFilterStore {
@@ -22,8 +32,8 @@ export interface SearchFilterStore {
   searchQuery: string;
   isSearchExpanded: boolean;
 
-  // Filter state
-  selectedFilters: Record<string, string[]>;
+  // Filter state //NOTE YOU CAN ADD MORE
+  selectedFilters: SelectedFilters;
   isFilterOpen: boolean;
 
   // Actions

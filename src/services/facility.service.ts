@@ -27,6 +27,9 @@ class FacilityService {
   }
 
   private addFilterParams(params: any, filters: FilterQuery): void {
+    if (filters.name && filters.name.length > 0) {
+      params.name = filters.name;
+    }
     if (filters.category && filters.category.length > 0) {
       params.category = filters.category.join(",");
     }
@@ -62,18 +65,15 @@ class FacilityService {
   }
 
   async searchFacilities({
-    name,
     filters = {},
     limit = 10,
     page = 1,
   }: {
-    name: string;
     filters?: FilterQuery;
     limit?: number;
     page?: number;
   }): Promise<SearchFacilities> {
     const params: any = {
-      name,
       limit,
       page,
     };

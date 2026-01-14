@@ -3,7 +3,7 @@ import RequestLocationCard from "@/features/user/components/request-location-car
 import SideBar from "@/features/user/components/side-bar";
 import { useUserStore } from "@/features/user/store/user-store";
 import { useSearchFilterStore } from "@/store/search-filter-store";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import DirectionDrawer from "../components/drawers/direction-drawer";
 import FacilityDetailsDrawer from "../components/drawers/facility-details-drawer";
 import RequestAppointmentDrawer from "../components/drawers/request-appointment-drawer";
@@ -12,7 +12,7 @@ import DynamicMap from "../components/dynamic-map";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
-import { SearchAndFilter } from "../../../components/shared/search-and-filter";
+import { SearchAndFilter } from "../../../components/shared/organisms/search-and-filter";
 
 function UserPage() {
   const activeDrawer = useDrawerStore((state) => state.activeDrawer);
@@ -33,6 +33,10 @@ function UserPage() {
   const locationError = useUserStore((state) => state.locationError);
 
   const isLoadingPosition = useUserStore((state) => state.isLoadingPosition);
+
+  const clearAllFilters = useSearchFilterStore(
+    (state) => state.clearAllFilters,
+  );
 
   const handleViewDetails = useCallback(
     (facilityId: string) => {
@@ -59,6 +63,12 @@ function UserPage() {
     openDetails();
   }, [openDetails]);
 
+  useEffect(() => {
+    return () => {
+      // Clear search query when leaving facilities page
+      clearAllFilters();
+    };
+  }, [clearAllFilters]);
   return (
     <main className="mx-auto h-full max-h-dvh w-full">
       {/* !isLoadingPosition && !locationError */}
@@ -67,12 +77,10 @@ function UserPage() {
           <SideBar className="shrink-0" />
 
           <SearchAndFilter
-            includeFilter={false}
+            key="user variant"
+            includeExpandedSearchFilter={true}
             className="relative z-60 w-full"
-            onApplyFilters={(filters) => {
-              // filter logic here TODO
-              console.log(filters);
-            }}
+            includeSearchResults={true}
           />
         </div>
       )}

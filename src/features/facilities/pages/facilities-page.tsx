@@ -1,20 +1,53 @@
 "use client";
+import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
 import FacilityListItem from "@/features/user/components/facility-list-item";
+import { useAllFacilities } from "@/hooks/useFacilities";
+import { useFacilitySearch } from "@/hooks/useFacilitySearch";
 import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { FilterComponent } from "../../../components/shared/filter-component";
-import { Button } from "../../../components/ui/button";
-import { useCallback, useEffect, useState } from "react";
-import { useAllFacilities } from "@/hooks/useFacilities";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-
+import { Button } from "../../../components/ui/button";
+import { useSearchFilterStore } from "@/store/search-filter-store";
+import { useDebounce } from "@/hooks/useDebounce";
+import { SelectedFilters } from "@/types/search-filter";
+// FIXME PERFORMANCE OPTIMIZATION IS NEEDED ASAP
 function FacilitiesPage() {
-  const [filters, setFilters] = useState({});
-  console.log(filters);
   const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
+  const [filters, setFilters] = useState<SelectedFilters>({});
+  const searchInput = useSearchFilterStore((state) => state.searchQuery);
 
+  const clearAllFilters = useSearchFilterStore(
+    (state) => state.clearAllFilters,
+  );
+
+  // Debounce the search input (500ms delay)
+  const debouncedSearchInput = useDebounce(searchInput, 500);
+
+  // Combine filters with search input only when search is at least 3 characters
+  const searchFilters = {
+    ...filters,
+    name:
+      debouncedSearchInput.trim().length >= 3
+        ? debouncedSearchInput.trim()
+        : undefined,
+  };
+
+  // Check if we have any active filters (including search)
+  const hasActiveFilters =
+    (filters.facilityType && filters.facilityType.length > 0) ||
+    (filters.performanceTier && filters.performanceTier.length > 0) ||
+    (filters.serviceAvailability && filters.serviceAvailability.length > 0) ||
+    (filters.lga && filters.lga.length > 0) ||
+    debouncedSearchInput.trim().length >= 3;
+
+  // Use search hook when filters are applied, otherwise use all facilities
+  const searchQuery = useFacilitySearch(searchFilters);
+  const allQuery = useAllFacilities();
+
+  // Pick the right query based on filter state
   const {
     data,
     isLoading,
@@ -24,20 +57,28 @@ function FacilitiesPage() {
     isFetchingNextPage,
     refetch,
     isRefetching,
-  } = useAllFacilities(filters);
+  } = hasActiveFilters ? searchQuery : allQuery;
 
   // Calculate total facilities
   const totalFacilities = data?.pages[0]?.totalCount;
 
   // Flatten all facilities from pages
   const allFacilities = data?.pages.flatMap((page) => page.facilities) || [];
-
+  console.log(allFacilities); //REMOVE THIS
   // Function to load more facilities
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleViewDetails = (facilityID) => {
+    router.push(`/facilities/${facilityID}`);
+  };
+
+  const handleFilter = useCallback((filterValues: any) => {
+    setFilters(filterValues);
+  }, []);
 
   // Set up infinite scroll with intersection observer
   useEffect(() => {
@@ -46,16 +87,16 @@ function FacilitiesPage() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, inView]);
 
-  const handleViewDetails = (facilityID) => {
-    router.push(`/facilities/${facilityID}`);
-  };
-  // Handle filter changes
-  const handleFilter = (filterValues: any) => {
-    setFilters(filterValues);
-  };
+  useEffect(() => {
+    return () => {
+      // Clear search query when leaving facilities page
+      clearAllFilters();
+    };
+  }, [clearAllFilters]);
+
   return (
     <main className="scrollbar-hide h-dvh overflow-auto px-5 pb-5">
-      <div className="sticky top-0 z-50 bg-white pt-5">
+      <div className="sticky top-0 z-30 bg-white pt-5">
         <div className="mb-3 flex items-start gap-3">
           <Link href="/user">
             <ArrowLeft size={24} />
@@ -70,8 +111,13 @@ function FacilitiesPage() {
           </div>
         </div>
 
-        <FilterComponent onApplyFilters={handleFilter} />
+        <SearchAndFilter
+          key="facilities variant"
+          includeFilter={true}
+          onApplyFilters={handleFilter}
+        />
       </div>
+
       {/* Loading State */}
       {isLoading && (
         <div className="mt-8 flex flex-col items-center justify-center py-12">
