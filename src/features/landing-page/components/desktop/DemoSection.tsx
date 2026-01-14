@@ -6,23 +6,23 @@ import { MapPin, Building2, BarChart3, UserCheck } from "lucide-react";
 
 export default function DemoSection() {
   return (
-    <section className="py-16 md:py-20 bg-[#EEF6F5]">
-      <div className="container mx-auto px-4">
+    <section className="py-12 sm:py-16 md:py-20 bg-[#EEF6F5] overflow-x-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <ScrollReveal direction="up">
-          <h2 className="text-xl md:text-2xl lg:text-4xl font-bold text-center text-[#0A0D14] mb-3">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-[#0A0D14] mb-3">
             How It Works
           </h2>
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={200}>
-          <p className="text-sm md:text-base lg:text-lg text-center text-gray-600 max-w-2xl mx-auto mb-12 md:mb-16">
+          <p className="text-sm md:text-base lg:text-lg text-center text-gray-600 max-w-2xl mx-auto mb-8 sm:mb-12 md:mb-16 px-4">
             Four simple steps from search to appointment
           </p>
         </ScrollReveal>
 
         {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <ScrollReveal direction="up" delay={0}>
             <FeatureCard
               icon={<MapPin className="text-primary" size={24} />}

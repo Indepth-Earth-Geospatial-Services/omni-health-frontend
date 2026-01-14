@@ -27,18 +27,18 @@ export default function Footer() {
     };
 
     return (
-        <footer className="relative bg-[#F6F8FA] pt-12 pb-0">
-            <div className="max-w-[1512px] mx-auto px-4 md:px-40">
+        <footer className="relative bg-[#F6F8FA] pt-8 sm:pt-12 pb-16 sm:pb-20 overflow-hidden">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl w-full">
                 {/* Main Content */}
-                <div className="flex flex-col md:flex-row justify-center items-start gap-8 isolate">
+                <div className="flex flex-col lg:flex-row justify-center items-start gap-8 lg:gap-12 w-full">
                     {/* Left Section */}
-                    <div className="flex flex-col justify-between items-start w-full md:w-[544px] gap-[197px] h-auto md:h-[493px]">
+                    <div className="flex flex-col justify-between items-start w-full lg:w-1/2 gap-8 sm:gap-12 lg:gap-16">
                         {/* Logo */}
                         <Link
                             href="/"
-                            className="flex flex-row items-center py-3 pr-5 gap-3 w-[301px] h-[57px] mx-auto md:mx-0"
+                            className="flex flex-row items-center py-3 gap-3 w-full md:justify-start"
                         >
-                            <div className="relative w-9 h-[33px]">
+                            <div className="relative w-9 h-8 flex-shrink-0">
                                 <Image
                                     src="/img/icons/svg/logo.svg"
                                     alt="RVS Healthcare Logo"
@@ -46,27 +46,28 @@ export default function Footer() {
                                     className="object-contain"
                                 />
                             </div>
-                            <span className="text-primary text-[19px] leading-[25px] font-normal font-geist">
+                            <span className="text-primary text-base sm:text-lg font-normal font-geist">
                                 RVS-HealthCare
                             </span>
                         </Link>
 
                         {/* Map */}
-                        <div className="relative w-full md:w-[544px] h-[264px] mx-auto md:mx-0">
+                        <div className="relative w-full h-48 sm:h-56 md:h-64">
                             <Image
                                 src="/img/landingpage/footer-map.png"
                                 alt="Location map"
                                 fill
-                                className="object-cover"
+                                className="object-cover rounded-lg"
                             />
                             {/* Map Marker */}
                             <div className="absolute left-[48.35%] top-[39.77%]">
                                 <svg
-                                    width="32"
-                                    height="32"
+                                    width="24"
+                                    height="24"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
+                                    className="w-6 h-6 sm:w-7 sm:h-7"
                                 >
                                     <path
                                         d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
@@ -88,11 +89,11 @@ export default function Footer() {
                     </div>
 
                     {/* Right Section */}
-                    <div className="flex flex-col justify-between items-start pb-6 gap-[125px] w-full md:w-[544px] h-auto md:h-[493px]">
+                    <div className="flex flex-col justify-between items-start w-full lg:w-1/2 gap-8 sm:gap-12 lg:gap-16">
                         {/* Top */}
-                        <div className="flex flex-col md:flex-row justify-between items-start w-full gap-8 md:gap-[357px]">
+                        <div className="flex justify-between items-start w-full gap-8 sm:gap-12">
                             {/* Info Links */}
-                            <div className="flex flex-col items-start gap-5 w-[61px]">
+                            <div className="flex flex-col items-start gap-4 sm:gap-5">
                                 <h3 className="text-[10px] leading-[15px] font-medium tracking-[0.04em] uppercase text-[#14181F] opacity-40 font-inter">
                                     INFO
                                 </h3>
@@ -110,12 +111,12 @@ export default function Footer() {
                             </div>
 
                             {/* Social Media */}
-                            <div className="flex flex-row items-center gap-2 w-[88px] h-10">
+                            <div className="flex flex-row items-center gap-2">
                                 <a
                                     href="https://t.me"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex flex-col justify-center items-center w-10 h-10 bg-primary rounded-full hover:bg-primary/90 transition-colors"
+                                    className="flex flex-col justify-center items-center w-10 h-10 bg-primary rounded-full hover:bg-primary/90 transition-colors flex-shrink-0"
                                     aria-label="Telegram"
                                 >
                                     <FaTelegram className="w-5 h-4 text-[#FCFCFD]" />
@@ -124,7 +125,7 @@ export default function Footer() {
                                     href="https://wa.me"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex flex-col justify-center items-center w-10 h-10 bg-primary rounded-full hover:bg-primary/90 transition-colors"
+                                    className="flex flex-col justify-center items-center w-10 h-10 bg-primary rounded-full hover:bg-primary/90 transition-colors flex-shrink-0"
                                     aria-label="WhatsApp"
                                 >
                                     <FaWhatsapp className="w-5 h-5 text-[#FCFCFD]" />
@@ -133,9 +134,9 @@ export default function Footer() {
                         </div>
 
                         {/* Bottom */}
-                        <div className="flex flex-col justify-between items-start gap-[62px] w-full md:w-[544px]">
+                        <div className="flex flex-col justify-between items-start gap-6 sm:gap-8 w-full">
                             {/* Contact Us */}
-                            <div className="flex flex-col items-start gap-4 w-[315px]">
+                            <div className="flex flex-col items-start gap-3 sm:gap-4 w-full">
                                 <h3 className="text-[10px] leading-[15px] font-medium tracking-[0.04em] uppercase text-[#14181F] opacity-40 font-inter">
                                     CONTACT US
                                 </h3>
@@ -148,25 +149,25 @@ export default function Footer() {
                             </div>
 
                             {/* Location and Email Group */}
-                            <div className="flex flex-col md:flex-row items-start md:items-end gap-4 md:gap-8 w-full md:w-[544px]">
+                            <div className="flex flex-col sm:flex-row items-start gap-6 sm:gap-8 w-full">
                                 {/* Location */}
-                                <div className="flex flex-col items-start gap-4 w-full md:w-64">
-                                    <h3 className="text-[10px] leading-[15px] font-medium tracking-[0.04em] uppercase text-[#14181F] opacity-40 font-inter w-full">
+                                <div className="flex flex-col items-start gap-3 sm:gap-4 w-full sm:w-1/2">
+                                    <h3 className="text-[10px] leading-[15px] font-medium tracking-[0.04em] uppercase text-[#14181F] opacity-40 font-inter">
                                         LOCATION
                                     </h3>
-                                    <p className="text-sm leading-[20px] font-medium text-[#14181F] w-full font-inter">
+                                    <p className="text-sm leading-[20px] font-medium text-[#14181F] font-inter">
                                         {FOOTER_INFO.address}
                                     </p>
                                 </div>
 
                                 {/* Email */}
-                                <div className="flex flex-col items-start gap-4 w-full md:w-64">
-                                    <h3 className="text-[10px] leading-[15px] font-medium tracking-[0.04em] uppercase text-[#14181F] opacity-40 font-inter w-full">
+                                <div className="flex flex-col items-start gap-3 sm:gap-4 w-full sm:w-1/2">
+                                    <h3 className="text-[10px] leading-[15px] font-medium tracking-[0.04em] uppercase text-[#14181F] opacity-40 font-inter">
                                         EMAIL
                                     </h3>
                                     <a
                                         href={`mailto:${FOOTER_INFO.email}`}
-                                        className="text-sm leading-[20px] font-medium text-[#14181F] hover:text-primary transition-colors w-full font-inter"
+                                        className="text-sm leading-[20px] font-medium text-[#14181F] hover:text-primary transition-colors font-inter break-words"
                                     >
                                         {FOOTER_INFO.email}
                                     </a>
@@ -175,20 +176,25 @@ export default function Footer() {
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            {/* Copyright - Rotated */}
-            <div className="absolute -right-[51px] bottom-[110px] text-[10px] leading-[14px] font-medium text-[#14181F] opacity-40 -rotate-90 font-inter">
-                © 2023 — Copyright
+            {/* Copyright - Rotated on right side (all screen sizes) */}
+            <div className="fixed right-2 sm:right-4 md:right-6 lg:right-8 bottom-28 sm:bottom-32 md:bottom-36 lg:bottom-40 pointer-events-none z-40">
+                <div className="flex items-center justify-center">
+                    <p className="text-[10px] sm:text-[11px] leading-[14px] font-medium text-[#14181F] opacity-40 -rotate-90 font-inter whitespace-nowrap">
+                        © 2026 — Copyright
+                    </p>
+                </div>
             </div>
 
             {/* Scroll to Top Button */}
             <button
                 onClick={scrollToTop}
-                className="absolute left-8 bottom-8 w-10 h-10 bg-primary rounded-full flex flex-col justify-center items-center hover:bg-primary/90 transition-all hover:scale-105"
+                className="fixed left-4 sm:left-8 bottom-4 sm:bottom-8 w-10 h-10 bg-primary rounded-full flex flex-col justify-center items-center hover:bg-primary/90 transition-all hover:scale-105 z-50 shadow-lg"
                 aria-label="Scroll to top"
             >
-                <ArrowUp className="w-3 h-[14px] text-[#F9FAFB]" strokeWidth={1.4} />
+                <ArrowUp className="w-3 h-3.5 text-[#F9FAFB]" strokeWidth={1.4} />
             </button>
         </footer>
     );

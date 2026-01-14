@@ -16,7 +16,7 @@ export default function LandingPage() {
       <DemoSection />
       <Trust />
       <Transparency />
-      <div className="py-50">
+      <div className="py-24 sm:py-32 md:py-40 lg:py-50">
         <Testimonials />
       </div>
       <Footer />
