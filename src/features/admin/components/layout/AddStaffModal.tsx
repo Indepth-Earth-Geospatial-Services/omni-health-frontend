@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ArrowRight, X, } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, X, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
     Select,
@@ -10,79 +10,238 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../ui/select';
+import { useStaffSchema } from '@/hooks/useAdminStaff';
 
 interface AddStaffModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit?: (staffData: StaffFormData) => void;
+    onSubmit?: (staffData: any) => void;
+    facilityId: string;
 }
 
-interface StaffFormData {
-    fullName: string;
-    selectSex: string;
-    rank: string;
-    gl: string;
-    qualification: string;
-    firstAppt: string;
-    presentAppt: string;
-    dob: string;
-    stateOrigin: string;
-    yearsInStation: string;
-    mobileNumber: string;
-    remark: string,
+// Field metadata for form generation
+interface FieldConfig {
+    name: string;
+    label: string;
+    type: 'text' | 'select' | 'date' | 'tel' | 'number' | 'textarea';
+    placeholder?: string;
+    required?: boolean;
+    options?: string[];
+    fullWidth?: boolean;
 }
 
-//    Name
-// Sex	Rank	G/L	Qualification	Date of 1st App	Confirmation	Date of Present Appmt	Date of Birth	LGA of Origin	Years in Station	Phone Number	Remark	Actions
+const AddStaffModal: React.FC<AddStaffModalProps> = ({
+    isOpen,
+    onClose,
+    onSubmit,
+    facilityId
+}) => {
+    const { data: schema, isLoading: isLoadingSchema } = useStaffSchema(facilityId);
 
-const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit }) => {
-    const [formData, setFormData] = useState<StaffFormData>({
-        fullName: '',
-        selectSex: '',
-        rank: '',
-        gl: '',
-        qualification: '',
-        firstAppt: '',
-        presentAppt: '',
-        dob: '',
-        stateOrigin: '',
-        yearsInStation: '',
-        mobileNumber: '',
-        remark: '',
-    });
+    // Define form fields configuration based on CreateStaffData
+    const formFields: FieldConfig[] = [
+        {
+            name: 'full_name',
+            label: 'Full Name',
+            type: 'text',
+            placeholder: 'Enter full name',
+            required: true,
+            fullWidth: true
+        },
+        {
+            name: 'gender',
+            label: 'Gender',
+            type: 'select',
+            options: ['M', 'F'],
+            required: false
+        },
+        {
+            name: 'rank_cadre',
+            label: 'Rank/Cadre',
+            type: 'text',
+            placeholder: 'Enter rank',
+            required: false
+        },
+        {
+            name: 'grade_level',
+            label: 'Grade Level',
+            type: 'text',
+            placeholder: 'Enter grade level',
+            required: false
+        },
+        {
+            name: 'qualifications',
+            label: 'Qualification',
+            type: 'text',
+            placeholder: 'e.g., BSc Nursing, MSc Public Health (comma separated)',
+            required: false
+        },
+        {
+            name: 'phone_number',
+            label: 'Phone Number',
+            type: 'tel',
+            placeholder: 'Enter phone number',
+            required: false
+        },
+        {
+            name: 'date_first_appointment',
+            label: 'Date of First Appointment',
+            type: 'date',
+            required: false
+        },
+        {
+            name: 'presentAppt',
+            label: 'Date of Present Appointment',
+            type: 'date',
+            required: false
+        },
+        {
+            name: 'date_of_birth',
+            label: 'Date of Birth',
+            type: 'date',
+            required: false
+        },
+        {
+            name: 'stateOrigin',
+            label: 'State/LGA of Origin',
+            type: 'text',
+            placeholder: 'Enter state/LGA',
+            required: false
+        },
+        {
+            name: 'yearsInStation',
+            label: 'Years in Present Station',
+            type: 'number',
+            placeholder: 'Enter years',
+            required: false
+        },
+        {
+            name: 'email',
+            label: 'Email Address',
+            type: 'text',
+            placeholder: 'Enter email',
+            required: false
+        },
+        {
+            name: 'remark',
+            label: 'Remark',
+            type: 'textarea',
+            placeholder: 'Enter any remarks (optional)',
+            required: false,
+            fullWidth: true
+        }
+    ];
 
+    // Filter fields based on schema if available
+    const availableFields = schema
+        ? formFields.filter(field => {
+            // Always include full_name and remark
+            if (field.name === 'full_name' || field.name === 'remark') return true;
+            // Check if field exists in schema
+            return schema.hasOwnProperty(field.name) ||
+                // Allow optional fields that might be processed by backend
+                ['presentAppt', 'stateOrigin', 'yearsInStation'].includes(field.name);
+        })
+        : formFields;
 
-    const selectSex = [
-        'M',
-        'F'
-    ]
+    // Initialize form data directly - no useEffect needed
+    const getInitialFormData = () => {
+        const initialData: Record<string, any> = {};
+        availableFields.forEach(field => {
+            initialData[field.name] = '';
+        });
+        return initialData;
+    };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const [formData, setFormData] = useState<Record<string, any>>(getInitialFormData);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit?.(formData);
-        // Reset form
-        setFormData({
-            fullName: '',
-            selectSex: '',
-            rank: '',
-            gl: '',
-            qualification: '',
-            firstAppt: '',
-            presentAppt: '',
-            dob: '',
-            stateOrigin: '',
-            yearsInStation: '',
-            mobileNumber: '',
-            remark: '',
-        });
+
+        // Remove empty fields and transform qualifications
+        const cleanedData = Object.entries(formData).reduce((acc, [key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) {
+                // Convert qualifications string to object format
+                if (key === 'qualifications' && typeof value === 'string' && value.trim()) {
+                    // Split by comma and create an object with each qualification as a key
+                    const qualArray = value.split(',').map(q => q.trim()).filter(Boolean);
+                    acc[key] = qualArray.reduce((obj, qual) => {
+                        obj[qual] = {};
+                        return obj;
+                    }, {} as Record<string, any>);
+                } else {
+                    acc[key] = value;
+                }
+            }
+            return acc;
+        }, {} as Record<string, any>);
+
+        onSubmit?.(cleanedData);
+
+        // Reset form to initial state
+        setFormData(getInitialFormData());
         onClose();
     };
 
+    const renderField = (field: FieldConfig) => {
+        switch (field.type) {
+            case 'select':
+                return (
+                    <Select
+                        value={formData[field.name] || ''}
+                        onValueChange={(value) => handleSelectChange(field.name, value)}
+                    >
+                        <SelectTrigger className="bg-gray-100">
+                            <SelectValue placeholder={`Select ${field.label}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {field.options?.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                    {option}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                );
+
+            case 'textarea':
+                return (
+                    <textarea
+                        id={field.name}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleInputChange}
+                        placeholder={field.placeholder}
+                        rows={3}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100 resize-none"
+                    />
+                );
+
+            default:
+                return (
+                    <input
+                        type={field.type}
+                        id={field.name}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleInputChange}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        min={field.type === 'number' ? '0' : undefined}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
+                    />
+                );
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -95,9 +254,9 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="bg-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <div className="bg-white px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10 border-b">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">New Staff</h2>
                         <p className="text-sm text-slate-500 mt-1">Provide details about the staff</p>
@@ -110,237 +269,71 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Full Name */}
-                    <div>
-                        <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
-                            Full Name
-                        </label>
-                        <input
-                            type="text"
-                            id="fullName"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            placeholder="Enter full name"
-                            required
-                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                        />
+                {/* Loading State */}
+                {isLoadingSchema ? (
+                    <div className="p-12 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <p className="text-sm text-slate-500">Loading form...</p>
+                        </div>
                     </div>
-
-                    {/* Sex  */}
-                    <div className="grid grid-cols-2 gap-4">
-
-                        <div>
-                            <label htmlFor="sex" className="block text-sm font-medium text-slate-700 mb-2">
-                                Sex
-                            </label>
-                            <Select
-                                value={formData.selectSex}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, selectSex: value }))}
+                ) : (
+                    /* Form */
+                    <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                        {availableFields.map((field) => (
+                            <div
+                                key={field.name}
+                                className={field.fullWidth ? 'w-full' : ''}
                             >
-                                <SelectTrigger className="bg-gray-100">
-                                    <SelectValue placeholder="Select Gender" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {selectSex.map((sex) => (
-                                        <SelectItem key={sex} value={sex}>
-                                            {sex}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div>
-                            <label htmlFor="rank" className="block text-sm font-medium text-slate-700 mb-2">
-                                Rank
-                            </label>
-                            <input
-                                type="text"
-                                id="rank"
-                                name="rank"
-                                value={formData.rank}
-                                onChange={handleInputChange}
-                                placeholder="Enter Rank"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Email Address and Address */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="gl" className="block text-sm font-medium text-slate-700 mb-2">
-                                Enter Grade Level
-                            </label>
-                            <input
-                                type="text"
-                                id="gl"
-                                name="gl"
-                                value={formData.gl}
-                                onChange={handleInputChange}
-                                placeholder="Enter Grade Level"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="qualification" className="block text-sm font-medium text-slate-700 mb-2">
-                                Qualification
-                            </label>
-                            <input
-                                type="text"
-                                id="qualification"
-                                name="qualification"
-                                value={formData.qualification}
-                                onChange={handleInputChange}
-                                placeholder="Enter Qualification"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Phone Number and Date */}
-                    <div className="grid grid-cols-2 gap-4 ">
-                        <div>
-                            <label htmlFor="mobileNumber" className="block text-sm font-medium text-slate-700 mb-2">
-                                Phone Number
-                            </label>
-                            <input
-                                type="tel"
-                                id="mobileNumber"
-                                name="mobileNumber"
-                                value={formData.mobileNumber}
-                                onChange={handleInputChange}
-                                placeholder="Enter phone number"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="firstAppt" className="block text-sm font-medium text-slate-700 mb-2">
-                                Date for First Appointment
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="date"
-                                    id="firstAppt"
-                                    name="firstAppt"
-                                    value={formData.firstAppt}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
-                                />
+                                {field.fullWidth ? (
+                                    // Full width fields
+                                    <div>
+                                        <label
+                                            htmlFor={field.name}
+                                            className="block text-sm font-medium text-slate-700 mb-2"
+                                        >
+                                            {field.label}
+                                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderField(field)}
+                                    </div>
+                                ) : null}
                             </div>
-                        </div>
-                    </div>
+                        ))}
 
-                    {/* Present Appointment and Date of Birth */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="presentAppt" className="block text-sm font-medium text-slate-700 mb-2">
-                                Date of Present Appointment
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="date"
-                                    id="presentAppt"
-                                    name="presentAppt"
-                                    value={formData.presentAppt}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
-                                />
-                            </div>
+                        {/* Two column layout for non-full-width fields */}
+                        <div className="grid grid-cols-2 gap-4">
+                            {availableFields
+                                .filter(field => !field.fullWidth)
+                                .map((field) => (
+                                    <div key={field.name}>
+                                        <label
+                                            htmlFor={field.name}
+                                            className="block text-sm font-medium text-slate-700 mb-2"
+                                        >
+                                            {field.label}
+                                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderField(field)}
+                                    </div>
+                                ))
+                            }
                         </div>
-                        <div>
-                            <label htmlFor="dob" className="block text-sm font-medium text-slate-700 mb-2">
-                                Date of Birth
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="date"
-                                    id="dob"
-                                    name="dob"
-                                    value={formData.dob}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
-                                />
-                            </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-4 flex justify-end">
+                            <Button
+                                type="submit"
+                                variant="default"
+                                size="xl"
+                                className="text-lg"
+                            >
+                                Submit
+                                <ArrowRight size={18} />
+                            </Button>
                         </div>
-                    </div>
-
-                    {/* State of Origin and Years in Station */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="stateOrigin" className="block text-sm font-medium text-slate-700 mb-2">
-                                State/LGA of Origin
-                            </label>
-                            <input
-                                type="text"
-                                id="stateOrigin"
-                                name="stateOrigin"
-                                value={formData.stateOrigin}
-                                onChange={handleInputChange}
-                                placeholder="Enter State/LGA of Origin"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="yearsInStation" className="block text-sm font-medium text-slate-700 mb-2">
-                                Years in Present Station
-                            </label>
-                            <input
-                                type="number"
-                                id="yearsInStation"
-                                name="yearsInStation"
-                                value={formData.yearsInStation}
-                                onChange={handleInputChange}
-                                placeholder="Enter years"
-                                required
-                                min="0"
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Remark */}
-                    <div>
-                        <label htmlFor="remark" className="block text-sm font-medium text-slate-700 mb-2">
-                            Remark
-                        </label>
-                        <textarea
-                            id="remark"
-                            name="remark"
-                            value={formData.remark}
-                            onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
-                            placeholder="Enter any remarks (optional)"
-                            rows={3}
-                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100 resize-none"
-                        />
-                    </div>
-
-                    {/* Submit Button */}
-
-                    <div className="pt-4 flex justify-end">
-                        <Button
-                            type="submit"
-                            variant="default"
-                            size="xl"
-                            className="text-lg"
-                        >
-                            Submit
-                            <ArrowRight size={18} />
-                        </Button>
-                    </div>
-                </form>
+                    </form>
+                )}
             </div>
         </div>
     );

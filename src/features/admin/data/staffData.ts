@@ -1,18 +1,25 @@
 export interface StaffMember {
+    // Required fields
     sno: number;
     name: string;
-    sex: string;
-    rank: string;
-    gl: string;
-    qualification: string;
-    dateOfFirstApp: string;
-    confirmationOfAppt: string;
-    dateOfPresentApp: string;
-    dateOfBirth: string;
-    lgaOfOrigin: string;
-    yearsInPresentStation: string;
-    phone: string;
-    remark: string;
+
+    // Optional fields - columns display only when data is available
+    sex?: string;
+    rank?: string;
+    gl?: string;
+    qualification?: string;
+    dateOfFirstApp?: string;
+    confirmationOfAppt?: string;
+    dateOfPresentApp?: string;
+    dateOfBirth?: string;
+    lgaOfOrigin?: string;
+    yearsInPresentStation?: string;
+    phone?: string;
+    remark?: string;
+    email?: string;
+    facility?: string;
+    lga?: string;
+    status?: string;
 }
 
 export const staffDatabase: StaffMember[] = [
