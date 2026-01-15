@@ -1,6 +1,6 @@
 "use client";
 import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
-import FacilityListItem from "@/features/user/components/facility-list-item";
+import FacilityListItem from "@/components/shared/molecules/facility-list-item";
 import { useAllFacilities } from "@/hooks/useFacilities";
 import { useFacilitySearch } from "@/hooks/useFacilitySearch";
 import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";

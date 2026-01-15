@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import FacilityListItem from "@/features/user/components/facility-list-item";
+import FacilityListItem from "@/components/shared/molecules/facility-list-item";
 import { useFacilitySearch } from "@/hooks/useFacilitySearch";
 import { cn } from "@/lib/utils";
 import { useSearchFilterStore } from "@/store/search-filter-store";
@@ -40,9 +40,10 @@ export function SearchResults({
   const [filterData, setFilterData] = useState<SelectedFilters>({});
 
   // Debounce search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 300, 3);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300, 2);
   const optimisedSearchQuery =
     debouncedSearchQuery.length >= 3 ? debouncedSearchQuery : undefined;
+
   // ==================== STORE STATE ====================
   const { selectedFilters, setIsFilterOpen, toggleFilter, isFilterOpen } =
     useSearchFilterStore(

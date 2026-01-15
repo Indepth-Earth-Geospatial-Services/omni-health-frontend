@@ -9,7 +9,7 @@ import {
   useNearestFacility,
 } from "../../../../hooks/useFacilities";
 import { useUserStore } from "../../store/user-store";
-import FacilityListItem from "../facility-list-item";
+import FacilityListItem from "../../../../components/shared/molecules/facility-list-item";
 import FacilityListItemErrorCard from "../facility-list-item-error-card";
 import FilterCard from "../filter-card";
 import { useInView } from "react-intersection-observer";
@@ -124,9 +124,8 @@ function ResultsDrawer({
               <h1 className="text-[19px] font-normal">
                 HealthCare Facilities near you
               </h1>
-              <div>
-                <FilterCard />
-              </div>
+              {/* FIXME IMPLEMENT FILTER WHEN YOU ARE READY */}
+              <div>{/* <FilterCard /> */}</div>
             </div>
             <h2 className="text-[15px] text-[#868C98]">
               Medical Facilities within your LGA

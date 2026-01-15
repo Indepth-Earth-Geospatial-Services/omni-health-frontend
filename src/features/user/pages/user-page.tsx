@@ -13,6 +13,7 @@ import { useUserLocation } from "../hooks/useUserLocation";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
 import { SearchAndFilter } from "../../../components/shared/organisms/search-and-filter";
+import MapComponent from "@/components/shared/molecules/map-component";
 
 function UserPage() {
   const activeDrawer = useDrawerStore((state) => state.activeDrawer);
@@ -31,9 +32,10 @@ function UserPage() {
   );
   const { requestLocation } = useUserLocation();
   const locationError = useUserStore((state) => state.locationError);
+  const userLocation = useUserStore((state) => state.userLocation);
 
   const isLoadingPosition = useUserStore((state) => state.isLoadingPosition);
-
+  console.log(userLocation);
   const clearAllFilters = useSearchFilterStore(
     (state) => state.clearAllFilters,
   );
@@ -88,10 +90,14 @@ function UserPage() {
       <RequestLocationCard />
 
       <section className="fixed inset-0 z-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
-        <DynamicMap
+        {/* <DynamicMap
           isLoading={isLoadingPosition}
           error={locationError}
           requestLocation={requestLocation}
+        /> */}
+        <MapComponent
+          destination={{ latitude: 4.814087, longitude: 7.01947 }}
+          userLocation={userLocation}
         />
       </section>
       {!isSearchExpanded && (
