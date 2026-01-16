@@ -3,7 +3,7 @@ import { useFacility } from "../../../hooks/useFacilities";
 import { AppointmentStep2Data } from "../schemas/appointment.schema";
 import { useFacilityStore } from "../store/facility-store";
 import { AppointmentData, AppointmentStepData } from "../types";
-import FacilityListItem from "./facility-list-item";
+import FacilityListItem from "../../../components/shared/molecules/facility-list-item";
 
 interface AppointmentStep2Prop {
   onNext: (formData: AppointmentStepData, key: keyof AppointmentData) => void;

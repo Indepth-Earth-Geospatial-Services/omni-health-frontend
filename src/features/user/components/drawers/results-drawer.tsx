@@ -9,10 +9,11 @@ import {
   useNearestFacility,
 } from "../../../../hooks/useFacilities";
 import { useUserStore } from "../../store/user-store";
-import FacilityListItem from "../facility-list-item";
+import FacilityListItem from "../../../../components/shared/molecules/facility-list-item";
 import FacilityListItemErrorCard from "../facility-list-item-error-card";
 import FilterCard from "../filter-card";
 import { useInView } from "react-intersection-observer";
+import { useFacilityStore } from "../../store/facility-store";
 
 interface ResultsDrawerProps {
   isOpen: boolean;
@@ -28,6 +29,11 @@ function ResultsDrawer({
 }: ResultsDrawerProps) {
   // State
   const [activeFilter, setActiveFilter] = useState("Distance");
+
+  const setNearestFacility = useFacilityStore(
+    (state) => state.setNearestFacility,
+  );
+
   const [snap, setSnap] = useState<number | string | null>(0.8);
   const router = useRouter();
   const { ref, inView } = useInView({
@@ -55,7 +61,8 @@ function ResultsDrawer({
     isFetchingNextPage,
     refetch: refetchLGAFacilities,
   } = useLGAFacilities(userLocation);
-  console.log(LGAFacilitiesData);
+  // console.log(LGAFacilitiesData);
+
   // Derived values
   const nearestFacility = nearestFacilityData?.facility;
   const isLoading =
@@ -102,6 +109,11 @@ function ResultsDrawer({
     return () => clearTimeout(timer);
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  useEffect(() => {
+    if (Object.values(nearestFacility || []).length === 0) return;
+    setNearestFacility(nearestFacility);
+  }, [nearestFacility, setNearestFacility]);
+
   return (
     <Drawer
       open={isOpen}
@@ -124,9 +136,8 @@ function ResultsDrawer({
               <h1 className="text-[19px] font-normal">
                 HealthCare Facilities near you
               </h1>
-              <div>
-                <FilterCard />
-              </div>
+              {/* FIXME IMPLEMENT FILTER WHEN YOU ARE READY */}
+              <div>{/* <FilterCard /> */}</div>
             </div>
             <h2 className="text-[15px] text-[#868C98]">
               Medical Facilities within your LGA

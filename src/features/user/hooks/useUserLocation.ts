@@ -68,7 +68,7 @@ export function useUserLocation(): UseUserLocationReturn {
       onLocationSuccess,
       onLocationError,
       {
-        enableHighAccuracy: false,
+        enableHighAccuracy: true,
         timeout: 15000, // 15 secs
         maximumAge: 300000, // 5mins
       },

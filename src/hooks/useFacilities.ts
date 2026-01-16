@@ -6,27 +6,11 @@ import {
 import { facilityService } from "../services/facility.service";
 import { Coordinates } from "../features/user/types";
 import { FilterQuery } from "@/types/search-filter";
-
-export const facilityKeys = {
-  facility: (id: string) => ["facility", id] as const,
-  lgaFacilities: (latitude: number, longitude: number) =>
-    [
-      "lgaFacilities",
-      Math.round(latitude * 100) / 100,
-      Math.round(longitude * 100) / 100,
-    ] as const,
-  nearestFacility: (latitude: number, longitude: number) =>
-    [
-      "nearestFacility",
-      Math.round(latitude * 100) / 100,
-      Math.round(longitude * 100) / 100,
-    ] as const,
-  allFacilities: (filters?: any) => ["allFacilities", filters] as const,
-};
+import { FACILITY_KEYS } from "@/constants";
 
 export const useAllFacilities = (filters?: FilterQuery, options = {}) => {
   return useInfiniteQuery({
-    queryKey: facilityKeys.allFacilities(filters),
+    queryKey: FACILITY_KEYS.allFacilities(filters),
     queryFn: async ({ pageParam = 1 }) => {
       const response = await facilityService.getAllFacilities({
         page: pageParam,
@@ -61,7 +45,7 @@ export const useAllFacilities = (filters?: FilterQuery, options = {}) => {
 
 export const useFacility = (id: string, options = {}) => {
   return useQuery({
-    queryKey: facilityKeys.facility(id),
+    queryKey: FACILITY_KEYS.facility(id),
     queryFn: () => facilityService.getFacility(id),
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -77,7 +61,7 @@ export const useLGAFacilities = (
 ) => {
   return useInfiniteQuery({
     queryKey: coordinates
-      ? facilityKeys.lgaFacilities(coordinates.latitude, coordinates.longitude)
+      ? FACILITY_KEYS.lgaFacilities(coordinates.latitude, coordinates.longitude)
       : ["lgaFacilities", "no-coords"],
     queryFn: async ({ pageParam = 1 }) => {
       if (!coordinates) {
@@ -124,7 +108,7 @@ export const useNearestFacility = (
 ) => {
   return useQuery({
     queryKey: coordinates
-      ? facilityKeys.nearestFacility(
+      ? FACILITY_KEYS.nearestFacility(
           coordinates.latitude,
           coordinates.longitude,
         )
@@ -151,7 +135,7 @@ export const useInvalidateFacilityCache = () => {
     invalidateFacility: (id?: string) => {
       if (id) {
         return queryClient.invalidateQueries({
-          queryKey: facilityKeys.facility(id),
+          queryKey: FACILITY_KEYS.facility(id),
         });
       }
       return queryClient.invalidateQueries({
@@ -161,7 +145,7 @@ export const useInvalidateFacilityCache = () => {
     invalidateLGAFacilities: (latitude?: number, longitude?: number) => {
       if (latitude !== undefined && longitude !== undefined) {
         return queryClient.invalidateQueries({
-          queryKey: facilityKeys.lgaFacilities(latitude, longitude),
+          queryKey: FACILITY_KEYS.lgaFacilities(latitude, longitude),
         });
       }
       return queryClient.invalidateQueries({
@@ -171,7 +155,7 @@ export const useInvalidateFacilityCache = () => {
     invalidateNearestFacility: (latitude?: number, longitude?: number) => {
       if (latitude !== undefined && longitude !== undefined) {
         return queryClient.invalidateQueries({
-          queryKey: facilityKeys.nearestFacility(latitude, longitude),
+          queryKey: FACILITY_KEYS.nearestFacility(latitude, longitude),
         });
       }
       return queryClient.invalidateQueries({
