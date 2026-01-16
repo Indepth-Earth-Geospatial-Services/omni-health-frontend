@@ -33,37 +33,44 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? "bg-primary/95 backdrop-blur-md shadow-lg py-2"
-        : "bg-transparent py-4 top-15"
+        : "bg-transparent py-3 sm:py-4 top-16 "
         }`}
       aria-label="Main navigation"
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative h-8 w-8 md:h-10 md:w-10">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
+            <div className="relative h-10 w-10 sm:h-10 sm:w-10 md:h-16 md:w-16">
               <Image
-                src="/img/icons/svg/logo.svg"
+                src="/img/image.png"
                 alt="RVS Healthcare Logo"
                 fill
-                className="object-contain transition-transform group-hover:scale-105 brightness-0 invert"
+                className="object-contain"
                 priority
               />
             </div>
-            <h1 className="text-white text-[14px] md:text-[18px] font-semibold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
-              RVS-HealthCare
+            <h1 className="text-white text-sm sm:text-base md:text-xl font-semibold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+              RSPHCMB
             </h1>
           </Link>
 
-          {/* CTA Button - Hidden on mobile */}
-          <div className="hidden md:flex gap-4 items-center">
-            <div className="h-12 w-px bg-white/40" aria-hidden="true" />
+          {/* CTA Buttons - Hidden on mobile */}
+          <div className="hidden md:flex gap-3 lg:gap-4 items-center">
+            <div className="h-10 lg:h-12 w-px bg-white/40" aria-hidden="true" />
             <Button
               asChild
               size="lg"
-              className="bg-transparent border hover:border-none font-semibold transition-all hover:scale-105 rounded-full py-6 text-[18px]"
+              className="bg-transparent border hover:border-none font-semibold transition-all hover:scale-105 rounded-full py-4 lg:py-6 text-base lg:text-lg px-6 lg:px-8"
             >
               <Link href="/user">Explore Facility</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              className="bg-white text-primary hover:bg-white/90 font-semibold transition-all hover:scale-105 rounded-full py-4 lg:py-6 text-base lg:text-lg px-6 lg:px-8"
+            >
+              <Link href="/admin">Explore Admin</Link>
             </Button>
           </div>
         </div>
