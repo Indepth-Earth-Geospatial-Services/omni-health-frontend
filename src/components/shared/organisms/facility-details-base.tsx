@@ -341,7 +341,7 @@ function FacilityDetailsBase({
     address = "",
     avg_daily_patients = 0,
     doctor_patient_ratio = 0,
-    inventory = {},
+    inventory,
     services_list = [],
     specialists = [],
     image_urls = [],
@@ -358,10 +358,10 @@ function FacilityDetailsBase({
   // Derived data
   const formattedRating = formatRating(average_rating);
   const totalBeds =
-    (inventory.inpatient_beds || 0) +
-    (inventory.baby_cots || 0) +
-    (inventory.delivery_beds || 0) +
-    (inventory.resuscitation_beds || 0);
+    (inventory?.infrastructure.inpatient_beds || 0) +
+    (inventory?.infrastructure.baby_cots || 0) +
+    (inventory?.infrastructure.delivery_beds || 0) +
+    (inventory?.infrastructure.resuscitation_beds || 0);
   const formattedLastUpdated = formatDate(last_updated as string);
   const workingHoursText = getWorkingHoursForDisplay(working_hours);
   const hasEmergency = working_hours?.emergency === "24/7";

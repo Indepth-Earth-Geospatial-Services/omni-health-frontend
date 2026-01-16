@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock, ImageOff } from "lucide-react";
-import { Facility } from "../../../features/user/types/apiResponse";
+import { Facility } from "../../../types/api-response";
 import Image from "next/image";
 import facilityImagePlaceholder from "@assets/img/facilities/facility-placeholder.jpeg";
 import { useUserStore } from "@/features/user/store/user-store";

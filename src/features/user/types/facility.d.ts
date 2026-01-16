@@ -1,4 +1,4 @@
-import { Facility } from "./apiResponse";
+import { Facility } from "../../../types/api-response";
 
 export interface FacilityState {
   selectedFacility: string | null;

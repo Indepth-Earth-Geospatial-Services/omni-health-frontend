@@ -4,12 +4,15 @@ export const useFacilityStore = create<FacilityStore>((set) => ({
   selectedFacility: null,
   nearestFacility: null,
   allFacilities: [],
+
   setAllFacilities(facilities) {
-    // FIXME
+    set({ allFacilities: facilities });
   },
+
   setSelectedFacility(id) {
     set({ selectedFacility: id });
   },
+
   setNearestFacility(facility) {
     set({
       nearestFacility: facility,

@@ -1,3 +1,4 @@
+import { Inventory } from "@/types";
 import { AdditionalInfoSection } from "./additional-info-section";
 import { ContactSection } from "./contact-section";
 import { ImageGallery } from "./image-gallery";
@@ -17,15 +18,7 @@ interface OverviewContentProps {
   email: string;
   address: string;
   workingHours: any;
-  inventory: {
-    inpatient_beds?: number;
-    baby_cots?: number;
-    delivery_beds?: number;
-    resuscitation_beds?: number;
-    stethoscopes?: number;
-    sphygmomanometers?: number;
-    refrigerators?: number;
-  };
+  inventory: Inventory;
   hfrId: string;
   facilityLga: string;
   town: string;
@@ -57,7 +50,7 @@ export const OverviewContent = ({
       avg_daily_patients={avgDailyPatients as number}
       doctor_patient_ratio={doctorPatientRatio as number}
       totalBeds={totalBeds as number}
-      baby_cots={inventory.baby_cots}
+      baby_cots={inventory?.infrastructure.baby_cots}
       isLoading={isLoading}
     />
     <ServicesSection services_list={serviceList} />
