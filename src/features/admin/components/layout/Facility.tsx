@@ -27,8 +27,8 @@ export default function Facility() {
                     <Button
                         type="button"
                         variant="default"
-                        size="default"
-                        className="px-8"
+                        size="xl"
+                        className="text-lg"
                     >
                         <Calendar size={18} />
                         Edit Profile

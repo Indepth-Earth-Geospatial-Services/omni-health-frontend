@@ -43,10 +43,10 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
             <div className="relative h-10 w-10 sm:h-10 sm:w-10 md:h-16 md:w-16">
               <Image
-                src="/img/health-logo.png"
+                src="/img/image.png"
                 alt="RVS Healthcare Logo"
                 fill
-                className="object-contain transition-transform group-hover:scale-105 brightness-0 invert"
+                className="object-contain"
                 priority
               />
             </div>

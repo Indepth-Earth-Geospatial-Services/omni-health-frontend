@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 const menuItems = [
     { label: "Overview", icon: MailOpen, href: "/admin" },
-    { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
+    // { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
     // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
     { label: "Staff", icon: UserCog, href: "/admin/staff" },
     { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
@@ -25,7 +27,7 @@ const menuItems = [
 ];
 
 // Replace these with your actual data
-const brandLogo = null; // Set to your image path/URL
+// Set to your image path/URL
 const adminProfile = {
     name: "Dr. Brown Joshua",
     email: "brown.j@omni.health",
@@ -38,20 +40,21 @@ export default function Sidebar() {
     return (
         <aside className="flex h-screen w-64 flex-col shadow-lg bg-white sticky top-0">
             {/* Brand */}
-            <div className="flex h-16 items-center px-4">
-                {brandLogo ? (
-                    <img
-                        src={brandLogo}
-                        alt="OMNI HEALTH"
-                        className="h-8 w-auto"
+            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
+                <div className="flex h-16 items-center px-4 gap-4">
+                    <Image
+                        src="/img/image.png"
+                        alt="Healthcare facility background"
+                        priority
+                        width={40}
+                        height={40}
+                        quality={75}
                     />
-                ) : (
-                    <h1 className="text-lg font-bold text-primary">
-                        OMNI HEALTH
+                    <h1 className="text-[#0aa150] text-sm sm:text-base md:text-xl font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+                        RSPHCMB
                     </h1>
-                )}
-            </div>
-
+                </div>
+            </Link>
             {/* Search Bar */}
             <div className="px-4 py-4">
                 <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 transition-all duration-200 focus-within:border-primary focus-within:bg-white">
@@ -101,17 +104,11 @@ export default function Sidebar() {
             <div className="p-4">
                 <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
-                        {adminProfile.avatar ? (
-                            <img
-                                src={adminProfile.avatar}
-                                alt={adminProfile.name}
-                                className="h-10 w-10 rounded-full object-cover"
-                            />
-                        ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                                {adminProfile.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                        )}
+
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                            {adminProfile.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <p className="truncate text-sm font-medium text-gray-900">

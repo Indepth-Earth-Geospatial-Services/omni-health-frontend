@@ -1,17 +1,25 @@
 export interface StaffMember {
+    // Required fields
     sno: number;
     name: string;
-    sex: string;
-    rank: string;
-    gl: string;
-    qualification: string;
-    dateOfFirstApp: string;
-    confirmationOfAppt: string;
-    dateOfPresentApp: string;
-    dateOfBirth: string;
-    lgaOfOrigin: string;
-    yearsInPresentStation: string;
-    phone: string;
+
+    // Optional fields - columns display only when data is available
+    sex?: string;
+    rank?: string;
+    gl?: string;
+    qualification?: string;
+    dateOfFirstApp?: string;
+    confirmationOfAppt?: string;
+    dateOfPresentApp?: string;
+    dateOfBirth?: string;
+    lgaOfOrigin?: string;
+    yearsInPresentStation?: string;
+    phone?: string;
+    remark?: string;
+    email?: string;
+    facility?: string;
+    lga?: string;
+    status?: string;
 }
 
 export const staffDatabase: StaffMember[] = [
@@ -28,7 +36,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "4/4/1979",
         lgaOfOrigin: "AHOADA EAST",
         yearsInPresentStation: "1 year",
-        phone: "08022628555"
+        phone: "08022628555",
+        remark: "STATE"
     },
     {
         sno: 2,
@@ -43,7 +52,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "12/4/1979",
         lgaOfOrigin: "AKUKU TORU",
         yearsInPresentStation: "10 MONTHS",
-        phone: "08037440159"
+        phone: "08037440159",
+        remark: "STATE"
     },
     {
         sno: 3,
@@ -58,7 +68,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "6/3/1969",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "14 YEARS",
-        phone: "08146621837"
+        phone: "08146621837",
+        remark:"LGA"
     },
     {
         sno: 4,
@@ -73,7 +84,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "6/2/1975",
         lgaOfOrigin: "AKUKU TORU",
         yearsInPresentStation: "9 YEARS",
-        phone: "08037099226"
+        phone: "08037099226",
+        remark:"LGA"
     },
     {
         sno: 5,
@@ -88,7 +100,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "16/7/77",
         lgaOfOrigin: "EMOLGA",
         yearsInPresentStation: "12 YEARS",
-        phone: "08030967465"
+        phone: "08030967465",
+        remark:"LGA"
     },
     {
         sno: 6,
@@ -103,7 +116,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "2/16/1972",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "4 YEARS",
-        phone: "08038882283"
+        phone: "08038882283",
+        remark:"LGA"
     },
     {
         sno: 7,
@@ -118,7 +132,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "10/9/1971",
         lgaOfOrigin: "DEGEMA",
         yearsInPresentStation: "10 YEARS",
-        phone: "08038691345"
+        phone: "08038691345",
+        remark:"LGA"
     },
     {
         sno: 8,
@@ -133,7 +148,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "3/10/1977",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "8 YEARS",
-        phone: "08134155312"
+        phone: "08134155312",
+        remark:"LGA"
     },
     {
         sno: 9,
@@ -148,7 +164,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "11/7/1973",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "12 YEARS",
-        phone: "08030871106"
+        phone: "08030871106",
+        remark:"LGA"
     },
     {
         sno: 10,
@@ -163,7 +180,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "5/10/1979",
         lgaOfOrigin: "ANDONI",
         yearsInPresentStation: "20 YEARS",
-        phone: "08032715642"
+        phone: "08032715642",
+        remark:"LGA"
     },
     {
         sno: 11,
@@ -178,7 +196,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "24/1/68",
         lgaOfOrigin: "PORT HARCOURT",
         yearsInPresentStation: "3 YRS",
-        phone: "08063422924"
+        phone: "08063422924",
+        remark:"LGA"
     },
     {
         sno: 12,
@@ -193,7 +212,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "8/7/1978",
         lgaOfOrigin: "OMULGA",
         yearsInPresentStation: "9 YEARS",
-        phone: "08037450907"
+        phone: "08037450907",
+        remark:"LGA"
     },
     {
         sno: 13,
@@ -208,7 +228,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "7/17/1979",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "12 YEARS",
-        phone: "07035341976"
+        phone: "07035341976",
+        remark:"LGA"
     },
     {
         sno: 14,
@@ -223,7 +244,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "8/7/1974",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "7 YEARS",
-        phone: "07010557048"
+        phone: "07010557048",
+        remark:"LGA"
     },
     {
         sno: 15,
@@ -238,7 +260,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "6/18/1980",
         lgaOfOrigin: "PHALGA",
         yearsInPresentStation: "8 YEARS",
-        phone: "08039489305"
+        phone: "08039489305",
+        remark:"LGA"
     },
     {
         sno: 16,
@@ -253,7 +276,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "12/28/1986",
         lgaOfOrigin: "EMOHUA",
         yearsInPresentStation: "2 YEARS",
-        phone: "07067462190"
+        phone: "07067462190",
+        remark:"LGA"
     },
     {
         sno: 17,
@@ -268,7 +292,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "",
         lgaOfOrigin: "OKRIKA",
         yearsInPresentStation: "4 YEARS",
-        phone: "08098119111"
+        phone: "08098119111",
+        remark:"LGA"
     },
     {
         sno: 18,
@@ -283,7 +308,8 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "19/6/77",
         lgaOfOrigin: "ASALGA",
         yearsInPresentStation: "5 YRS",
-        phone: "08133748394"
+        phone: "08133748394",
+        remark:"LGA"
     },
     {
         sno: 19,
@@ -298,6 +324,7 @@ export const staffDatabase: StaffMember[] = [
         dateOfBirth: "3/3/2025",
         lgaOfOrigin: "OGU/BOLO",
         yearsInPresentStation: "1 MONTH",
-        phone: "09034428306"
+        phone: "09034428306",
+        remark:"LGA"
     }
 ];

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ArrowRight, X, } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, X, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import {
     Select,
@@ -10,68 +10,237 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../ui/select';
+import { useStaffSchema } from '@/hooks/useAdminStaff';
 
 interface AddStaffModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit?: (staffData: StaffFormData) => void;
+    onSubmit?: (staffData: any) => void;
+    facilityId: string;
 }
 
-interface StaffFormData {
-    fullName: string;
-    staffId: string;
-    mobileNumber: string;
-    emailAddress: string;
-    address: string;
-    designation: string;
-    dateOfAppointment: string;
+// Field metadata for form generation
+interface FieldConfig {
+    name: string;
+    label: string;
+    type: 'text' | 'select' | 'date' | 'tel' | 'number' | 'textarea';
+    placeholder?: string;
+    required?: boolean;
+    options?: string[];
+    fullWidth?: boolean;
 }
 
-const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit }) => {
-    const [formData, setFormData] = useState<StaffFormData>({
-        fullName: '',
-        staffId: '',
-        mobileNumber: '',
-        emailAddress: '',
-        address: '',
-        designation: '',
-        dateOfAppointment: ''
-    });
+const AddStaffModal: React.FC<AddStaffModalProps> = ({
+    isOpen,
+    onClose,
+    onSubmit,
+    facilityId
+}) => {
+    const { data: schema, isLoading: isLoadingSchema } = useStaffSchema(facilityId);
 
-    const designations = [
-        'Doctor',
-        'Nurse',
-        'Lab Technician',
-        'Pharmacist',
-        'Radiologist',
-        'Surgeon',
-        'Cardiologist',
-        'Pediatrician',
-        'Neurologist',
-        'Anesthesiologist',
-        'Psychiatrist',
-        'Dentist'
+    // Define form fields configuration based on CreateStaffData
+    const formFields: FieldConfig[] = [
+        {
+            name: 'full_name',
+            label: 'Full Name',
+            type: 'text',
+            placeholder: 'Enter full name',
+            required: true,
+            fullWidth: true
+        },
+        {
+            name: 'gender',
+            label: 'Gender',
+            type: 'select',
+            options: ['M', 'F'],
+            required: false
+        },
+        {
+            name: 'rank_cadre',
+            label: 'Rank/Cadre',
+            type: 'text',
+            placeholder: 'Enter rank',
+            required: false
+        },
+        {
+            name: 'grade_level',
+            label: 'Grade Level',
+            type: 'text',
+            placeholder: 'Enter grade level',
+            required: false
+        },
+        {
+            name: 'qualifications',
+            label: 'Qualification',
+            type: 'text',
+            placeholder: 'e.g., BSc Nursing, MSc Public Health (comma separated)',
+            required: false
+        },
+        {
+            name: 'phone_number',
+            label: 'Phone Number',
+            type: 'tel',
+            placeholder: 'Enter phone number',
+            required: false
+        },
+        {
+            name: 'date_first_appointment',
+            label: 'Date of First Appointment',
+            type: 'date',
+            required: false
+        },
+        {
+            name: 'presentAppt',
+            label: 'Date of Present Appointment',
+            type: 'date',
+            required: false
+        },
+        {
+            name: 'date_of_birth',
+            label: 'Date of Birth',
+            type: 'date',
+            required: false
+        },
+        {
+            name: 'stateOrigin',
+            label: 'State/LGA of Origin',
+            type: 'text',
+            placeholder: 'Enter state/LGA',
+            required: false
+        },
+        {
+            name: 'yearsInStation',
+            label: 'Years in Present Station',
+            type: 'number',
+            placeholder: 'Enter years',
+            required: false
+        },
+        {
+            name: 'email',
+            label: 'Email Address',
+            type: 'text',
+            placeholder: 'Enter email',
+            required: false
+        },
+        {
+            name: 'remark',
+            label: 'Remark',
+            type: 'textarea',
+            placeholder: 'Enter any remarks (optional)',
+            required: false,
+            fullWidth: true
+        }
     ];
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    // Filter fields based on schema if available
+    const availableFields = schema
+        ? formFields.filter(field => {
+            // Always include full_name and remark
+            if (field.name === 'full_name' || field.name === 'remark') return true;
+            // Check if field exists in schema
+            return schema.hasOwnProperty(field.name) ||
+                // Allow optional fields that might be processed by backend
+                ['presentAppt', 'stateOrigin', 'yearsInStation'].includes(field.name);
+        })
+        : formFields;
+
+    // Initialize form data directly - no useEffect needed
+    const getInitialFormData = () => {
+        const initialData: Record<string, any> = {};
+        availableFields.forEach(field => {
+            initialData[field.name] = '';
+        });
+        return initialData;
+    };
+
+    const [formData, setFormData] = useState<Record<string, any>>(getInitialFormData);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectChange = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit?.(formData);
-        // Reset form
-        setFormData({
-            fullName: '',
-            staffId: '',
-            mobileNumber: '',
-            emailAddress: '',
-            address: '',
-            designation: '',
-            dateOfAppointment: ''
-        });
+
+        // Remove empty fields and transform qualifications
+        const cleanedData = Object.entries(formData).reduce((acc, [key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) {
+                // Convert qualifications string to object format
+                if (key === 'qualifications' && typeof value === 'string' && value.trim()) {
+                    // Split by comma and create an object with each qualification as a key
+                    const qualArray = value.split(',').map(q => q.trim()).filter(Boolean);
+                    acc[key] = qualArray.reduce((obj, qual) => {
+                        obj[qual] = {};
+                        return obj;
+                    }, {} as Record<string, any>);
+                } else {
+                    acc[key] = value;
+                }
+            }
+            return acc;
+        }, {} as Record<string, any>);
+
+        onSubmit?.(cleanedData);
+
+        // Reset form to initial state
+        setFormData(getInitialFormData());
         onClose();
+    };
+
+    const renderField = (field: FieldConfig) => {
+        switch (field.type) {
+            case 'select':
+                return (
+                    <Select
+                        value={formData[field.name] || ''}
+                        onValueChange={(value) => handleSelectChange(field.name, value)}
+                    >
+                        <SelectTrigger className="bg-gray-100">
+                            <SelectValue placeholder={`Select ${field.label}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {field.options?.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                    {option}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                );
+
+            case 'textarea':
+                return (
+                    <textarea
+                        id={field.name}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleInputChange}
+                        placeholder={field.placeholder}
+                        rows={3}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100 resize-none"
+                    />
+                );
+
+            default:
+                return (
+                    <input
+                        type={field.type}
+                        id={field.name}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleInputChange}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        min={field.type === 'number' ? '0' : undefined}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
+                    />
+                );
+        }
     };
 
     if (!isOpen) return null;
@@ -80,14 +249,14 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50"
                 onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="sticky top-0 bg-white  px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <div className="bg-white px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10 border-b">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">New Staff</h2>
                         <p className="text-sm text-slate-500 mt-1">Provide details about the staff</p>
@@ -100,146 +269,71 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({ isOpen, onClose, onSubmit
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Full Name */}
-                    <div>
-                        <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
-                            Full Name
-                        </label>
-                        <input
-                            type="text"
-                            id="fullName"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            placeholder="Enter full name"
-                            required
-                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                        />
-                    </div>
-
-                    {/* Staff ID and Mobile Number */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="staffId" className="block text-sm font-medium text-slate-700 mb-2">
-                                Staff ID
-                            </label>
-                            <input
-                                type="text"
-                                id="staffId"
-                                name="staffId"
-                                value={formData.staffId}
-                                onChange={handleInputChange}
-                                placeholder="Enter Staff ID"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="mobileNumber" className="block text-sm font-medium text-slate-700 mb-2">
-                                Mobile Number
-                            </label>
-                            <input
-                                type="tel"
-                                id="mobileNumber"
-                                name="mobileNumber"
-                                value={formData.mobileNumber}
-                                onChange={handleInputChange}
-                                placeholder="Enter mobile number"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
+                {/* Loading State */}
+                {isLoadingSchema ? (
+                    <div className="p-12 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <p className="text-sm text-slate-500">Loading form...</p>
                         </div>
                     </div>
-
-                    {/* Email Address and Address */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="emailAddress" className="block text-sm font-medium text-slate-700 mb-2">
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                id="emailAddress"
-                                name="emailAddress"
-                                value={formData.emailAddress}
-                                onChange={handleInputChange}
-                                placeholder="Enter email"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="address" className="block text-sm font-medium text-slate-700 mb-2">
-                                Address
-                            </label>
-                            <input
-                                type="text"
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleInputChange}
-                                placeholder="General Checkup"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Designation and Date */}
-                    <div className="grid grid-cols-2 gap-4 ">
-                        <div>
-                            <label htmlFor="designation" className="block text-sm font-medium text-slate-700 mb-2">
-                                Designation
-                            </label>
-                            <Select
-                                value={formData.designation}
-                                onValueChange={(value) => setFormData(prev => ({ ...prev, designation: value }))}
+                ) : (
+                    /* Form */
+                    <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                        {availableFields.map((field) => (
+                            <div
+                                key={field.name}
+                                className={field.fullWidth ? 'w-full' : ''}
                             >
-                                <SelectTrigger className="bg-gray-100">
-                                    <SelectValue placeholder="Select Designation" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {designations.map((designation) => (
-                                        <SelectItem key={designation} value={designation}>
-                                            {designation}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <label htmlFor="dateOfAppointment" className="block text-sm font-medium text-slate-700 mb-2">
-                                Date for Appointment
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="date"
-                                    id="dateOfAppointment"
-                                    name="dateOfAppointment"
-                                    value={formData.dateOfAppointment}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all appearance-none bg-gray-100"
-                                />
+                                {field.fullWidth ? (
+                                    // Full width fields
+                                    <div>
+                                        <label
+                                            htmlFor={field.name}
+                                            className="block text-sm font-medium text-slate-700 mb-2"
+                                        >
+                                            {field.label}
+                                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderField(field)}
+                                    </div>
+                                ) : null}
                             </div>
-                        </div>
-                    </div>
+                        ))}
 
-                    {/* Submit Button */}
-                    <div className="pt-4 flex justify-end">
-                        <Button
-                            type="submit"
-                            variant="default"
-                            size="xl"
-                            className="text-lg"
-                        >
-                            Submit
-                            <ArrowRight size={18} />
-                        </Button>
-                    </div>
-                </form>
+                        {/* Two column layout for non-full-width fields */}
+                        <div className="grid grid-cols-2 gap-4">
+                            {availableFields
+                                .filter(field => !field.fullWidth)
+                                .map((field) => (
+                                    <div key={field.name}>
+                                        <label
+                                            htmlFor={field.name}
+                                            className="block text-sm font-medium text-slate-700 mb-2"
+                                        >
+                                            {field.label}
+                                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {renderField(field)}
+                                    </div>
+                                ))
+                            }
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-4 flex justify-end">
+                            <Button
+                                type="submit"
+                                variant="default"
+                                size="xl"
+                                className="text-lg"
+                            >
+                                Submit
+                                <ArrowRight size={18} />
+                            </Button>
+                        </div>
+                    </form>
+                )}
             </div>
         </div>
     );
