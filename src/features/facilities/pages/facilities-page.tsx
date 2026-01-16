@@ -1,6 +1,6 @@
 "use client";
 import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
-import FacilityListItem from "@/features/user/components/facility-list-item";
+import FacilityListItem from "@/components/shared/molecules/facility-list-item";
 import { useAllFacilities } from "@/hooks/useFacilities";
 import { useFacilitySearch } from "@/hooks/useFacilitySearch";
 import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
@@ -12,7 +12,6 @@ import { Button } from "../../../components/ui/button";
 import { useSearchFilterStore } from "@/store/search-filter-store";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SelectedFilters } from "@/types/search-filter";
-// FIXME PERFORMANCE OPTIMIZATION IS NEEDED ASAP
 function FacilitiesPage() {
   const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
@@ -64,7 +63,7 @@ function FacilitiesPage() {
 
   // Flatten all facilities from pages
   const allFacilities = data?.pages.flatMap((page) => page.facilities) || [];
-  console.log(allFacilities); //REMOVE THIS
+
   // Function to load more facilities
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -72,9 +71,12 @@ function FacilitiesPage() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleViewDetails = (facilityID) => {
-    router.push(`/facilities/${facilityID}`);
-  };
+  const handleViewDetails = useCallback(
+    (facilityID: string) => {
+      router.push(`/facilities/${facilityID}`);
+    },
+    [router],
+  );
 
   const handleFilter = useCallback((filterValues: any) => {
     setFilters(filterValues);
