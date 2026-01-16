@@ -13,6 +13,7 @@ import FacilityListItem from "../../../../components/shared/molecules/facility-l
 import FacilityListItemErrorCard from "../facility-list-item-error-card";
 import FilterCard from "../filter-card";
 import { useInView } from "react-intersection-observer";
+import { useFacilityStore } from "../../store/facility-store";
 
 interface ResultsDrawerProps {
   isOpen: boolean;
@@ -28,6 +29,11 @@ function ResultsDrawer({
 }: ResultsDrawerProps) {
   // State
   const [activeFilter, setActiveFilter] = useState("Distance");
+
+  const setNearestFacility = useFacilityStore(
+    (state) => state.setNearestFacility,
+  );
+
   const [snap, setSnap] = useState<number | string | null>(0.8);
   const router = useRouter();
   const { ref, inView } = useInView({
@@ -55,7 +61,8 @@ function ResultsDrawer({
     isFetchingNextPage,
     refetch: refetchLGAFacilities,
   } = useLGAFacilities(userLocation);
-  console.log(LGAFacilitiesData);
+  // console.log(LGAFacilitiesData);
+
   // Derived values
   const nearestFacility = nearestFacilityData?.facility;
   const isLoading =
@@ -101,6 +108,11 @@ function ResultsDrawer({
     }, 100);
     return () => clearTimeout(timer);
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    if (Object.values(nearestFacility || []).length === 0) return;
+    setNearestFacility(nearestFacility);
+  }, [nearestFacility, setNearestFacility]);
 
   return (
     <Drawer

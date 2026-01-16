@@ -1,6 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import profileImage from "@assets/img/facilities/shammah.jpg";
 import logo from "@assets/img/icons/svg/logo.svg";
@@ -43,6 +48,7 @@ function SideBar({ className }: { className?: string }) {
     <>
       {/* TRIGGER */}
       <Sheet>
+        <SheetTitle className="sr-only">RVS Health Care Side bar</SheetTitle>
         <SheetTrigger asChild>
           {/* absolute top-[59px] left-5 */}
           <button

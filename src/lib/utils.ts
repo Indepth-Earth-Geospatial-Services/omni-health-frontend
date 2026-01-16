@@ -21,7 +21,11 @@ export class ApiError extends Error {
 export function handleApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
     const message =
-      error.response?.data?.message || error.message || "An error occurred";
+      error.response?.data?.message ||
+      error.response?.data?.detail ||
+      error.message ||
+      "An error occurred";
+    console.warn("ERROR MESSAGE", message);
     const statusCode = error.response?.status;
     const code = error.response?.data?.code;
 

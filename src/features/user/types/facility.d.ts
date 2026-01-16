@@ -1,14 +1,15 @@
 import { Facility } from "./apiResponse";
-import { Coordinates } from "./user";
 
 export interface FacilityState {
   selectedFacility: string | null;
-  nearUserFacilityCoordinate: Coordinates;
+  nearestFacility: Facility | null;
+  allFacilities: Facility[];
 }
 
 export interface FacilityActions {
   setSelectedFacility: (id: string) => void;
-  setNearUserFacilityCoordinate: (coordinates: Coordinates) => void;
+  setNearestFacility: (facility: Facility) => void;
+  setAllFacilities: (allFacilities) => void;
 }
 
 export type FacilityStore = FacilityState & FacilityActions;

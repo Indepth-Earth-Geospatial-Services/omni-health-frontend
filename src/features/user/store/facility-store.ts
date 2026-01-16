@@ -2,16 +2,17 @@ import { create } from "zustand";
 import { FacilityStore } from "../types";
 export const useFacilityStore = create<FacilityStore>((set) => ({
   selectedFacility: null,
-  nearUserFacilityCoordinate: null,
+  nearestFacility: null,
+  allFacilities: [],
+  setAllFacilities(facilities) {
+    // FIXME
+  },
   setSelectedFacility(id) {
     set({ selectedFacility: id });
   },
-  setNearUserFacilityCoordinate(coordinates) {
+  setNearestFacility(facility) {
     set({
-      nearUserFacilityCoordinate: {
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-      },
+      nearestFacility: facility,
     });
   },
 }));

@@ -9,12 +9,19 @@ import Map, {
 } from "react-map-gl/mapbox";
 import { MAPBOX_TOKEN } from "@/constants";
 import "mapbox-gl/dist/mapbox-gl.css";
+import mapboxgl from "mapbox-gl";
+import { Facility } from "@/features/user/types";
 
 interface MapComponentProps {
   userLocation?: { longitude: number; latitude: number } | null;
   routeGeometry?: any;
   destination?: { longitude: number; latitude: number } | null;
   onViewportChange?: (viewState: any) => void;
+  showUserPin?: boolean;
+  nearYouFacilities?: Facility[];
+  showNearYouFacilities?: boolean;
+  allFacilities?: Facility[];
+  showAllFacilities?: boolean;
 }
 
 function MapComponent({
@@ -22,6 +29,11 @@ function MapComponent({
   routeGeometry = null,
   destination = null,
   onViewportChange,
+  showUserPin = false,
+  nearYouFacilities = [],
+  showNearYouFacilities = false,
+  allFacilities = [],
+  showAllFacilities = false,
 }: MapComponentProps) {
   const mapRef = useRef<any>(null);
   const [viewState, setViewState] = useState({
@@ -31,6 +43,31 @@ function MapComponent({
     pitch: 0,
     bearing: 0,
   });
+  console.log(
+    "FROM MAP COMPONENT",
+    nearYouFacilities[0]?.lat,
+    nearYouFacilities[0]?.lat,
+  );
+  useEffect(() => {
+    if (
+      showNearYouFacilities &&
+      nearYouFacilities.length > 0 &&
+      mapRef.current
+    ) {
+      const bounds = new mapboxgl.LngLatBounds();
+
+      nearYouFacilities.forEach((f) => bounds.extend([f.lon, f.lat]));
+      allFacilities.forEach((f) => bounds.extend([f.lon, f.lat]));
+
+      if (userLocation)
+        bounds.extend([userLocation.longitude, userLocation.latitude]);
+
+      mapRef.current.fitBounds(bounds, {
+        padding: { top: 40, bottom: 350, left: 50, right: 50 }, // 350px cleared for drawer
+        duration: 1000,
+      });
+    }
+  }, [showNearYouFacilities, nearYouFacilities, userLocation, allFacilities]);
 
   // Fit map to route when route changes
   useEffect(() => {
@@ -73,8 +110,8 @@ function MapComponent({
       mapStyle="mapbox://styles/mapbox/streets-v12"
       mapboxAccessToken={MAPBOX_TOKEN}
     >
-      {/* User Location Marker */}
-      {userLocation && (
+      {/* User Location Marker - Only show when showUserPin is true */}
+      {userLocation && showUserPin && (
         <Marker
           longitude={userLocation.longitude}
           latitude={userLocation.latitude}
@@ -86,6 +123,60 @@ function MapComponent({
           </div>
         </Marker>
       )}
+
+      {/* Near You Facilities - Only show when showNearYouFacilities is true and showUserPin is false */}
+      {!showUserPin &&
+        showNearYouFacilities &&
+        nearYouFacilities.map((facility, i) => (
+          <Marker
+            key={i}
+            longitude={facility.lon}
+            latitude={facility.lat}
+            anchor="bottom" // Ensures the tip of the pin is on the coordinate
+          >
+            <div className="group relative flex cursor-pointer flex-col items-center">
+              {/* Label Container */}
+              <div className="mt-3 rounded-md bg-white/90 px-2 py-0.5 shadow-sm backdrop-blur-sm transition-all">
+                <p className="text-xs font-semibold whitespace-nowrap text-green-700">
+                  {/* Show name on hover/click, otherwise show "Near you" */}
+                  <span className="block text-[10px] tracking-wider uppercase group-hover:hidden">
+                    Near you !
+                  </span>
+                  <span className="hidden italic group-hover:block">
+                    {facility.facility_name || "Health Centre"}
+                  </span>
+                </p>
+              </div>
+
+              {/* The Pin Body */}
+              <div className="bg-primary relative flex h-9 w-9 items-center justify-center rounded-full border-4 border-white shadow-lg transition-transform duration-200 group-hover:scale-110 group-active:scale-95">
+                {/* Medical/Facility Icon inside the pin */}
+                <span className="text-lg font-bold text-white">+</span>
+
+                {/* The Pointy Tip (Tail) */}
+                <div className="bg-primary absolute -bottom-2 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-r-4 border-b-4 border-white"></div>
+              </div>
+            </div>
+          </Marker>
+        ))}
+
+      {/* All Facilities Around User - Small dot markers with + cross */}
+      {showAllFacilities &&
+        allFacilities.map((facility) => (
+          <Marker
+            key={facility.facility_id}
+            longitude={facility.lon}
+            latitude={facility.lat}
+          >
+            <div className="group relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-500 shadow-sm transition-all hover:scale-125 hover:bg-red-600">
+              <span className="text-[10px] font-bold text-white">+</span>
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full mb-2 hidden rounded bg-gray-900 px-2 py-1 text-[10px] whitespace-nowrap text-white group-hover:block">
+                {facility.facility_name || "Health Centre"}
+              </div>
+            </div>
+          </Marker>
+        ))}
 
       {/* Destination Marker */}
       {destination && (

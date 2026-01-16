@@ -1,12 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { facilityService } from "../services/facility.service";
 import { FilterQuery, SelectedFilters } from "@/types/search-filter";
-
-export const searchKeys = {
-  all: ["facilitySearch"] as const,
-  search: (filters: any) =>
-    [...searchKeys.all, JSON.stringify(filters)] as const,
-};
+import { FACILITY_KEYS } from "@/constants";
 
 export const useFacilitySearch = (
   filters: SelectedFilters = {},
@@ -21,7 +16,7 @@ export const useFacilitySearch = (
     (filters.name && filters.name.trim().length >= 3);
 
   return useInfiniteQuery({
-    queryKey: searchKeys.search(filters),
+    queryKey: FACILITY_KEYS.search(filters),
     queryFn: async ({ pageParam = 1 }) => {
       // Early return with empty response if no filters
       if (!hasFilters) {
