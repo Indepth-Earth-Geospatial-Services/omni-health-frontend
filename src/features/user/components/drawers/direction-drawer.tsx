@@ -143,12 +143,12 @@ import { useDrawerStore } from "../../store/drawer-store";
 import { useFacilityStore } from "../../store/facility-store";
 import { useUserStore } from "../../store/user-store";
 
-interface ResultsDrawerProps {
+interface DirectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-function DirectionDrawer({ isOpen, onClose }: ResultsDrawerProps) {
+function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
   const [snap, setSnap] = useState<number | string | null>(0.8);
   const [hasAttemptedNavigation, setHasAttemptedNavigation] = useState(false);
 

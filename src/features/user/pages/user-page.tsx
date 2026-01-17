@@ -14,6 +14,7 @@ import ResultsDrawer from "../components/drawers/results-drawer";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
 import { Facility } from "../types";
+import { useRouteGeometry } from "@/hooks/useRouteGeometry";
 
 function UserPage() {
   // DRAWER STATES ================================
@@ -21,6 +22,9 @@ function UserPage() {
   const openResults = useDrawerStore((state) => state.openResults);
   const openDetails = useDrawerStore((state) => state.openDetails);
   const openDirections = useDrawerStore((state) => state.openDirections);
+  const hasStartDirections = useDrawerStore(
+    (state) => state.hasStartDirections,
+  );
 
   // SELECTED FACILITY ============
   const setSelectedFacility = useFacilityStore(
@@ -57,6 +61,27 @@ function UserPage() {
     return debounceNearestFacilityData ? [debounceNearestFacilityData] : [];
   }, [debounceNearestFacilityData]);
 
+  // Get route geometry when directions drawer is open
+  const shouldFetchRoute =
+    activeDrawer === "directions" && !!selectedFacility && !!userLocation;
+  const {
+    data: routeData,
+    isLoading: isRouteLoading,
+    error: routeError,
+  } = useRouteGeometry({
+    // origin: userLocation,
+    origin: { latitude: 4.8585, longitude: 7.0647 }, // HACK FIX LOCATION
+    destination: selectedFacility
+      ? {
+          latitude: selectedFacility.lat,
+          longitude: selectedFacility.lon,
+        }
+      : null,
+    enabled: shouldFetchRoute,
+  });
+
+  console.log(routeData); // FIXME REMOVE
+
   const handleViewDetails = useCallback(
     (facility: Facility) => {
       setSelectedFacility(facility);
@@ -64,7 +89,9 @@ function UserPage() {
     },
     [setSelectedFacility, openDetails],
   );
+
   console.log(selectedFacility); // FIXME REMOVE
+
   const handleCloseDetails = useCallback(() => {
     setSelectedFacility(null);
     openResults();
@@ -90,8 +117,7 @@ function UserPage() {
   }, [clearAllFilters]);
   return (
     <main className="mx-auto h-full max-h-dvh w-full">
-      {/* !isLoadingPosition && !locationError */}
-      {true && (
+      {!isLoadingPosition && (
         <div className="relative z-10 flex gap-3 px-5 pt-3">
           <SideBar className="shrink-0" />
 
@@ -105,16 +131,34 @@ function UserPage() {
       )}
 
       <RequestLocationCard />
-
+      {/* MAP SECTION  =================================== */}
       <section className="fixed inset-0 z-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
-        <MapComponent
-          showUserPin={false}
-          nearYouFacilities={nearYouFacilitiesArray}
-          showNearYouFacilities={true}
-          allFacilities={allFacilitiesArray}
-          showAllFacilities={true}
-        />
+        {activeDrawer !== "directions" && (
+          <MapComponent
+            showUserPin={false}
+            nearYouFacilities={nearYouFacilitiesArray}
+            showNearYouFacilities={true}
+            allFacilities={allFacilitiesArray}
+            showAllFacilities={true}
+          />
+        )}
+        {activeDrawer === "directions" &&
+          userLocation &&
+          selectedFacility &&
+          !routeError?.message && (
+            <MapComponent
+              userLocation={{ latitude: 4.8585, longitude: 7.0647 }} // HACK FIX LOCATION
+              destination={{
+                longitude: selectedFacility?.lon,
+                latitude: selectedFacility?.lat,
+              }}
+              routeGeometry={routeData?.geometry || null}
+              showUserPin={true}
+            />
+          )}
       </section>
+
+      {/* DRAWERS SECTION=================================== */}
       {!isSearchExpanded && (
         <section>
           {activeDrawer === "results" && (
@@ -138,13 +182,13 @@ function UserPage() {
             <DirectionDrawer isOpen={true} onClose={handleCloseDirections} />
           )}
 
-          {activeDrawer === "requestAppointment" && (
+          {/* {activeDrawer === "requestAppointment" && (
             <RequestAppointmentDrawer
               isOpen={true}
               onClose={handleCloseRequestAppointment}
-              facilityId={selectedFacilityId}
+              facilityId={selectedFacility?.facility_id}
             />
-          )}
+          )} */}
         </section>
       )}
     </main>

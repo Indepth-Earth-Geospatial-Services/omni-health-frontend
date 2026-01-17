@@ -81,7 +81,12 @@ function MapComponent({
       );
 
       mapRef.current.fitBounds(bounds, {
-        padding: 50,
+        padding: {
+          top: 40,
+          bottom: 450,
+          left: 50,
+          right: 50,
+        },
         duration: 1000,
       });
     }
@@ -90,6 +95,7 @@ function MapComponent({
   // Update viewport when user location changes
   useEffect(() => {
     if (userLocation && mapRef.current) {
+      // eslint-disable-next-line
       setViewState((prev) => ({
         ...prev,
         longitude: userLocation.longitude,
@@ -168,8 +174,8 @@ function MapComponent({
             longitude={facility.lon}
             latitude={facility.lat}
           >
-            <div className="group relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-500 shadow-sm transition-all hover:scale-125 hover:bg-red-600">
-              <span className="text-[10px] font-bold text-white">+</span>
+            <div className="group relative flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-400 shadow-sm transition-all hover:scale-125 hover:bg-red-500">
+              <span className="text-[8px] font-bold text-white">+</span>
               {/* Tooltip on hover */}
               <div className="absolute bottom-full mb-2 hidden rounded bg-gray-900 px-2 py-1 text-[10px] whitespace-nowrap text-white group-hover:block">
                 {facility.facility_name || "Health Centre"}
@@ -196,31 +202,116 @@ function MapComponent({
 
       {/* Route Layer */}
       {routeGeometry && (
+        // <Source
+        //   id="route"
+        //   type="geojson"
+        //   lineMetrics={true} // Essential for the line-gradient to render
+        //   data={{
+        //     type: "Feature",
+        //     properties: {},
+        //     geometry: routeGeometry,
+        //   }}
+        // >
+        //   {/* 1. LAYER: SOFT OUTER SHADOW */}
+        //   <Layer
+        //     id="route-shadow"
+        //     type="line"
+        //     layout={{ "line-join": "round", "line-cap": "round" }}
+        //     paint={{
+        //       "line-color": "#000000",
+        //       "line-width": 12,
+        //       "line-opacity": 0.2,
+        //       "line-blur": 8,
+        //       "line-translate": [2, 4], // Creates the 3D depth effect
+        //     }}
+        //   />
+
+        //   {/* 2. LAYER: DARK BORDER (The "Casing") */}
+        //   <Layer
+        //     id="route-border"
+        //     type="line"
+        //     layout={{ "line-join": "round", "line-cap": "round" }}
+        //     paint={{
+        //       "line-color": "#00243D", // Your requested border color
+        //       "line-width": 10, // Must be wider than the gradient line
+        //     }}
+        //   />
+
+        //   {/* 3. LAYER: THE GRADIENT FILL */}
+        //   <Layer
+        //     id="route-line"
+        //     type="line"
+        //     layout={{ "line-join": "round", "line-cap": "round" }}
+        //     paint={{
+        //       "line-width": 6,
+        //       "line-gradient": [
+        //         "interpolate",
+        //         ["linear"],
+        //         ["line-progress"],
+        //         0,
+        //         "#C6F1F8", // Start color
+        //         0.5,
+        //         "#FFFFFF", // Center highlight
+        //         1,
+        //         "#C6F1F8", // End color
+        //       ],
+        //     }}
+        //   />
+        // </Source>
+
         <Source
           id="route"
           type="geojson"
+          lineMetrics={true}
           data={{
             type: "Feature",
             properties: {},
             geometry: routeGeometry,
           }}
         >
+          {/* 1. SOFT DEPTH SHADOW - Uses a subtle blur to lift the route off the map */}
+          <Layer
+            id="route-shadow"
+            type="line"
+            layout={{ "line-join": "round", "line-cap": "round" }}
+            paint={{
+              "line-color": "#000000",
+              "line-width": 12,
+              "line-opacity": 0.12,
+              "line-blur": 6,
+              "line-translate": [1.5, 3],
+            }}
+          />
+
+          {/* 2. OUTER CASING - Creates a sharp "border" effect for high contrast */}
+          <Layer
+            id="route-border"
+            type="line"
+            layout={{ "line-join": "round", "line-cap": "round" }}
+            paint={{
+              "line-color": "#054A91", // Deep Navy Blue
+              "line-width": 9,
+            }}
+          />
+
+          {/* 3. PREMIUM GRADIENT LINE - Vibrant blue with a subtle inner glow */}
           <Layer
             id="route-line"
             type="line"
+            layout={{ "line-join": "round", "line-cap": "round" }}
             paint={{
-              "line-color": "#0095FF",
-              "line-width": 4,
-              "line-opacity": 0.8,
-            }}
-          />
-          <Layer
-            id="route-outline"
-            type="line"
-            paint={{
-              "line-color": "#FFFFFF",
-              "line-width": 6,
-              "line-opacity": 0.3,
+              "line-width": 5.5,
+              "line-gradient": [
+                "interpolate",
+                ["linear"],
+                ["line-progress"],
+                0,
+                "#00B4DB", // Start: Bright Cyan-Blue (at User)
+                0.5,
+                "#4285F4", // Middle: Google Blue (Standard focus)
+                1,
+                "#083D77", // End: Royal Blue (at Destination)
+              ],
             }}
           />
         </Source>
