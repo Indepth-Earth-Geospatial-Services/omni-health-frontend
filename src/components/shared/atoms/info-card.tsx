@@ -55,13 +55,13 @@ export const InfoCard: React.FC<InfoCardProps> = ({
       className={`${sizeClasses[size]} rounded-lg border ${colorClasses[color]} ${className}`}
     >
       <div className="flex flex-wrap items-center gap-1">
-        <div>
-          <p className="mb-1 text-sm font-medium">{title}</p>
-          <p
+        <div className="*:block">
+          <span className="mb-1 text-sm font-medium">{title}</span>
+          <span
             className={`font-bold ${size === "lg" ? "text-2xl" : size === "md" ? "text-xl" : "text-lg"}`}
           >
             {value}
-          </p>
+          </span>
         </div>
 
         <div

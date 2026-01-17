@@ -288,25 +288,23 @@ import { OverviewContent } from "../molecules/overview-content";
 import { StatsContent } from "../molecules/stats-content";
 
 interface FacilityDetailsBaseProps {
-  facilityId: string;
+  facility: Facility;
   onShowDirections?: () => void;
   onClose?: () => void;
   variant?: "drawer" | "page";
   isLoading?: boolean;
   error?: Error | null;
   refetch?: () => void;
-  facilityData?: Facility;
 }
 
 function FacilityDetailsBase({
-  facilityId,
+  facility,
   onShowDirections,
   onClose,
   variant = "page",
   isLoading: externalIsLoading,
   error: externalError,
   refetch: externalRefetch,
-  facilityData: externalFacilityData,
 }: FacilityDetailsBaseProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const router = useRouter();
@@ -315,23 +313,23 @@ function FacilityDetailsBase({
   );
 
   // Use internal hook if no external props provided
-  const {
-    isLoading: internalIsLoading,
-    data: internalFacilityData,
-    error: internalError,
-    refetch: internalRefetch,
-  } = useFacility(facilityId);
+  // const {
+  //   isLoading: internalIsLoading,
+  //   data: internalFacilityData,
+  //   error: internalError,
+  //   refetch: internalRefetch,
+  // } = useFacility(facilityId);
 
   // Use external props if provided, otherwise use internal hook results
-  const isLoading =
-    externalIsLoading !== undefined ? externalIsLoading : internalIsLoading;
-  const error = externalError !== undefined ? externalError : internalError;
-  const refetch = externalRefetch || internalRefetch;
+  // const isLoading =
+  //   externalIsLoading !== undefined ? externalIsLoading : internalIsLoading;
+  // const error = externalError !== undefined ? externalError : internalError;
+  // const refetch = externalRefetch || internalRefetch;
 
   // Use external data if provided, otherwise use data from hook
-  const facilityData: Facility =
-    externalFacilityData || internalFacilityData?.facility || {};
-
+  // const facilityData: Facility =
+  //   externalFacilityData || internalFacilityData?.facility || {};
+  const facilityData = facility;
   // Extract data with defaults
   const {
     facility_name = "Unknown Facility",
@@ -367,8 +365,8 @@ function FacilityDetailsBase({
   const hasEmergency = working_hours?.emergency === "24/7";
 
   const isDataAvailable = !isEmptyValue(facilityData);
-  const isError = !!error;
-  const shouldShowContent = !isLoading && !isError && isDataAvailable;
+  // const isError = !!error;
+  // const shouldShowContent = !isLoading && !isError && isDataAvailable;
 
   // Handler functions
   const handleRequestAppointment = () => {
@@ -386,42 +384,42 @@ function FacilityDetailsBase({
   };
 
   // Loading state
-  const loadingContent = (
-    <div className="flex h-full items-center justify-center p-5">
-      <div className="space-y-4 text-center">
-        <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
-        <p className="text-gray-600">Loading facility details...</p>
-      </div>
-    </div>
-  );
+  // const loadingContent = (
+  //   <div className="flex h-full items-center justify-center p-5">
+  //     <div className="space-y-4 text-center">
+  //       <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
+  //       <p className="text-gray-600">Loading facility details...</p>
+  //     </div>
+  //   </div>
+  // );
 
   // Error state
-  const errorContent = (
-    <div className="flex h-full items-center justify-center p-5 text-center">
-      <div className="space-y-4">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-          <X className="h-6 w-6 text-red-500" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900">
-          Unable to load facility details
-        </h3>
-        <p className="text-gray-600">
-          {error?.message || "Please try again later"}
-        </p>
-        <div className="space-x-3">
-          <Button onClick={() => refetch?.()} className="mt-2">
-            Try Again
-          </Button>
-          {variant === "page" && onClose && (
-            <Button onClick={onClose} variant="outline" className="mt-2">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Go Back
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  // const errorContent = (
+  //   <div className="flex h-full items-center justify-center p-5 text-center">
+  //     <div className="space-y-4">
+  //       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+  //         <X className="h-6 w-6 text-red-500" />
+  //       </div>
+  //       <h3 className="text-lg font-semibold text-gray-900">
+  //         Unable to load facility details
+  //       </h3>
+  //       <p className="text-gray-600">
+  //         {error?.message || "Please try again later"}
+  //       </p>
+  //       <div className="space-x-3">
+  //         <Button onClick={() => refetch?.()} className="mt-2">
+  //           Try Again
+  //         </Button>
+  //         {variant === "page" && onClose && (
+  //           <Button onClick={onClose} variant="outline" className="mt-2">
+  //             <ArrowLeft className="mr-2 h-4 w-4" />
+  //             Go Back
+  //           </Button>
+  //         )}
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   // Header content
   const headerContent = (
@@ -591,7 +589,7 @@ function FacilityDetailsBase({
             facilityLga={facility_lga}
             town={town}
             facilityCategory={facility_category}
-            isLoading={isLoading}
+            // isLoading={isLoading}
           />
         </TabsContent>
         <TabsContent value="stats">
@@ -600,7 +598,7 @@ function FacilityDetailsBase({
             doctorPatientRatio={doctor_patient_ratio}
             formattedRating={formattedRating}
             totalReviews={total_reviews}
-            isLoading={isLoading}
+            // isLoading={isLoading}
           />
         </TabsContent>
       </div>
@@ -625,10 +623,11 @@ function FacilityDetailsBase({
 
   return (
     <>
-      {isLoading && loadingContent}
-      {isError && errorContent}
+      {/* {isLoading && loadingContent}
+      {isError && errorContent} */}
 
-      {shouldShowContent && (
+      {/* {shouldShowContent && ( */}
+      {true && (
         <div
           className={`flex ${variant === "drawer" ? "h-full flex-1 flex-col" : "flex h-dvh flex-col bg-white"}`}
         >

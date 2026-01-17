@@ -14,12 +14,13 @@ import FacilityListItemErrorCard from "../facility-list-item-error-card";
 import FilterCard from "../filter-card";
 import { useInView } from "react-intersection-observer";
 import { useFacilityStore } from "../../store/facility-store";
+import { Facility } from "@/types";
 
 interface ResultsDrawerProps {
   isOpen: boolean;
   onClose?: () => void;
   isGettingLocation: boolean;
-  onViewDetails: (facilityId: string) => void;
+  onViewDetails: (facility: Facility) => void;
 }
 
 function ResultsDrawer({

@@ -23,7 +23,7 @@ interface OverviewContentProps {
   facilityLga: string;
   town: string;
   facilityCategory: string;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 export const OverviewContent = ({

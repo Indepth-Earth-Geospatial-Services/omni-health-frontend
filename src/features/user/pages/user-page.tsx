@@ -13,6 +13,7 @@ import RequestAppointmentDrawer from "../components/drawers/request-appointment-
 import ResultsDrawer from "../components/drawers/results-drawer";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
+import { Facility } from "../types";
 
 function UserPage() {
   // DRAWER STATES ================================
@@ -22,12 +23,10 @@ function UserPage() {
   const openDirections = useDrawerStore((state) => state.openDirections);
 
   // SELECTED FACILITY ============
-  const setSelectedFacilityId = useFacilityStore(
+  const setSelectedFacility = useFacilityStore(
     (state) => state.setSelectedFacility,
   );
-  const selectedFacilityId = useFacilityStore(
-    (state) => state.selectedFacility,
-  );
+  const selectedFacility = useFacilityStore((state) => state.selectedFacility);
   // HACK:
   const isSearchExpanded = useSearchFilterStore(
     (state) => state.isSearchExpanded,
@@ -59,17 +58,17 @@ function UserPage() {
   }, [debounceNearestFacilityData]);
 
   const handleViewDetails = useCallback(
-    (facilityId: string) => {
-      setSelectedFacilityId(facilityId);
+    (facility: Facility) => {
+      setSelectedFacility(facility);
       openDetails();
     },
-    [setSelectedFacilityId, openDetails],
+    [setSelectedFacility, openDetails],
   );
-
+  console.log(selectedFacility); // FIXME REMOVE
   const handleCloseDetails = useCallback(() => {
-    setSelectedFacilityId(null);
+    setSelectedFacility(null);
     openResults();
-  }, [setSelectedFacilityId, openResults]);
+  }, [setSelectedFacility, openResults]);
 
   const handleShowDirections = useCallback(() => {
     openDirections();
@@ -130,7 +129,7 @@ function UserPage() {
             <FacilityDetailsDrawer
               isOpen={true}
               onClose={handleCloseDetails}
-              facilityId={selectedFacilityId}
+              facility={selectedFacility}
               onShowDirections={handleShowDirections}
             />
           )}

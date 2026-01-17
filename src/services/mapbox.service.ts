@@ -1,3 +1,5 @@
+import { checkDomainOfScale } from "recharts/types/util/ChartUtils";
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -237,7 +239,7 @@ class MapboxService {
       if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
         throw new Error("No routes found");
       }
-
+      console.log("FROM MAP SERVICE", data);
       return data;
     } catch (error) {
       console.error("Error fetching directions:", error);
@@ -370,7 +372,6 @@ class MapboxService {
       );
     }
   }
-
   /**
    * Decode polyline geometry to coordinates array
    * Mapbox uses GeoJSON by default, but this is useful for other formats

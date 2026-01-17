@@ -9,8 +9,8 @@ export const useFacilityStore = create<FacilityStore>((set) => ({
     set({ allFacilities: facilities });
   },
 
-  setSelectedFacility(id) {
-    set({ selectedFacility: id });
+  setSelectedFacility(facility) {
+    set({ selectedFacility: facility });
   },
 
   setNearestFacility(facility) {
