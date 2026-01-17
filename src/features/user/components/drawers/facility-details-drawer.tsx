@@ -3,26 +3,27 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useState } from "react";
 import { useFacilityStore } from "../../store/facility-store";
 import FacilityDetailsBase from "@/components/shared/organisms/facility-details-base";
+import { Facility } from "../../types";
 
 interface FacilityDetailsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  facilityId: string | null;
+  facility: Facility | null;
   onShowDirections: () => void;
 }
 
 function FacilityDetailsDrawer({
   isOpen,
   onClose,
-  facilityId,
+  facility,
   onShowDirections,
 }: FacilityDetailsDrawerProps) {
   const [snap, setSnap] = useState<string | number | null>(1.1);
-  const autoFacilityID = useFacilityStore((s) => s.selectedFacility);
+  const autoFacility = useFacilityStore((s) => s.selectedFacility);
 
-  const idToUse = facilityId || autoFacilityID;
+  const facilityToUse = facility || autoFacility;
 
-  if (!idToUse) {
+  if (Object.values(facilityToUse).length === 0 || facilityToUse === null) {
     return (
       <Drawer
         open={isOpen}
@@ -54,7 +55,7 @@ function FacilityDetailsDrawer({
       <DrawerContent className="flex h-dvh">
         <DrawerTitle className="sr-only">Facility Details</DrawerTitle>
         <FacilityDetailsBase
-          facilityId={idToUse}
+          facility={facilityToUse}
           onShowDirections={onShowDirections}
           onClose={onClose}
           variant="drawer"

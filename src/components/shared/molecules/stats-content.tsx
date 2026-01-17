@@ -6,7 +6,7 @@ interface StatsContentProps {
   doctorPatientRatio: number | string;
   formattedRating: string;
   totalReviews: number;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 export const StatsContent = ({

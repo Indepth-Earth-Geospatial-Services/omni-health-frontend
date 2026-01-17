@@ -12,11 +12,16 @@ import { Button } from "../../../components/ui/button";
 import { useSearchFilterStore } from "@/store/search-filter-store";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SelectedFilters } from "@/types/search-filter";
+import { Facility } from "@/types";
+import { useFacilityStore } from "@/features/user/store/facility-store";
 function FacilitiesPage() {
   const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
   const [filters, setFilters] = useState<SelectedFilters>({});
   const searchInput = useSearchFilterStore((state) => state.searchQuery);
+  const setSelectedFacility = useFacilityStore(
+    (state) => state.setSelectedFacility,
+  );
 
   const clearAllFilters = useSearchFilterStore(
     (state) => state.clearAllFilters,
@@ -72,10 +77,11 @@ function FacilitiesPage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleViewDetails = useCallback(
-    (facilityID: string) => {
-      router.push(`/facilities/${facilityID}`);
+    (facility: Facility) => {
+      setSelectedFacility(facility);
+      router.push(`/facilities/${facility.facility_id}`);
     },
-    [router],
+    [router, setSelectedFacility],
   );
 
   const handleFilter = useCallback((filterValues: any) => {

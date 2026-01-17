@@ -11,13 +11,13 @@ interface AppointmentStep2Prop {
 }
 
 function AppointmentStep2({ onNext, onBack }: AppointmentStep2Prop) {
-  const facilityId = useFacilityStore((state) => state.selectedFacility);
+  const facility = useFacilityStore((state) => state.selectedFacility);
 
   const {
     isLoading,
     error,
     data: facilityDetailsData,
-  } = useFacility(facilityId);
+  } = useFacility(facility.facility_id);
   const facilityDetails = facilityDetailsData.facility;
   function handleContinue() {
     onNext({ facilityId: facilityDetails.facility_id }, "step2");

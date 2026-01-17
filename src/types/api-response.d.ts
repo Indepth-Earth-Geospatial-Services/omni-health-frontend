@@ -1,3 +1,16 @@
+export interface Inventory {
+  equipment: {
+    refrigerators?: number;
+    sphygmomanometers?: number;
+    stethoscopes?: number;
+  };
+  infrastructure: {
+    baby_cots?: number;
+    delivery_beds?: number;
+    inpatient_beds?: number;
+    resuscitation_beds?: number;
+  };
+}
 export interface Facility {
   address?: string;
   average_rating?: number;
@@ -14,15 +27,7 @@ export interface Facility {
   facility_name?: string;
   hfr_id?: string;
   image_urls?: string[];
-  inventory?: {
-    baby_cots?: number;
-    delivery_beds?: number;
-    inpatient_beds?: number;
-    refrigerators?: number;
-    resuscitation_beds?: number;
-    sphygmomanometers?: number;
-    stethoscopes?: number;
-  };
+  inventory?: Inventory;
   last_updated?: Date;
   lat?: number;
   lon?: number;
