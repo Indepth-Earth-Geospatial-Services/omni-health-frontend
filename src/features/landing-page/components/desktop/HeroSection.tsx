@@ -11,7 +11,7 @@ export default function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/img/landingpage/heroimage.jpg"
+          src="/img/landingpage/heroimage.png"
           alt="Healthcare facility background"
           fill
           sizes="100vw"

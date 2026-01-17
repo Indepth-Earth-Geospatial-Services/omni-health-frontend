@@ -41,18 +41,19 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-            <div className="relative h-10 w-10 sm:h-10 sm:w-10 md:h-16 md:w-16">
+            <div className="flex h-18 items-center px-4 gap-4">
               <Image
                 src="/img/image.png"
-                alt="RVS Healthcare Logo"
-                fill
-                className="object-contain"
+                alt="Healthcare facility background"
                 priority
+                width={60}
+                height={60}
+                quality={75}
               />
+              <h1 className="text-white text-sm sm:text-base md:text-xl font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+                RSPHCMB
+              </h1>
             </div>
-            <h1 className="text-white text-sm sm:text-base md:text-xl font-semibold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
-              RSPHCMB
-            </h1>
           </Link>
 
           {/* CTA Buttons - Hidden on mobile */}

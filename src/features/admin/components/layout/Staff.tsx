@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ArrowUpDown, ChevronLeft, ChevronRight, MinusSquare, PenIcon, Loader2 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import TableHeaders from './TableHeaders';
 import AddStaffModal from './AddStaffModal';
+import EditStaffModal from './EditStaffModal';
 import DeleteStaffModal from './DeleteStaffModal';
-import { useAdminStaff, useCreateStaff, useDeleteStaff, type CreateStaffData } from '@/hooks/useAdminStaff';
+import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff, type CreateStaffData, type StaffMember } from '@/hooks/useAdminStaff';
 
 interface StaffListProps {
     facilityId: string;
@@ -15,6 +16,10 @@ interface StaffListProps {
 
 const StaffList = ({ facilityId }: StaffListProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; staffData: StaffMember | null }>({
+        isOpen: false,
+        staffData: null
+    });
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; staffId: string; staffName: string }>({
         isOpen: false,
         staffId: '',
@@ -34,6 +39,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     } = useAdminStaff(facilityId, currentPage, itemsPerPage);
 
     const createStaffMutation = useCreateStaff(facilityId);
+    const updateStaffMutation = useUpdateStaff(facilityId);
     const deleteStaffMutation = useDeleteStaff(facilityId);
 
     // Extract data from query response
@@ -66,9 +72,8 @@ const StaffList = ({ facilityId }: StaffListProps) => {
         }
     };
 
-    // Handle form submission with toast
+    // Handle create staff with toast
     const handleAddStaff = (staffData: Record<string, any>) => {
-        // Show loading toast
         const loadingToast = toast.loading('Creating staff member...');
 
         createStaffMutation.mutate(staffData as CreateStaffData, {
@@ -89,6 +94,42 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 console.error('Failed to create staff:', err);
             }
         });
+    };
+
+    // Handle edit staff
+    const handleEditStaff = (staffData: StaffMember) => {
+        setEditModal({ isOpen: true, staffData });
+    };
+
+    // Handle update staff with toast
+    const handleUpdateStaff = (updatedData: Record<string, any>) => {
+        if (!editModal.staffData) return;
+
+        const loadingToast = toast.loading('Updating staff member...');
+
+        updateStaffMutation.mutate(
+            {
+                staffId: editModal.staffData.staff_id,
+                data: updatedData
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Staff member updated successfully!', {
+                        id: loadingToast,
+                        duration: 4000,
+                    });
+                    setEditModal({ isOpen: false, staffData: null });
+                },
+                onError: (err: any) => {
+                    const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update staff member';
+                    toast.error(errorMessage, {
+                        id: loadingToast,
+                        duration: 5000,
+                    });
+                    console.error('Failed to update staff:', err);
+                }
+            }
+        );
     };
 
     // Handle delete with toast
@@ -130,11 +171,6 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     const hasStatus = staffs.some(s => s.is_active !== undefined);
 
     // Animation Variants
-    const containerVars = {
-        initial: { opacity: 0 },
-        animate: { opacity: 1, transition: { staggerChildren: 0.05 } }
-    };
-
     const rowVars = {
         initial: { opacity: 0, y: 10 },
         animate: { opacity: 1, y: 0 }
@@ -144,7 +180,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     if (isLoading) {
         return (
             <>
-                <Toaster position="top-right" />
+                {/* <Toaster position="top-right" /> */}
                 <TableHeaders
                     title="Staff Management"
                     searchPlaceholder="Search staff..."
@@ -166,7 +202,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     if (isError) {
         return (
             <>
-                <Toaster position="top-right" />
+                {/* <Toaster position="top-right" /> */}
                 <TableHeaders
                     title="Staff Management"
                     searchPlaceholder="Search staff..."
@@ -187,7 +223,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     return (
         <>
             {/* Toast Container */}
-            <Toaster position="top-right" />
+            {/* <Toaster position="top-right" /> */}
 
             <TableHeaders
                 title="Staff Management"
@@ -271,7 +307,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                                             <td className="p-4 text-sm text-slate-600">{idx + 1 + (currentPage - 1) * itemsPerPage}</td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-full bg-linear-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shadow-sm`}>
+                                                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shadow-sm`}>
                                                         {initials}
                                                     </div>
                                                     <div>
@@ -310,7 +346,11 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                                             )}
                                             <td className="p-4 sticky right-0 bg-white group-hover:bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <button className="p-2 text-slate-400 hover:text-primary hover:bg-teal-50 rounded-lg transition-all">
+                                                    <button
+                                                        onClick={() => handleEditStaff(item)}
+                                                        disabled={updateStaffMutation.isPending}
+                                                        className="p-2 text-slate-400 hover:text-primary hover:bg-teal-50 rounded-lg transition-all disabled:opacity-50"
+                                                    >
                                                         <PenIcon size={18} />
                                                     </button>
                                                     <button
@@ -369,6 +409,17 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleAddStaff}
                 facilityId={facilityId}
+            />
+
+            {/* Edit Staff Modal - key forces re-render with new data */}
+            <EditStaffModal
+                key={editModal.staffData?.staff_id || "edit-staff-modal"}
+                isOpen={editModal.isOpen}
+                onClose={() => setEditModal({ isOpen: false, staffData: null })}
+                onSubmit={handleUpdateStaff}
+                facilityId={facilityId}
+                staffData={editModal.staffData}
+                isUpdating={updateStaffMutation.isPending}
             />
 
             {/* Delete Confirmation Modal */}

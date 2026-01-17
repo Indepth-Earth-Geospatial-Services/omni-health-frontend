@@ -55,10 +55,10 @@ const DeleteStaffModal: React.FC<DeleteStaffModalProps> = ({
                 <div className="p-6 space-y-4">
                     {/* Warning Message */}
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p className="text-sm text-slate-700">
+                        <div className="text-sm text-slate-700">
                             Are you sure you want to delete{' '}
                             <p className="font-semibold text-red-600">{staffName} ?</p>
-                        </p>
+                        </div>
                         <p className="text-xs text-slate-500 mt-2">
                             All associated records and data will be permanently removed from the system.
                         </p>
