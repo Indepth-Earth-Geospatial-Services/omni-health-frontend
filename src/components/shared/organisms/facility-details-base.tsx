@@ -286,6 +286,8 @@ import { useState } from "react";
 import { InfoCard } from "../atoms/info-card";
 import { OverviewContent } from "../molecules/overview-content";
 import { StatsContent } from "../molecules/stats-content";
+import { useUserLocation } from "@/features/user/hooks/useUserLocation";
+import { useUserStore } from "@/features/user/store/user-store";
 
 interface FacilityDetailsBaseProps {
   facility: Facility;
@@ -311,6 +313,13 @@ function FacilityDetailsBase({
   const openRequestAppointment = useDrawerStore(
     (state) => state.openRequestAppointment,
   );
+  const openDirections = useDrawerStore((state) => state.openDirections);
+
+  const userLocation = useUserStore((state) => state.userLocation);
+  const { permissionState, requestLocation } = useUserLocation();
+  const isLocationReady = !!userLocation;
+  const isLocationDenied = permissionState === "denied";
+  console.log("FROM FACILITY DETAILS BASE", userLocation);
 
   // Use internal hook if no external props provided
   // const {
@@ -458,13 +467,13 @@ function FacilityDetailsBase({
           </div>
         </div>
         <div className={`shrink-0 ${variant === "drawer" ? "space-x-3" : ""}`}>
-          <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
+          {/* <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
             <Image
               src={exportIcon}
               alt="Export"
               className="size-5 object-cover"
             />
-          </Button>
+          </Button> */}
           {variant === "drawer" && onClose && (
             <Button
               onClick={onClose}
@@ -508,18 +517,43 @@ function FacilityDetailsBase({
 
       {/* Action Buttons */}
       <div className="mb-3 flex gap-3">
-        <Button
-          onClick={onShowDirections}
-          size="sm"
-          className="bg-primary flex-1 rounded-full text-[13px]"
-        >
-          <Image
-            src={compass}
-            alt="Directions"
-            className="mr-2 size-4 object-cover"
-          />
-          Get Directions
-        </Button>
+        {isLocationReady && (
+          <Button
+            onClick={() => {
+              if (variant === "page") {
+                openDirections();
+                router.push(`/user?facility=${facility.hfr_id}`);
+              } else {
+                onShowDirections?.();
+              }
+            }}
+            size="sm"
+            className="bg-primary flex-1 rounded-full text-[13px]"
+          >
+            <Image
+              src={compass}
+              alt="Directions"
+              className="mr-2 size-4 object-cover"
+            />
+            Get Directions
+          </Button>
+        )}
+
+        {!isLocationReady && (
+          <Button
+            onClick={() => requestLocation()}
+            disabled={isLocationDenied}
+            size="sm"
+            className={`flex-1 rounded-full bg-gray-400 text-[13px]`}
+          >
+            <Image
+              src={compass}
+              alt="Directions"
+              className="mr-2 size-4 object-cover"
+            />
+            {isLocationDenied ? "Location Access Denied" : "Enable Location"}
+          </Button>
+        )}
         {phone && (
           <Button
             size="sm"
@@ -532,6 +566,16 @@ function FacilityDetailsBase({
           </Button>
         )}
       </div>
+
+      {isLocationDenied && (
+        <div className="my-3 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-2.5 text-red-700">
+          <CircleAlert size={14} className="shrink-0" />
+          <p className="text-[11px] leading-tight font-medium">
+            Location access is blocked. Please enable it in your browser
+            settings to get directions.
+          </p>
+        </div>
+      )}
 
       {/* Meta Info */}
       <div className="flex items-center justify-between text-xs text-gray-500">

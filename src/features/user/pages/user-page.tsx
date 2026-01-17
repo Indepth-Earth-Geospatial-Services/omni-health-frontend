@@ -1,7 +1,7 @@
 "use client";
 import MapComponent from "@/components/shared/molecules/map-component";
 import RequestLocationCard from "@/features/user/components/request-location-card";
-import SideBar from "@/features/user/components/side-bar";
+import SideBar from "@/components/shared/molecules/side-bar";
 import { useUserStore } from "@/features/user/store/user-store";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchFilterStore } from "@/store/search-filter-store";
@@ -22,40 +22,38 @@ function UserPage() {
   const openResults = useDrawerStore((state) => state.openResults);
   const openDetails = useDrawerStore((state) => state.openDetails);
   const openDirections = useDrawerStore((state) => state.openDirections);
-  const hasStartDirections = useDrawerStore(
-    (state) => state.hasStartDirections,
-  );
 
-  // SELECTED FACILITY ============
-  const setSelectedFacility = useFacilityStore(
-    (state) => state.setSelectedFacility,
-  );
-  const selectedFacility = useFacilityStore((state) => state.selectedFacility);
-  // HACK:
+  // SEARCH FILTER STATE =========================
   const isSearchExpanded = useSearchFilterStore(
     (state) => state.isSearchExpanded,
+  );
+  const clearAllFilters = useSearchFilterStore(
+    (state) => state.clearAllFilters,
   );
 
   // LOCATION RELATED STATE =========================
   const userLocation = useUserStore((state) => state.userLocation);
   const isLoadingPosition = useUserStore((state) => state.isLoadingPosition);
 
-  console.log(userLocation); // FIXME REMOVE
-
-  const clearAllFilters = useSearchFilterStore(
-    (state) => state.clearAllFilters,
+  // FACILITY STORE STATES ========================
+  const setSelectedFacility = useFacilityStore(
+    (state) => state.setSelectedFacility,
   );
-
+  const selectedFacility = useFacilityStore((state) => state.selectedFacility);
+  // NEARBY & ALL FACILITIES =============
   const nearestFacility = useFacilityStore((s) => s.nearestFacility);
   const allFacilities = useFacilityStore((s) => s.allFacilities);
 
   const debounceNearestFacilityData = useDebounce(nearestFacility, 1000);
-
-  const debounceAllFacilitiesData = useDebounce(allFacilities, 1000);
+  const debounceAllFacilitiesData = useDebounce(allFacilities, 500);
 
   const allFacilitiesArray = useMemo(() => {
-    return debounceAllFacilitiesData ? debounceAllFacilitiesData : [];
-  }, [debounceAllFacilitiesData]);
+    return debounceAllFacilitiesData
+      ? debounceAllFacilitiesData.filter(
+          (facility) => facility.facility_id !== nearestFacility?.facility_id,
+        )
+      : [];
+  }, [debounceAllFacilitiesData, nearestFacility?.facility_id]);
 
   const nearYouFacilitiesArray = useMemo(() => {
     return debounceNearestFacilityData ? [debounceNearestFacilityData] : [];
@@ -64,13 +62,9 @@ function UserPage() {
   // Get route geometry when directions drawer is open
   const shouldFetchRoute =
     activeDrawer === "directions" && !!selectedFacility && !!userLocation;
-  const {
-    data: routeData,
-    isLoading: isRouteLoading,
-    error: routeError,
-  } = useRouteGeometry({
-    // origin: userLocation,
-    origin: { latitude: 4.8585, longitude: 7.0647 }, // HACK FIX LOCATION
+  const { data: routeData, error: routeError } = useRouteGeometry({
+    origin: userLocation,
+    // origin: { latitude: 4.8585, longitude: 7.0647 }, // HACK FIX LOCATION FOR DEVELOPMENT
     destination: selectedFacility
       ? {
           latitude: selectedFacility.lat,
@@ -80,8 +74,7 @@ function UserPage() {
     enabled: shouldFetchRoute,
   });
 
-  console.log(routeData); // FIXME REMOVE
-
+  // HANDER FOR FACILITY LIST ITEM CLICK AND OTHER RELATED HANDLERS FOR DRAWER STATE ==============
   const handleViewDetails = useCallback(
     (facility: Facility) => {
       setSelectedFacility(facility);
@@ -89,8 +82,6 @@ function UserPage() {
     },
     [setSelectedFacility, openDetails],
   );
-
-  console.log(selectedFacility); // FIXME REMOVE
 
   const handleCloseDetails = useCallback(() => {
     setSelectedFacility(null);
@@ -124,7 +115,7 @@ function UserPage() {
           <SearchAndFilter
             key="user variant"
             includeExpandedSearchFilter={true}
-            className="relative z-60 w-full"
+            className="relative z-60 w-[70%]!"
             includeSearchResults={true}
           />
         </div>
@@ -147,7 +138,8 @@ function UserPage() {
           selectedFacility &&
           !routeError?.message && (
             <MapComponent
-              userLocation={{ latitude: 4.8585, longitude: 7.0647 }} // HACK FIX LOCATION
+              userLocation={userLocation}
+              // userLocation={{ latitude: 4.8585, longitude: 7.0647 }} // HACK FIX LOCATION FOR DEVELOPMENT
               destination={{
                 longitude: selectedFacility?.lon,
                 latitude: selectedFacility?.lat,
