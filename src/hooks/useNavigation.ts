@@ -42,7 +42,6 @@ export function useNavigation({
   const [userPosition, setUserPosition] = useState<Coordinates | null>(origin);
   const lastAnnouncementRef = useRef<string>("");
   const watchIdRef = useRef<number | null>(null);
-
   // Fetch route directions
   const {
     data: directionsData,

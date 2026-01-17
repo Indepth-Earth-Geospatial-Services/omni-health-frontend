@@ -160,7 +160,7 @@ export function useDistanceCalculation({
         apiLocation,
         [facilityLocation],
       );
-      console.log("HOOK FIRED-------------------------");
+
       return distances[0] || null;
     },
     enabled:

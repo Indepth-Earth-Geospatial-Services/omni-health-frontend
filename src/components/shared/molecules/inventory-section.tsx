@@ -1,30 +1,25 @@
 import { Shield, Bed, Baby, Activity, Thermometer, Pill } from "lucide-react";
 import { DataSection } from "../atoms/data-section";
+import { Inventory } from "@/types";
 
 interface InventorySectionProps {
-  inventory: {
-    inpatient_beds?: number;
-    baby_cots?: number;
-    delivery_beds?: number;
-    resuscitation_beds?: number;
-    stethoscopes?: number;
-    sphygmomanometers?: number;
-    refrigerators?: number;
-  };
+  inventory: Inventory;
 }
 
 export const InventorySection: React.FC<InventorySectionProps> = ({
   inventory,
 }) => {
   const {
+    stethoscopes = 0,
+    sphygmomanometers = 0,
+    refrigerators = 0,
+  } = inventory.equipment;
+  const {
     inpatient_beds = 0,
     baby_cots = 0,
     delivery_beds = 0,
     resuscitation_beds = 0,
-    stethoscopes = 0,
-    sphygmomanometers = 0,
-    refrigerators = 0,
-  } = inventory;
+  } = inventory.infrastructure;
 
   const inventoryItems = [
     {

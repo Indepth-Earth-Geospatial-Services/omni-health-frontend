@@ -14,13 +14,14 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { ActiveFilters } from "../atoms/active-filters";
 import { SelectedFilters } from "@/types/search-filter";
 import { useShallow } from "zustand/react/shallow";
+import { Facility } from "@/types";
 
 interface SearchResultsProps {
   isOpen: boolean;
   onClose: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  onViewDetails?: (facilityId: string) => void;
+  onViewDetails?: (facility: Facility) => void;
   includeFilter?: boolean;
   className?: string;
 }
@@ -100,8 +101,8 @@ export function SearchResults({
   };
 
   const handleViewDetails = useCallback(
-    (facilityId: string) => {
-      onViewDetails?.(facilityId);
+    (facility: Facility) => {
+      onViewDetails?.(facility);
     },
     [onViewDetails],
   );
@@ -240,7 +241,7 @@ export function SearchResults({
           <FacilityListItem
             key={facility.facility_id}
             facility={facility}
-            onViewDetails={() => handleViewDetails(facility.facility_id || "")}
+            onViewDetails={() => handleViewDetails(facility)}
           />
         ))}
 

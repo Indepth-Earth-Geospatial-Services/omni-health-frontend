@@ -5,7 +5,7 @@ import {
   GetLGAFacilities,
   GetNearestFacility,
   SearchFacilities,
-} from "../features/user/types/apiResponse";
+} from "../types/api-response";
 import { apiClient } from "../lib/client";
 
 class FacilityService {
@@ -124,7 +124,6 @@ class FacilityService {
         },
       },
     );
-    console.log(response.data);
     return response.data;
   }
 

@@ -14,12 +14,13 @@ import FacilityListItemErrorCard from "../facility-list-item-error-card";
 import FilterCard from "../filter-card";
 import { useInView } from "react-intersection-observer";
 import { useFacilityStore } from "../../store/facility-store";
+import { Facility } from "@/types";
 
 interface ResultsDrawerProps {
   isOpen: boolean;
   onClose?: () => void;
   isGettingLocation: boolean;
-  onViewDetails: (facilityId: string) => void;
+  onViewDetails: (facility: Facility) => void;
 }
 
 function ResultsDrawer({
@@ -33,6 +34,7 @@ function ResultsDrawer({
   const setNearestFacility = useFacilityStore(
     (state) => state.setNearestFacility,
   );
+  const setAllFacilities = useFacilityStore((state) => state.setAllFacilities);
 
   const [snap, setSnap] = useState<number | string | null>(0.8);
   const router = useRouter();
@@ -109,10 +111,23 @@ function ResultsDrawer({
     return () => clearTimeout(timer);
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // setter =====================
   useEffect(() => {
     if (Object.values(nearestFacility || []).length === 0) return;
     setNearestFacility(nearestFacility);
   }, [nearestFacility, setNearestFacility]);
+
+  useEffect(() => {
+    if (!LGAFacilitiesData?.pages || LGAFacilitiesData.pages.length === 0)
+      return;
+
+    // Flatten all facilities from all pages
+    const allFacilitiesFlattened = LGAFacilitiesData.pages.flatMap(
+      (page) => page.facilities,
+    );
+
+    setAllFacilities(allFacilitiesFlattened);
+  }, [LGAFacilitiesData, setAllFacilities]);
 
   return (
     <Drawer

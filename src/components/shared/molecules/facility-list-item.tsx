@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock, ImageOff } from "lucide-react";
-import { Facility } from "../../../features/user/types/apiResponse";
+import { Facility } from "../../../types/api-response";
 import Image from "next/image";
 import facilityImagePlaceholder from "@assets/img/facilities/facility-placeholder.jpeg";
 import { useUserStore } from "@/features/user/store/user-store";
@@ -12,7 +12,7 @@ interface FacilityListItemProps {
   facility: Facility | null;
   nearUser?: boolean;
   isLoading?: boolean;
-  onViewDetails?: (facilityID: string) => void;
+  onViewDetails?: (facility: Facility) => void;
 }
 
 function FacilityListItem(props: FacilityListItemProps) {
@@ -45,7 +45,7 @@ function FacilityListItem(props: FacilityListItemProps) {
   const workingHours = facility?.working_hours?.[currentDay];
 
   const displayDistance = facility?.road_distance_meters
-    ? `${(facility.road_distance_meters / 1000).toFixed(1)}km`
+    ? `${roadDistance.toFixed(1)}km`
     : formattedDistance;
 
   const distanceText = displayDistance;
@@ -137,7 +137,7 @@ function FacilityListItem(props: FacilityListItemProps) {
               </span>
               {onViewDetails && (
                 <button
-                  onClick={() => onViewDetails(facilityId)}
+                  onClick={() => onViewDetails(facility!)}
                   className="text-primary cursor-pointer"
                 >
                   View Details <ChevronRight size={12} />
