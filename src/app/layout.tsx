@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
+import { AuthProvider } from "@/features/auth/auth-provider";
 
 export const metadata: Metadata = {
     title: "Omni Health",
@@ -22,7 +23,9 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                {children}
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
 
                 {/* Global Toast Notifications - Works everywhere */}
                 <Toaster
