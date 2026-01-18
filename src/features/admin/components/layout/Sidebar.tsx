@@ -103,7 +103,7 @@ export default function Sidebar() {
             {/* Admin Profile */}
             <div className="p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
+                    {/* <div className="flex-shrink-0">
 
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                             {adminProfile.name.split(' ').map(n => n[0]).join('')}
@@ -117,7 +117,7 @@ export default function Sidebar() {
                         <p className="truncate text-xs text-gray-500">
                             {adminProfile.email}
                         </p>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </aside>
