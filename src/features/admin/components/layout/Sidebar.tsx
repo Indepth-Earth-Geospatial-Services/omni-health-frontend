@@ -22,7 +22,7 @@ const menuItems = [
     { label: "Staff", icon: UserCog, href: "/admin/staff" },
     { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
     { label: "Equipments & Facility", icon: Hospital, href: "/admin/equipments" },
-    { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
+    // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
     { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
