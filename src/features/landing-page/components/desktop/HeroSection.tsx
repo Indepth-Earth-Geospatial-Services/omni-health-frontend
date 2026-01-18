@@ -11,7 +11,7 @@ export default function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/img/landingpage/heroimage.jpg"
+          src="/img/landingpage/heroimage.png"
           alt="Healthcare facility background"
           fill
           sizes="100vw"
@@ -53,14 +53,14 @@ export default function HeroSection() {
               size="lg"
               className="bg-primary text-white hover:bg-primary/90 font-semibold px-6 sm:px-8 md:px-10 py-5 md:py-6 transition-all hover:scale-105 rounded-full text-sm sm:text-base md:text-lg w-52 md:w-76"
             >
-              <Link href="/user">Explore Facilities Near You</Link>
+              <Link href="/login">Explore Facilities Near You</Link>
             </Button>
             <Button
               asChild
               size="lg"
               className="bg-transparent border-white border-2 text-white hover:bg-white hover:text-primary font-semibold px-6 sm:px-8 md:px-10 py-5 md:py-6 transition-all hover:scale-105 rounded-full text-sm sm:text-base md:text-lg w-52 md:w-76"
             >
-              <Link href="/user">Compare Facility</Link>
+              <Link href="/login">Compare Facility</Link>
             </Button>
           </div>
         </div>

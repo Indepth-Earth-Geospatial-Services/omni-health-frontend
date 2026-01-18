@@ -1,42 +1,67 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ArrowRight, X, } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import React, { useState } from "react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import { Button } from "../components/ui/button";
 
 interface InfrastructureModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit?: (equipmentData: InfrastructureFormData) => void;
+    isSubmitting?: boolean;
 }
 
 interface InfrastructureFormData {
     name: string;
     quantity: string;
-
 }
 
-const InfrastructureModal: React.FC<InfrastructureModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const InfrastructureModal: React.FC<InfrastructureModalProps> = ({
+    isOpen,
+    onClose,
+    onSubmit,
+    isSubmitting = false,
+}) => {
     const [formData, setFormData] = useState<InfrastructureFormData>({
-        name: '',
-        quantity: '',
+        name: "",
+        quantity: "",
     });
 
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate quantity is a number
+        if (isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
+            alert("Please enter a valid quantity");
+            return;
+        }
+
         onSubmit?.(formData);
-        // Reset form
-        setFormData({
-            name: '',
-            quantity: '',
-        });
-        onClose();
+
+        // Reset form only if not submitting (parent will close modal on success)
+        if (!isSubmitting) {
+            setFormData({
+                name: "",
+                quantity: "",
+            });
+        }
+    };
+
+    const handleClose = () => {
+        if (!isSubmitting) {
+            setFormData({
+                name: "",
+                quantity: "",
+            });
+            onClose();
+        }
     };
 
     if (!isOpen) return null;
@@ -45,80 +70,106 @@ const InfrastructureModal: React.FC<InfrastructureModalProps> = ({ isOpen, onClo
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 "
-                onClick={onClose}
+                className="absolute inset-0 bg-black/50"
+                onClick={handleClose}
             />
 
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="sticky top-0 bg-white  px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <div className="sticky top-0 bg-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
                     <div>
-                        <h1 className='text-3xl text-slate-900 mb-4 mt-2 font-medium'>New Facility</h1>
+                        <h1 className="text-3xl text-slate-900 mb-4 mt-2 font-medium">
+                            New Infrastructure
+                        </h1>
                         <div>
-                            <h2 className="text-xl font-medium text-slate-600">Facility Details</h2>
-                            <p className="text-sm text-slate-500 mt-1">Provide details about the facility</p>
+                            <h2 className="text-xl font-medium text-slate-600">
+                                Infrastructure Details
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Provide details about the facility infrastructure
+                            </p>
                         </div>
                     </div>
-                    {/* <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    >
-                        <X size={20} className="text-slate-600" />
-                    </button> */}
                 </div>
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Full Name */}
+                    {/* Infrastructure Name */}
+                    <div>
+                        <label
+                            htmlFor="name"
+                            className="block text-sm font-medium text-slate-700 mb-2"
+                        >
+                            Infrastructure Name
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            placeholder="Enter infrastructure name (e.g., Baby Cot)"
+                            required
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                    </div>
 
-                    {/* Designation and Date */}
-                    <div className="grid grid-cols-1 gap-4 ">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
-                                Facility Name
-                            </label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                placeholder="Enter Facility Name"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
-                                Quantity/Capacity
-                            </label>
-                            <input
-                                type="text"
-                                id="quantity"
-                                name="quantity"
-                                value={formData.quantity}
-                                onChange={handleInputChange}
-                                placeholder="Enter Quantity"
-                                required
-                                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100"
-                            />
-                        </div>
+                    {/* Quantity/Capacity */}
+                    <div>
+                        <label
+                            htmlFor="quantity"
+                            className="block text-sm font-medium text-slate-700 mb-2"
+                        >
+                            Quantity/Capacity
+                        </label>
+                        <input
+                            type="number"
+                            id="quantity"
+                            name="quantity"
+                            value={formData.quantity}
+                            onChange={handleInputChange}
+                            placeholder="Enter quantity or capacity"
+                            min="1"
+                            required
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
                     </div>
 
                     {/* Submit Button */}
-                    <div className="pt-4 flex justify-end">
+                    <div className="pt-4 flex justify-end gap-3">
+                        {/* <Button
+                            type="button"
+                            variant="outline"
+                            size="xl"
+                            onClick={handleClose}
+                            disabled={isSubmitting}
+                            className="text-lg"
+                        >
+                            Cancel
+                        </Button> */}
                         <Button
                             type="submit"
                             variant="default"
                             size="xl"
+                            disabled={isSubmitting}
                             className="text-lg"
                         >
-                            Add Facility
-                            <ArrowRight size={18} />
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 size={18} className="animate-spin" />
+                                    Adding...
+                                </>
+                            ) : (
+                                <>
+                                    Add Infrastructure
+                                    <ArrowRight size={18} />
+                                </>
+                            )}
                         </Button>
                     </div>
-
                 </form>
             </div>
         </div>

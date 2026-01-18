@@ -3,44 +3,50 @@ import {
   useMutation,
   useQueryClient,
   keepPreviousData,
+  type UseQueryOptions,
 } from "@tanstack/react-query";
+
 import {
   adminService,
   type StaffMember,
   type CreateStaffData,
+  type GetStaffResponse,
+  type AddEquipmentRequest,
+  type AddInfrastructureRequest,
+  type AddEquipmentResponse,
+  type AddInfrastructureResponse,
 } from "@/services/admin.service";
 
 // Query keys for admin staff
 export const adminStaffKeys = {
   all: ["adminStaff"] as const,
-  list: (facilityId: string, page: number) =>
-    [...adminStaffKeys.all, facilityId, page] as const,
+  list: (facilityId: string, page: number, limit: number = 10) =>
+    [...adminStaffKeys.all, facilityId, page, limit] as const,
   detail: (facilityId: string, staffId: string) =>
     [...adminStaffKeys.all, facilityId, "detail", staffId] as const,
 };
 
 /**
  * Hook to fetch paginated staff list
- * Uses keepPreviousData to maintain smooth pagination UX
  */
 export const useAdminStaff = (
   facilityId: string,
   page: number = 1,
   limit: number = 10,
-  options = {}
+  options?: Omit<UseQueryOptions<GetStaffResponse>, "queryKey" | "queryFn">
 ) => {
   return useQuery({
-    queryKey: adminStaffKeys.list(facilityId, page),
+    queryKey: adminStaffKeys.list(facilityId, page, limit),
     queryFn: () =>
       adminService.getStaff({
         facilityId,
         page,
         limit,
       }),
-    placeholderData: keepPreviousData, // Keep previous data while fetching new page
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes cache
-    enabled: !!facilityId, // Only fetch if facilityId is provided
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    enabled: !!facilityId,
     retry: 2,
     ...options,
   });
@@ -54,13 +60,9 @@ export const useCreateStaff = (facilityId: string) => {
 
   return useMutation({
     mutationFn: (data: CreateStaffData) => {
-      // console.log("FACILITYID",facilityId)
-      // console.log("data",data)
-
-      return adminService.createStaff({ facilityId, data })
+      return adminService.createStaff({ facilityId, data });
     },
     onSuccess: () => {
-      // Invalidate all staff queries to refetch with new data
       queryClient.invalidateQueries({
         queryKey: adminStaffKeys.all,
       });
@@ -127,7 +129,6 @@ export const useInvalidateStaffCache = () => {
 
 /**
  * Hook to fetch staff schema dynamically
- * This will return only the fields available in the backend schema
  */
 export const useStaffSchema = (facilityId: string) => {
   return useQuery<Record<string, any>, Error>({
@@ -136,11 +137,162 @@ export const useStaffSchema = (facilityId: string) => {
       const response = await adminService.getStaffSchema(facilityId);
       return response;
     },
-    staleTime: 5 * 60 * 1000, // cache schema for 5 minutes
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 };
 
+// ==================== INVENTORY HOOKS ====================
+
+export const AdminInventoryKeys = {
+  all: ["admin-inventory"] as const,
+  facility: (facilityId: string) =>
+    [...AdminInventoryKeys.all, facilityId] as const,
+};
+
+/**
+ * Fetch Facility Inventory (Equipment + Infrastructure)
+ */
+export const useFacilityInventory = (facilityId: string) => {
+  return useQuery({
+    queryKey: AdminInventoryKeys.facility(facilityId),
+    queryFn: () => adminService.getFacilityInventory(facilityId),
+    enabled: !!facilityId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+/**
+ * Hook to add equipment to facility inventory
+ */
+export const useAddEquipment = (facilityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<AddEquipmentResponse, Error, AddEquipmentRequest>({
+    mutationFn: (data: AddEquipmentRequest) => {
+      return adminService.addEquipment({ facilityId, data });
+    },
+    onSuccess: () => {
+      // Invalidate inventory queries to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: AdminInventoryKeys.facility(facilityId),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to add equipment:", error);
+    },
+  });
+};
+
+/**
+ * Hook to add infrastructure to facility inventory
+ */
+export const useAddInfrastructure = (facilityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<AddInfrastructureResponse, Error, AddInfrastructureRequest>({
+    mutationFn: (data: AddInfrastructureRequest) => {
+      return adminService.addInfrastructure({ facilityId, data });
+    },
+    onSuccess: () => {
+      // Invalidate inventory queries to refetch updated data
+      queryClient.invalidateQueries({
+        queryKey: AdminInventoryKeys.facility(facilityId),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to add infrastructure:", error);
+    },
+  });
+};
+
+/**
+ * Hook to delete equipment from facility inventory
+ */
+export const useDeleteEquipment = (facilityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (itemName: string) => {
+      return adminService.deleteEquipment({ facilityId, itemName });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: AdminInventoryKeys.facility(facilityId),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to delete equipment:", error);
+    },
+  });
+};
+
+/**
+ * Hook to delete infrastructure from facility inventory
+ */
+export const useDeleteInfrastructure = (facilityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (itemName: string) => {
+      return adminService.deleteInfrastructure({ facilityId, itemName });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: AdminInventoryKeys.facility(facilityId),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to delete infrastructure:", error);
+    },
+  });
+};
+
+/**
+ * Hook to update equipment in facility inventory
+ * NOTE: Backend endpoint to be implemented
+ */
+export const useUpdateEquipment = (facilityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<AddEquipmentResponse, Error, AddEquipmentRequest>({
+    mutationFn: (data: AddEquipmentRequest) => {
+      return adminService.updateEquipment({ facilityId, data });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: AdminInventoryKeys.facility(facilityId),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to update equipment:", error);
+    },
+  });
+};
+
+/**
+ * Hook to update infrastructure in facility inventory
+ * NOTE: Backend endpoint to be implemented
+ */
+export const useUpdateInfrastructure = (facilityId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<AddInfrastructureResponse, Error, AddInfrastructureRequest>({
+    mutationFn: (data: AddInfrastructureRequest) => {
+      return adminService.updateInfrastructure({ facilityId, data });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: AdminInventoryKeys.facility(facilityId),
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to update infrastructure:", error);
+    },
+  });
+};
 
 // Re-export types for convenience
 export type { StaffMember, CreateStaffData };
