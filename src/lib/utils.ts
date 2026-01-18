@@ -20,11 +20,37 @@ export class ApiError extends Error {
 // Generic error handler
 export function handleApiError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.detail ||
-      error.message ||
-      "An error occurred";
+    // ✅ ENHANCED: Handle multiple error formats from backend
+    let message = "An error occurred";
+
+    if (error.response?.data) {
+      const data = error.response.data;
+
+      // Format 1: { detail: "Error message" } - Most common
+      if (typeof data.detail === "string") {
+        message = data.detail;
+      }
+      // Format 2: { detail: [{ msg: "Error", loc: [...], type: "..." }] } - Validation errors
+      else if (Array.isArray(data.detail) && data.detail.length > 0) {
+        const firstError = data.detail[0];
+        message = firstError.msg || firstError.message || message;
+      }
+      // Format 3: { message: "Error message" }
+      else if (data.message) {
+        message = data.message;
+      }
+      // Format 4: Direct string
+      else if (typeof data === "string") {
+        message = data;
+      }
+      // Fallback to axios error message
+      else if (error.message) {
+        message = error.message;
+      }
+    } else if (error.message) {
+      message = error.message;
+    }
+
     console.warn("ERROR MESSAGE", message);
     const statusCode = error.response?.status;
     const code = error.response?.data?.code;

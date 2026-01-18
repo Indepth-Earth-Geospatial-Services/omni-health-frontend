@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 const AUTH_STORAGE_KEY = "omni_health_auth";
 
+
 export interface User {
   user_id: number;
   email: string;

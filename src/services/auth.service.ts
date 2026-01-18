@@ -23,6 +23,23 @@ export interface RegisterRequest {
   role?: "user" | "admin" | "super_admin";
 }
 
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface VerifyOtpResponse {
+  message: string;
+  email: string;
+  is_verified: boolean;
+}
+
+export interface ResendOtpResponse {
+  message: string;
+  email: string;
+  expires_in_minutes: number;
+}
+
 // ✅ REMOVED: export interface RegisterResponse extends User {}
 // Just use User type directly since the API returns the same structure
 
@@ -80,6 +97,54 @@ class AuthService {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Verify email using OTP code
+   */
+  async verifyOtp(data: VerifyOtpRequest): Promise<VerifyOtpResponse> {
+    try {
+      const response = await axios.post<VerifyOtpResponse>(
+        `${this.baseUrl}/verify-otp`,
+        {
+          email: data.email,
+          otp: data.otp,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Resend OTP verification code
+   * Uses query parameter as required by the API
+   */
+  async resendOtp(email: string): Promise<ResendOtpResponse> {
+    try {
+      const response = await axios.post<ResendOtpResponse>(
+        `${this.baseUrl}/resend-otp`,
+        null,
+        {
+          params: { email },
+          headers: {
+            Accept: "application/json",
           },
         }
       );

@@ -40,11 +40,11 @@ export default function RegisterForm() {
 
       // ✅ Show success message
       toast.success("Account created successfully!", {
-        description: "Please log in with your credentials.",
+        description: "Please verify your email to continue.",
       });
 
-      // ✅ FIXED: Redirect to login page instead of auto-login
-      router.push("/login");
+      // Redirect to OTP verification page with email
+      router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
       // Handle error
       const errorMessage =

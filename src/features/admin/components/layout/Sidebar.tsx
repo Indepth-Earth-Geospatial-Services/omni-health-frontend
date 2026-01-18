@@ -16,7 +16,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const menuItems = [
-    { label: "Overview", icon: MailOpen, href: "/admin" },
+    // { label: "Overview", icon: MailOpen, href: "/admin" },
     // { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
     // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
     { label: "Staff", icon: UserCog, href: "/admin/staff" },

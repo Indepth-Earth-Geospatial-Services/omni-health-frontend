@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -36,11 +36,24 @@ const shakeVariants = {
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [shouldShake, setShouldShake] = useState(false);
+
+  // ✅ Show welcome message for verified users
+  useEffect(() => {
+    const verified = searchParams.get("verified");
+    const email = searchParams.get("email");
+
+    if (verified === "true" && email) {
+      toast.success("Email verified!", {
+        description: "You can now log in with your credentials.",
+      });
+    }
+  }, [searchParams]);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -55,25 +68,74 @@ export default function LoginForm() {
     setLoginError(null);
 
     try {
+      // 1. Login and get token
       const response = await authService.login(data.email, data.password);
 
-      // Store auth data
-      login(response.access_token, response.facility_ids || []);
+      // 2. ✅ Decode JWT to extract user info (temporary solution)
+      const tokenPayload = parseJwt(response.access_token);
+
+      // 3. Create user object from token or set basic info
+      const user = {
+        user_id: tokenPayload.user_id || 0,
+        email: data.email, // We know the email from login form
+        first_name: tokenPayload.first_name || null,
+        last_name: tokenPayload.last_name || null,
+        role: tokenPayload.role || "user",
+        is_active: true,
+        created_at: new Date().toISOString(),
+      };
+
+      // 4. Store auth data with user info
+      login(response.access_token, response.facility_ids || [], user);
 
       toast.success("Login successful!");
 
-      // Redirect based on role
+      // 5. Redirect based on role
       const redirectPath = getRedirectPath(response.facility_ids);
       router.push(redirectPath);
-    } catch {
-      // Set error message and trigger shake animation
-      setLoginError("Invalid email or password");
+    } catch (error: any) {
+      // ✅ Better error handling with specific messages
+      let errorMessage = "Invalid email or password";
+
+      if (error?.response?.status === 401) {
+        errorMessage = "Invalid email or password";
+      } else if (error?.response?.status === 403) {
+        errorMessage = "Please verify your email before logging in";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setLoginError(errorMessage);
       setShouldShake(true);
+
+      // Show toast for specific errors
+      if (errorMessage.includes("verify")) {
+        toast.error("Email not verified", {
+          description: "Please check your email and verify your account.",
+        });
+      }
 
       // Reset shake after animation completes
       setTimeout(() => setShouldShake(false), 400);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  // ✅ Helper function to decode JWT token
+  function parseJwt(token: string) {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return {};
     }
   }
 
@@ -121,9 +183,8 @@ export default function LoginForm() {
                   </FieldLabel>
                   <div className="relative">
                     <Mail
-                      className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${
-                        loginError ? "text-red-400" : "text-gray-400"
-                      }`}
+                      className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${loginError ? "text-red-400" : "text-gray-400"
+                        }`}
                     />
                     <Input
                       {...field}
@@ -165,9 +226,8 @@ export default function LoginForm() {
                   </div>
                   <div className="relative">
                     <Lock
-                      className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${
-                        loginError ? "text-red-400" : "text-gray-400"
-                      }`}
+                      className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${loginError ? "text-red-400" : "text-gray-400"
+                        }`}
                     />
                     <Input
                       {...field}
