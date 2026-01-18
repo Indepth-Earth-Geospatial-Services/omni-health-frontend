@@ -21,7 +21,7 @@ import Link from "next/link";
 import logo from "@assets/img/image.png";
 import { useAuthStore } from "@/store/auth-store"; // ✅ Import auth store
 import { useRouter } from "next/navigation"; // ✅ Import router
-import { toast } from "react-hot-toast"; // ✅ Import toast (or your toast library)
+import { toast } from "sonner";
 
 const navLinks = [
   {
@@ -51,7 +51,6 @@ function SideBar({ className }: { className?: string }) {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-
   // ✅ Handle logout
   const handleLogout = () => {
     try {
