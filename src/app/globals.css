@@ -152,7 +152,15 @@
 [data-slot="drawer-overlay"] {
   @apply pointer-events-none! hidden!;
 }
+/* Fix the bottom gutter/whitespace */
+/* [data-vaul-drawer][data-vaul-drawer-direction="bottom"]::after {
+  height: unset !important;
+} */
 
+/* Optional: Ensure drawer goes to bottom of viewport */
+/* [data-vaul-drawer][data-vaul-drawer-direction="bottom"] {
+  bottom: 0 !important;
+} */
 .loader {
   position: relative;
   width: 85px;

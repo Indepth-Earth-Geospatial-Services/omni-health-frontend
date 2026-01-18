@@ -11,6 +11,7 @@ import { useDrawerStore } from "@/features/user/store/drawer-store";
 import { useFacilityStore } from "@/features/user/store/facility-store";
 import { iso } from "zod";
 import { SelectedFilters } from "@/types/search-filter";
+import { Facility } from "@/types";
 
 interface SearchAndFilterProps {
   onApplyFilters?: (filters: SelectedFilters) => void;
@@ -40,7 +41,7 @@ export function SearchAndFilter({
     setIsFilterOpen,
   } = useSearchFilterStore();
   const openDetails = useDrawerStore((state) => state.openDetails);
-  const setSelectedFacilityId = useFacilityStore(
+  const setSelectedFacility = useFacilityStore(
     (state) => state.setSelectedFacility,
   );
   // Calculate selected count for badge
@@ -66,12 +67,12 @@ export function SearchAndFilter({
   };
 
   const handleViewDetails = useCallback(
-    (facilityId: string) => {
-      setSelectedFacilityId(facilityId);
+    (facility: Facility) => {
+      setSelectedFacility(facility);
       openDetails();
       setIsSearchExpanded(false);
     },
-    [setSelectedFacilityId, openDetails, setIsSearchExpanded],
+    [setSelectedFacility, openDetails, setIsSearchExpanded],
   );
 
   useEffect(() => {

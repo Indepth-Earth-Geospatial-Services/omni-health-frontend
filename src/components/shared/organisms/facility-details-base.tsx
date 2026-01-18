@@ -286,52 +286,59 @@ import { useState } from "react";
 import { InfoCard } from "../atoms/info-card";
 import { OverviewContent } from "../molecules/overview-content";
 import { StatsContent } from "../molecules/stats-content";
+import { useUserLocation } from "@/features/user/hooks/useUserLocation";
+import { useUserStore } from "@/features/user/store/user-store";
 
 interface FacilityDetailsBaseProps {
-  facilityId: string;
+  facility: Facility;
   onShowDirections?: () => void;
   onClose?: () => void;
   variant?: "drawer" | "page";
   isLoading?: boolean;
   error?: Error | null;
   refetch?: () => void;
-  facilityData?: Facility;
 }
 
 function FacilityDetailsBase({
-  facilityId,
+  facility,
   onShowDirections,
   onClose,
   variant = "page",
   isLoading: externalIsLoading,
   error: externalError,
   refetch: externalRefetch,
-  facilityData: externalFacilityData,
 }: FacilityDetailsBaseProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const router = useRouter();
   const openRequestAppointment = useDrawerStore(
     (state) => state.openRequestAppointment,
   );
+  const openDirections = useDrawerStore((state) => state.openDirections);
+
+  const userLocation = useUserStore((state) => state.userLocation);
+  const { permissionState, requestLocation } = useUserLocation();
+  const isLocationReady = !!userLocation;
+  const isLocationDenied = permissionState === "denied";
+  console.log("FROM FACILITY DETAILS BASE", userLocation);
 
   // Use internal hook if no external props provided
-  const {
-    isLoading: internalIsLoading,
-    data: internalFacilityData,
-    error: internalError,
-    refetch: internalRefetch,
-  } = useFacility(facilityId);
+  // const {
+  //   isLoading: internalIsLoading,
+  //   data: internalFacilityData,
+  //   error: internalError,
+  //   refetch: internalRefetch,
+  // } = useFacility(facilityId);
 
   // Use external props if provided, otherwise use internal hook results
-  const isLoading =
-    externalIsLoading !== undefined ? externalIsLoading : internalIsLoading;
-  const error = externalError !== undefined ? externalError : internalError;
-  const refetch = externalRefetch || internalRefetch;
+  // const isLoading =
+  //   externalIsLoading !== undefined ? externalIsLoading : internalIsLoading;
+  // const error = externalError !== undefined ? externalError : internalError;
+  // const refetch = externalRefetch || internalRefetch;
 
   // Use external data if provided, otherwise use data from hook
-  const facilityData: Facility =
-    externalFacilityData || internalFacilityData?.facility || {};
-
+  // const facilityData: Facility =
+  //   externalFacilityData || internalFacilityData?.facility || {};
+  const facilityData = facility;
   // Extract data with defaults
   const {
     facility_name = "Unknown Facility",
@@ -341,7 +348,7 @@ function FacilityDetailsBase({
     address = "",
     avg_daily_patients = 0,
     doctor_patient_ratio = 0,
-    inventory = {},
+    inventory,
     services_list = [],
     specialists = [],
     image_urls = [],
@@ -358,17 +365,17 @@ function FacilityDetailsBase({
   // Derived data
   const formattedRating = formatRating(average_rating);
   const totalBeds =
-    (inventory.inpatient_beds || 0) +
-    (inventory.baby_cots || 0) +
-    (inventory.delivery_beds || 0) +
-    (inventory.resuscitation_beds || 0);
+    (inventory?.infrastructure.inpatient_beds || 0) +
+    (inventory?.infrastructure.baby_cots || 0) +
+    (inventory?.infrastructure.delivery_beds || 0) +
+    (inventory?.infrastructure.resuscitation_beds || 0);
   const formattedLastUpdated = formatDate(last_updated as string);
   const workingHoursText = getWorkingHoursForDisplay(working_hours);
   const hasEmergency = working_hours?.emergency === "24/7";
 
   const isDataAvailable = !isEmptyValue(facilityData);
-  const isError = !!error;
-  const shouldShowContent = !isLoading && !isError && isDataAvailable;
+  // const isError = !!error;
+  // const shouldShowContent = !isLoading && !isError && isDataAvailable;
 
   // Handler functions
   const handleRequestAppointment = () => {
@@ -386,42 +393,42 @@ function FacilityDetailsBase({
   };
 
   // Loading state
-  const loadingContent = (
-    <div className="flex h-full items-center justify-center p-5">
-      <div className="space-y-4 text-center">
-        <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
-        <p className="text-gray-600">Loading facility details...</p>
-      </div>
-    </div>
-  );
+  // const loadingContent = (
+  //   <div className="flex h-full items-center justify-center p-5">
+  //     <div className="space-y-4 text-center">
+  //       <div className="border-primary mx-auto h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
+  //       <p className="text-gray-600">Loading facility details...</p>
+  //     </div>
+  //   </div>
+  // );
 
   // Error state
-  const errorContent = (
-    <div className="flex h-full items-center justify-center p-5 text-center">
-      <div className="space-y-4">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-          <X className="h-6 w-6 text-red-500" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900">
-          Unable to load facility details
-        </h3>
-        <p className="text-gray-600">
-          {error?.message || "Please try again later"}
-        </p>
-        <div className="space-x-3">
-          <Button onClick={() => refetch?.()} className="mt-2">
-            Try Again
-          </Button>
-          {variant === "page" && onClose && (
-            <Button onClick={onClose} variant="outline" className="mt-2">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Go Back
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  // const errorContent = (
+  //   <div className="flex h-full items-center justify-center p-5 text-center">
+  //     <div className="space-y-4">
+  //       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+  //         <X className="h-6 w-6 text-red-500" />
+  //       </div>
+  //       <h3 className="text-lg font-semibold text-gray-900">
+  //         Unable to load facility details
+  //       </h3>
+  //       <p className="text-gray-600">
+  //         {error?.message || "Please try again later"}
+  //       </p>
+  //       <div className="space-x-3">
+  //         <Button onClick={() => refetch?.()} className="mt-2">
+  //           Try Again
+  //         </Button>
+  //         {variant === "page" && onClose && (
+  //           <Button onClick={onClose} variant="outline" className="mt-2">
+  //             <ArrowLeft className="mr-2 h-4 w-4" />
+  //             Go Back
+  //           </Button>
+  //         )}
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   // Header content
   const headerContent = (
@@ -460,13 +467,13 @@ function FacilityDetailsBase({
           </div>
         </div>
         <div className={`shrink-0 ${variant === "drawer" ? "space-x-3" : ""}`}>
-          <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
+          {/* <Button className="rounded-full bg-[#E2E4E9]" size="icon-sm">
             <Image
               src={exportIcon}
               alt="Export"
               className="size-5 object-cover"
             />
-          </Button>
+          </Button> */}
           {variant === "drawer" && onClose && (
             <Button
               onClick={onClose}
@@ -510,18 +517,43 @@ function FacilityDetailsBase({
 
       {/* Action Buttons */}
       <div className="mb-3 flex gap-3">
-        <Button
-          onClick={onShowDirections}
-          size="sm"
-          className="bg-primary flex-1 rounded-full text-[13px]"
-        >
-          <Image
-            src={compass}
-            alt="Directions"
-            className="mr-2 size-4 object-cover"
-          />
-          Get Directions
-        </Button>
+        {isLocationReady && (
+          <Button
+            onClick={() => {
+              if (variant === "page") {
+                openDirections();
+                router.push(`/user?facility=${facility.hfr_id}`);
+              } else {
+                onShowDirections?.();
+              }
+            }}
+            size="sm"
+            className="bg-primary flex-1 rounded-full text-[13px]"
+          >
+            <Image
+              src={compass}
+              alt="Directions"
+              className="mr-2 size-4 object-cover"
+            />
+            Get Directions
+          </Button>
+        )}
+
+        {!isLocationReady && (
+          <Button
+            onClick={() => requestLocation()}
+            disabled={isLocationDenied}
+            size="sm"
+            className={`flex-1 rounded-full bg-gray-400 text-[13px]`}
+          >
+            <Image
+              src={compass}
+              alt="Directions"
+              className="mr-2 size-4 object-cover"
+            />
+            {isLocationDenied ? "Location Access Denied" : "Enable Location"}
+          </Button>
+        )}
         {phone && (
           <Button
             size="sm"
@@ -534,6 +566,16 @@ function FacilityDetailsBase({
           </Button>
         )}
       </div>
+
+      {isLocationDenied && (
+        <div className="my-3 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-2.5 text-red-700">
+          <CircleAlert size={14} className="shrink-0" />
+          <p className="text-[11px] leading-tight font-medium">
+            Location access is blocked. Please enable it in your browser
+            settings to get directions.
+          </p>
+        </div>
+      )}
 
       {/* Meta Info */}
       <div className="flex items-center justify-between text-xs text-gray-500">
@@ -591,7 +633,7 @@ function FacilityDetailsBase({
             facilityLga={facility_lga}
             town={town}
             facilityCategory={facility_category}
-            isLoading={isLoading}
+            // isLoading={isLoading}
           />
         </TabsContent>
         <TabsContent value="stats">
@@ -600,7 +642,7 @@ function FacilityDetailsBase({
             doctorPatientRatio={doctor_patient_ratio}
             formattedRating={formattedRating}
             totalReviews={total_reviews}
-            isLoading={isLoading}
+            // isLoading={isLoading}
           />
         </TabsContent>
       </div>
@@ -625,10 +667,11 @@ function FacilityDetailsBase({
 
   return (
     <>
-      {isLoading && loadingContent}
-      {isError && errorContent}
+      {/* {isLoading && loadingContent}
+      {isError && errorContent} */}
 
-      {shouldShowContent && (
+      {/* {shouldShowContent && ( */}
+      {true && (
         <div
           className={`flex ${variant === "drawer" ? "h-full flex-1 flex-col" : "flex h-dvh flex-col bg-white"}`}
         >

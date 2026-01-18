@@ -9,13 +9,13 @@ import { toast } from "sonner";
 
 function AppointmentStep5() {
   const [copied, setCopied] = useState(false);
-  const facilityId = useFacilityStore((state) => state.selectedFacility);
+  const facility = useFacilityStore((state) => state.selectedFacility);
 
   const {
     data: facilityDetailsData,
     isLoading,
     error,
-  } = useFacility(facilityId);
+  } = useFacility(facility.facility_id);
   const facilityDetails = facilityDetailsData.facility;
   const openDetails = useDrawerStore((state) => state.openDetails);
 

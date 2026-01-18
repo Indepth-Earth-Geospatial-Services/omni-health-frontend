@@ -5,7 +5,7 @@ import {
   GetLGAFacilities,
   GetNearestFacility,
   SearchFacilities,
-} from "../features/user/types/apiResponse";
+} from "../types/api-response";
 import { apiClient } from "../lib/client";
 
 class FacilityService {
@@ -79,11 +79,9 @@ class FacilityService {
     };
 
     this.addFilterParams(params, filters);
-
     const response = await apiClient.get(this.ENDPOINTS.SEARCH, {
       params,
     });
-
     return response.data;
   }
 
@@ -126,7 +124,6 @@ class FacilityService {
         },
       },
     );
-
     return response.data;
   }
 

@@ -1,12 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { facilityService } from "../services/facility.service";
 import { FilterQuery, SelectedFilters } from "@/types/search-filter";
-
-export const searchKeys = {
-  all: ["facilitySearch"] as const,
-  search: (filters: any) =>
-    [...searchKeys.all, JSON.stringify(filters)] as const,
-};
+import { FACILITY_KEYS } from "@/constants";
 
 export const useFacilitySearch = (
   filters: SelectedFilters = {},
@@ -18,10 +13,10 @@ export const useFacilitySearch = (
     (filters.performanceTier && filters.performanceTier.length > 0) ||
     (filters.serviceAvailability && filters.serviceAvailability.length > 0) ||
     (filters.lga && filters.lga.length > 0) ||
-    (filters.name && filters.name.trim().length > 3);
+    (filters.name && filters.name.trim().length >= 3);
 
   return useInfiniteQuery({
-    queryKey: searchKeys.search(filters),
+    queryKey: FACILITY_KEYS.search(filters),
     queryFn: async ({ pageParam = 1 }) => {
       // Early return with empty response if no filters
       if (!hasFilters) {
@@ -47,7 +42,6 @@ export const useFacilitySearch = (
         page: pageParam,
         limit: 10,
       });
-
       return {
         facilities: response.facilities,
         page: response.pagination.current_page,

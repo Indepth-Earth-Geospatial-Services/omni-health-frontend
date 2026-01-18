@@ -33,10 +33,11 @@ function Overview({ facility }: OverviewProps) {
     "N/A";
 
   // Inventory variables
-  const deliveryBeds = facility?.inventory?.delivery_beds || 0;
-  const babyCots = facility?.inventory?.baby_cots || 0;
-  const inPatientBeds = facility?.inventory?.inpatient_beds || 0;
-  const resuscitationBeds = facility?.inventory?.resuscitation_beds || 0;
+  const deliveryBeds = facility?.inventory?.infrastructure.delivery_beds || 0;
+  const babyCots = facility?.inventory?.infrastructure.baby_cots || 0;
+  const inPatientBeds = facility?.inventory?.infrastructure.inpatient_beds || 0;
+  const resuscitationBeds =
+    facility?.inventory?.infrastructure.resuscitation_beds || 0;
   const totalBeds = deliveryBeds + babyCots + inPatientBeds + resuscitationBeds;
 
   // Contact variables

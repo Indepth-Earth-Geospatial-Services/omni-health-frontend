@@ -2,104 +2,25 @@ import { FilterCategory } from "@/types/search-filter";
 
 export const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-// export const FILTERCATEGORIES: FilterCategory[] = [
-//   {
-//     title: "Facility Type",
-//     storeKey: "facilityType",
-//     options: [
-//       {
-//         id: "hospital",
-//         icon: "🏥",
-//         label: "Hospital",
-//         value: "hospital",
-//       },
-//       {
-//         id: "pharmacy",
-//         icon: "💊",
-//         label: "Pharmacy",
-//         value: "pharmacy",
-//       },
-//       {
-//         id: "clinic",
-//         icon: "🩺",
-//         label: "Clinic",
-//         value: "clinic",
-//       },
-//       {
-//         id: "teaching-hospital",
-//         label: "Teaching Hospital",
-//         value: "teaching_hospital",
-//       },
-//       {
-//         id: "healthcare-center",
-//         label: "Healthcare Center",
-//         value: "healthcare_center",
-//       },
-//     ],
-//   },
-//   {
-//     title: "Performance Tier",
-//     storeKey: "performanceTier",
-//     options: [
-//       { id: "high-performance", label: "High Performance", value: "high" },
-//       { id: "moderate", label: "Moderate", value: "moderate" },
-//       { id: "average", label: "Average", value: "average" },
-//     ],
-//   },
-//   {
-//     title: "Service Availability",
-//     storeKey: "serviceAvailability",
-//     options: [
-//       { id: "cardiology", label: "Cardiology", value: "cardiology" },
-//       { id: "dentistry", label: "Dentistry", value: "dentistry" },
-//       { id: "dermatology", label: "Dermatology", value: "dermatology" },
-//       { id: "emergency", label: "Emergency", value: "emergency" },
-//       { id: "ent", label: "ENT", value: "ent" },
-//       { id: "maternity", label: "Maternity", value: "maternity" },
-//       {
-//         id: "general-practice",
-//         label: "General Practice",
-//         value: "general_practice",
-//       },
-//       { id: "gynaecology", label: "Gynaecology", value: "gynaecology" },
-//       { id: "pediatrics", label: "Pediatrics", value: "pediatrics" },
-//       { id: "neurology", label: "Neurology", value: "neurology" },
-//     ],
-//   },
-//   {
-//     title: "Local Government",
-//     storeKey: "lga",
-//     options: [
-//       { id: "abua-odual", label: "Abua/Odual", value: "Abua-Odual" },
-//       { id: "ahoada-east", label: "Ahoada East", value: "Ahoada-East" },
-//       { id: "ahoada-west", label: "Ahoada West", value: "Ahoada-West" },
-//       { id: "akuku-toru", label: "Akuku-Toru", value: "Akuku-Toru" },
-//       { id: "andoni", label: "Andoni", value: "Andoni" },
-//       { id: "asari-toru", label: "Asari-Toru", value: "Asari-Toru" },
-//       { id: "bonny", label: "Bonny", value: "Bonny" },
-//       { id: "degema", label: "Degema", value: "Degema" },
-//       { id: "eleme", label: "Eleme", value: "Eleme" },
-//       { id: "emohua", label: "Emohua", value: "Emohua" },
-//       { id: "etche", label: "Etche", value: "Etche" },
-//       { id: "gokana", label: "Gokana", value: "Gokana" },
-//       { id: "ikwerre", label: "Ikwerre", value: "Ikwerre" },
-//       { id: "khana", label: "Khana", value: "Khana" },
-//       { id: "obio-akpor", label: "Obio/Akpor", value: "Obio-Akpor" },
-//       {
-//         id: "ogba-egbema-ndoni",
-//         label: "Ogba/Egbema/Ndoni",
-//         value: "Ogba-Egbema-Ndoni",
-//       },
-//       { id: "ogu-bolo", label: "Ogu/Bolo", value: "Ogu-Bolo" },
-//       { id: "okrika", label: "Okrika", value: "Okrika" },
-//       { id: "omuma", label: "Omuma", value: "Omuma" },
-//       { id: "opobo-nkoro", label: "Opobo/Nkoro", value: "Opobo-Nkoro" },
-//       { id: "oyigbo", label: "Oyigbo", value: "Oyigbo" },
-//       { id: "port-harcourt", label: "Port Harcourt", value: "Port-Harcourt" },
-//       { id: "tai", label: "Tai", value: "Tai" },
-//     ],
-//   },
-// ];
+export const FACILITY_KEYS = {
+  facility: (id: string) => ["facility", id] as const,
+  lgaFacilities: (latitude: number, longitude: number) =>
+    [
+      "lgaFacilities",
+      Math.round(latitude * 100) / 100,
+      Math.round(longitude * 100) / 100,
+    ] as const,
+  nearestFacility: (latitude: number, longitude: number) =>
+    [
+      "nearestFacility",
+      Math.round(latitude * 100) / 100,
+      Math.round(longitude * 100) / 100,
+    ] as const,
+  allFacilities: (filters?: any) => ["allFacilities", filters] as const,
+  all: ["facilitySearch"] as const,
+  search: (filters: any) =>
+    [...FACILITY_KEYS.all, JSON.stringify(filters)] as const,
+};
 
 export const FILTERCATEGORIES: FilterCategory[] = [
   {

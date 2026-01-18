@@ -3,7 +3,7 @@ import { useFacility } from "../../../hooks/useFacilities";
 import { AppointmentStep2Data } from "../schemas/appointment.schema";
 import { useFacilityStore } from "../store/facility-store";
 import { AppointmentData, AppointmentStepData } from "../types";
-import FacilityListItem from "./facility-list-item";
+import FacilityListItem from "../../../components/shared/molecules/facility-list-item";
 
 interface AppointmentStep2Prop {
   onNext: (formData: AppointmentStepData, key: keyof AppointmentData) => void;
@@ -11,13 +11,13 @@ interface AppointmentStep2Prop {
 }
 
 function AppointmentStep2({ onNext, onBack }: AppointmentStep2Prop) {
-  const facilityId = useFacilityStore((state) => state.selectedFacility);
+  const facility = useFacilityStore((state) => state.selectedFacility);
 
   const {
     isLoading,
     error,
     data: facilityDetailsData,
-  } = useFacility(facilityId);
+  } = useFacility(facility.facility_id);
   const facilityDetails = facilityDetailsData.facility;
   function handleContinue() {
     onNext({ facilityId: facilityDetails.facility_id }, "step2");

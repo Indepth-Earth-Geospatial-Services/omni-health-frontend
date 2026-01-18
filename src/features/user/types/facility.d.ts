@@ -1,11 +1,15 @@
-import { Facility } from "./apiResponse";
+import { Facility } from "../../../types/api-response";
 
 export interface FacilityState {
-  selectedFacility: string | null;
+  selectedFacility: Facility | null;
+  nearestFacility: Facility | null;
+  allFacilities: Facility[];
 }
 
 export interface FacilityActions {
-  setSelectedFacility: (id: string) => void;
+  setSelectedFacility: (facility: Facility) => void;
+  setNearestFacility: (facility: Facility) => void;
+  setAllFacilities: (allFacilities) => void;
 }
 
 export type FacilityStore = FacilityState & FacilityActions;

@@ -1,9 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import profileImage from "@assets/img/facilities/shammah.jpg";
-import logo from "@assets/img/icons/svg/logo.svg";
 import {
   GitCompareArrows,
   Info,
@@ -14,6 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import logo from "@assets/img/image.png";
 
 const navLinks = [
   {
@@ -26,11 +31,11 @@ const navLinks = [
     name: "Facilities",
     href: "/facilities",
   },
-  {
-    icons: <GitCompareArrows size={24} />,
-    name: "Compare",
-    href: "/compare-facilities",
-  },
+  // {
+  //   icons: <GitCompareArrows size={24} />,
+  //   name: "Compare",
+  //   href: "/compare-facilities",
+  // },
   {
     icons: <Info size={24} />,
     name: "Help",
@@ -43,6 +48,7 @@ function SideBar({ className }: { className?: string }) {
     <>
       {/* TRIGGER */}
       <Sheet>
+        <SheetTitle className="sr-only">RVS Health Care Side bar</SheetTitle>
         <SheetTrigger asChild>
           {/* absolute top-[59px] left-5 */}
           <button
@@ -64,15 +70,25 @@ function SideBar({ className }: { className?: string }) {
               href="/user"
               className="mt-10 flex h-[57px] items-center gap-3"
             >
-              <Image src={logo} alt="logo" />
+              {/* <Image src={logo} alt="logo" />
               <h1 className="text-primary text-[19px] font-normal">
                 RVS-HealthCare
-              </h1>
+              </h1> */}
+              <div className="relative h-10 w-10">
+                <Image
+                  src={logo}
+                  alt="RVS Healthcare Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              <h1 className="text-sm font-semibold text-black">RSPHCMB</h1>
             </Link>
 
             {/* PROFILE DETAILS */}
             <div className="mt-8 flex items-center gap-2.5 py-3">
-              <div className="relative size-20 overflow-hidden rounded-full">
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-full">
                 <Image
                   src={profileImage}
                   alt="profile image"

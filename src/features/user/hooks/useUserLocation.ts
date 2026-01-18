@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useUserStore } from "../store/user-store";
+import { toast } from "sonner";
 
 type PermissionState = "prompt" | "granted" | "denied" | "unsupported";
 
@@ -7,6 +8,7 @@ interface UseUserLocationReturn {
   permissionState: PermissionState;
   requestLocation: () => void;
 }
+const TOAST_ID = "user-location-toast";
 
 export function useUserLocation(): UseUserLocationReturn {
   const setIsLoading = useUserStore((state) => state.setIsLoadingPosition);
@@ -15,11 +17,15 @@ export function useUserLocation(): UseUserLocationReturn {
     useState<PermissionState>("prompt");
   const setUserLocation = useUserStore((state) => state.setUserLocation);
 
+  const requestRef = useRef<() => void>(() => {});
+  // const loadingToastId = useRef<string | number | null>(null);
   // Use ref to store the permission result for cleanup
   const permissionStatusRef = useRef<PermissionStatus | null>(null);
 
   const onLocationSuccess = useCallback(
     (position: GeolocationPosition) => {
+      toast.success("Location updated", { id: TOAST_ID });
+
       setUserLocation({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -33,34 +39,51 @@ export function useUserLocation(): UseUserLocationReturn {
   const onLocationError = useCallback(
     (err: GeolocationPositionError) => {
       console.error("Location error:", err);
+      setIsLoading(false);
+
+      // 1. Specific Handle for "Denied" (Permanent Block)
+      if (err.code === 1) {
+        setPermissionState("denied");
+        setError("Location permission denied.");
+
+        return toast.error("Permission Blocked", {
+          id: TOAST_ID,
+          // description:
+          //   "Please enable location access in your browser settings to continue.",
+          // duration: 5000,
+        });
+      }
+
+      // 2. Handle Transient Errors (Retry-able)
+      let message = "An unknown error occurred.";
       switch (err.code) {
-        case 1:
-          setError(
-            "Location permission denied. Please enable location access.",
-          );
-          setPermissionState("denied");
-          break;
         case 2:
-          setError("Location information unavailable.");
+          message = "Location information unavailable.";
           break;
         case 3:
-          setError("Location request timed out.");
+          message = "Location request timed out.";
           break;
-        default:
-          setError("An unknown error occurred.");
       }
-      setIsLoading(false);
+
+      setError(message);
+
+      toast.error(message, {
+        id: TOAST_ID,
+        action: {
+          label: "Retry",
+          onClick: () => requestRef.current(),
+        },
+      });
     },
     [setError, setIsLoading],
   );
-
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
       setPermissionState("unsupported");
       return;
     }
-
+    toast.loading("Getting your location...", { id: TOAST_ID });
     setIsLoading(true);
     setError(null);
 
@@ -127,6 +150,10 @@ export function useUserLocation(): UseUserLocationReturn {
       }
     };
   }, []);
+
+  useEffect(() => {
+    requestRef.current = requestLocation;
+  }, [requestLocation]);
 
   return {
     permissionState,
