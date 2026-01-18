@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "../globals.css";
 import Providers from "../../providers/providers";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,20 +19,17 @@ const inter = Inter({
   weight: ["400", "700"],
 });
 
-// NO metadata export - it's in root layout
-// NO viewport export - it's in root layout
-
 export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-dvh *:mx-auto *:max-w-120!`}>
-      <Providers>
-        {children}
-      </Providers>
-      {/* NO Toaster here - it's in root layout */}
+    <div
+      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-dvh *:mx-auto *:max-w-120!`}
+    >
+      <Providers>{children}</Providers>
+      <Toaster position="top-right" closeButton />
     </div>
   );
 }
