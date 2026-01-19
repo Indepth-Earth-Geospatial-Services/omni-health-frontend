@@ -88,10 +88,7 @@ function SideBar({ className }: { className?: string }) {
           className="flex h-dvh w-[80dvw] flex-col border-0 bg-white p-0 px-5 pb-4.5"
         >
           <div className="flex h-full flex-col">
-            <Link
-              href="/user"
-              className="mt-10 flex h-[57px] items-center gap-3"
-            >
+            <Link href="/" className="mt-10 flex h-[57px] items-center gap-3">
               <div className="relative h-10 w-10">
                 <Image
                   src={logo}
