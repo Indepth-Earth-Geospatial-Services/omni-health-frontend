@@ -1,7 +1,6 @@
 import axios from "axios";
 import { handleApiError } from "@/lib/utils";
 import type { User } from "@/store/auth-store";
-import config from "@/lib/config";
 
 // Types for API requests/responses
 export interface LoginRequest {
@@ -48,7 +47,7 @@ class AuthService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = config.API_BASE_URL;
+    this.baseUrl = "/authentication"; // Updated to match the rewrite rule HOTFIX: HACK: FIXME
   }
 
   /**
