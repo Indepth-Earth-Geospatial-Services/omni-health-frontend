@@ -121,15 +121,15 @@ export default function LoginPage() {
             className="flex gap-8"
           >
             <div>
-              <p className="text-primary text-3xl font-bold">500+</p>
+              <p className="text-primary text-3xl font-bold"> 347+</p>
               <p className="text-sm text-gray-600">Healthcare Facilities</p>
             </div>
-            <div>
+            {/* <div>
               <p className="text-primary text-3xl font-bold">50k+</p>
               <p className="text-sm text-gray-600">Happy Patients</p>
-            </div>
+            </div> */}
             <div>
-              <p className="text-primary text-3xl font-bold">36</p>
+              <p className="text-primary text-3xl font-bold">23 </p>
               <p className="text-sm text-gray-600">LGAs Covered</p>
             </div>
           </motion.div>
@@ -188,5 +188,4 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
-}
+  )}

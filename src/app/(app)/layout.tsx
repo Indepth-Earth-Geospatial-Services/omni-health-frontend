@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "../globals.css";
 import Providers from "../../providers/providers";
 import { Toaster } from "sonner";
+import { AuthHydration } from "@/components/AuthHydration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,9 @@ export default function AppLayout({
     <div
       className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-dvh *:mx-auto *:max-w-120!`}
     >
-      <Providers>{children}</Providers>
+      <Providers>
+        <AuthHydration>{children}</AuthHydration>
+      </Providers>
       <Toaster position="top-right" closeButton />
     </div>
   );

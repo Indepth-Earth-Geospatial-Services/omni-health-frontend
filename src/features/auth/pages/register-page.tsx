@@ -7,7 +7,7 @@ import RegisterForm from "../components/register-form";
 import Image from "next/image";
 
 const benefits = [
-  "Access to 500+ verified healthcare facilities",
+  "Access to 347+ verified healthcare facilities",
   "Real-time availability and capacity updates",
   "Performance metrics and quality ratings",
   "Easy appointment booking",
@@ -146,7 +146,7 @@ export default function RegisterPage() {
             </h2>
             <p className="mt-2 text-gray-600">
               Get started with OmniHealth today
-            </p>
+            </p>s
           </motion.div>
 
           {/* Register Form */}
