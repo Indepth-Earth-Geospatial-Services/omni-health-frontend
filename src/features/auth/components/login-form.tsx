@@ -21,7 +21,7 @@ import { loginSchema, LoginFormData } from "../schemas/login.schema";
 import { authService } from "@/services/auth.service";
 import { useAuthStore, getRedirectPath } from "@/store/auth-store";
 import { toast } from "sonner";
-import SocialLogin from "./social-login";
+// import SocialLogin from "./social-login";
 
 // Shake animation variants
 const shakeVariants = {
@@ -298,7 +298,7 @@ export default function LoginForm() {
       </div>
 
       {/* Social Login */}
-      <SocialLogin />
+      {/* <SocialLogin /> */}
 
       {/* Register Link */}
       <p className="mt-6 text-center text-sm text-gray-600">

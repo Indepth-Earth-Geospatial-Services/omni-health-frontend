@@ -47,17 +47,24 @@ const StaffList = ({ facilityId }: StaffListProps) => {
         ? data
         : data?.staff ?? [];
 
-    const pagination = !Array.isArray(data)
-        ? data?.pagination
-        : {
-            total_records: staffs.length,
-            current_page: currentPage,
-            total_pages: 2,
-            limit: itemsPerPage,
-        };
+    // Get pagination from API response
+    const apiPagination = !Array.isArray(data) ? data?.pagination : null;
 
-    const totalPages = pagination?.total_pages ?? 1;
-    const totalRecords = pagination?.total_records ?? staffs.length;
+    // Calculate total records - use API value if available, otherwise we can't know the true total
+    // If API doesn't return total_records, we assume there might be more pages if we got a full page
+    const totalRecords = apiPagination?.total_records ?? 0;
+
+    // Calculate total pages from API pagination or estimate based on current data
+    // If we have API pagination with total_records, use that for calculation
+    // Otherwise, if we received a full page of items, assume there might be more
+    const hasMorePages = staffs.length === itemsPerPage && !apiPagination?.total_records;
+    const totalPages = apiPagination?.total_records
+        ? Math.ceil(apiPagination.total_records / itemsPerPage)
+        : apiPagination?.total_pages
+            ? apiPagination.total_pages
+            : hasMorePages
+                ? currentPage + 1  // Assume at least one more page
+                : currentPage;     // Current page is the last
 
     // Pagination handlers
     const handleNextPage = () => {
@@ -232,7 +239,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 buttonLabel="Add New Staff"
                 onButtonClick={() => setIsModalOpen(true)}
             />
-            <div className="w-full bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="w-full bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
                 {/* Loading overlay when fetching new page */}
                 {isFetching && !isLoading && (
                     <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
@@ -240,10 +247,11 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                     </div>
                 )}
 
-                <div className="overflow-x-auto relative">
+                {/* Fixed height container for 10 rows - each row ~72px, so 720px total */}
+                <div className="overflow-x-auto relative" style={{ minHeight: '720px' }}>
                     <table className="w-full text-left border-collapse">
                         {/* Table Header */}
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                        <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                             <tr className="text-slate-500 text-sm font-medium">
                                 <th className="p-4 w-12"><MinusSquare size={18} className="text-primary bg-primary/10 rounded" /></th>
                                 <th className="p-4">S/NO</th>
@@ -267,8 +275,10 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                         <tbody>
                             {staffs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={20} className="p-8 text-center text-slate-500">
-                                        No staff members found
+                                    <td colSpan={20} className="p-8 text-center text-slate-500" style={{ height: '668px' }}>
+                                        <div className="flex flex-col items-center justify-center h-full">
+                                            <p>No staff members found</p>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
@@ -371,7 +381,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 </div>
 
                 {/* Pagination Footer */}
-                <div className="p-4 flex flex-col md:flex-row items-center justify-between border-t border-slate-100 gap-4">
+                <div className="p-4 flex flex-col md:flex-row items-center justify-between border-t border-slate-100 gap-4 mt-auto">
                     <button
                         onClick={handlePreviousPage}
                         disabled={currentPage === 1 || isFetching}
@@ -384,10 +394,13 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                     </button>
                     <div className="flex flex-col items-center">
                         <p className="text-sm text-slate-500 font-medium italic">
-                            Page {currentPage} of {totalPages}
+                            Page {currentPage} {totalRecords > 0 ? `of ${totalPages}` : ''}
                         </p>
                         <p className="text-xs text-slate-400">
-                            {totalRecords} total records
+                            {totalRecords > 0
+                                ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalRecords)} of ${totalRecords} records`
+                                : `Showing ${staffs.length} records`
+                            }
                         </p>
                     </div>
                     <button

@@ -1,8 +1,18 @@
 "use client";
 
 import React from 'react';
-import { Search, SlidersHorizontal, Plus } from 'lucide-react';
+import { Search, SlidersHorizontal, Plus, Download, FileSpreadsheet, FileText, FileImage } from 'lucide-react';
 import { Button } from '../ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+export type ExportFormat = 'pdf' | 'excel' | 'svg';
 
 interface TableHeadersProps {
     title: string;
@@ -12,6 +22,8 @@ interface TableHeadersProps {
     onSortBy?: () => void;
     showFilters?: boolean;
     onFilters?: () => void;
+    showExport?: boolean;
+    onExport?: (format: ExportFormat) => void;
     buttonLabel?: string;
     onButtonClick?: () => void;
     buttonIcon?: React.ReactNode;
@@ -25,6 +37,8 @@ const TableHeaders: React.FC<TableHeadersProps> = ({
     onSortBy,
     showFilters = true,
     onFilters,
+    showExport = true,
+    onExport,
     buttonLabel,
     onButtonClick,
     buttonIcon = <Plus size={18} />
@@ -70,6 +84,45 @@ const TableHeaders: React.FC<TableHeadersProps> = ({
                             <SlidersHorizontal size={16} />
                             Filters
                         </button>
+                    )}
+
+                    {/* Export Button with Dropdown */}
+                    {showExport && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2"
+                                >
+                                    <Download size={16} />
+                                    Export
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-white">
+                                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() => onExport?.('pdf')}
+                                    className="cursor-pointer"
+                                >
+                                    <FileText size={16} className="text-red-500" />
+                                    <span>PDF Document</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => onExport?.('excel')}
+                                    className="cursor-pointer"
+                                >
+                                    <FileSpreadsheet size={16} className="text-green-600" />
+                                    <span>Excel Spreadsheet</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => onExport?.('svg')}
+                                    className="cursor-pointer"
+                                >
+                                    <FileImage size={16} className="text-blue-500" />
+                                    <span>SVG Image</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
 
                     {/* Optional Action Button (e.g., "Add Staff") */}
