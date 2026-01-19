@@ -16,13 +16,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 const menuItems = [
-    { label: "Overview", icon: MailOpen, href: "/admin" },
+    // { label: "Overview", icon: MailOpen, href: "/admin" },
     // { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
     // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
     { label: "Staff", icon: UserCog, href: "/admin/staff" },
     { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
     { label: "Equipments & Facility", icon: Hospital, href: "/admin/equipments" },
-    { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
+    // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
     { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
@@ -103,7 +103,7 @@ export default function Sidebar() {
             {/* Admin Profile */}
             <div className="p-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
+                    {/* <div className="flex-shrink-0">
 
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                             {adminProfile.name.split(' ').map(n => n[0]).join('')}
@@ -117,7 +117,7 @@ export default function Sidebar() {
                         <p className="truncate text-xs text-gray-500">
                             {adminProfile.email}
                         </p>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </aside>

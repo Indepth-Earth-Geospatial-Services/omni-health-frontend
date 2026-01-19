@@ -3,10 +3,9 @@
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { MapPin, Shield, BarChart3 } from "lucide-react";
-import LoginForm from "../components/login-form";
 import Image from "next/image";
 import Link from "next/link";
-
+import { Suspense } from "react"; // ✅ Add this
 
 // Dynamically import map to avoid SSR issues
 const AnimatedMapBackground = dynamic(
@@ -18,6 +17,16 @@ const AnimatedMapBackground = dynamic(
     ),
   }
 );
+
+// ✅ Dynamically import LoginForm with Suspense
+const LoginForm = dynamic(() => import("../components/login-form"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-12">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  ),
+});
 
 const features = [
   {
@@ -67,7 +76,6 @@ export default function LoginPage() {
                 </h1>
               </div>
             </Link>
-
           </motion.div>
 
           {/* Main Content */}
@@ -167,8 +175,16 @@ export default function LoginPage() {
             </p>
           </motion.div>
 
-          {/* Login Form */}
-          <LoginForm />
+          {/* ✅ Wrap LoginForm in Suspense */}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            }
+          >
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>
