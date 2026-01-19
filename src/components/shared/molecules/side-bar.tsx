@@ -19,6 +19,9 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@assets/img/image.png";
+import { useAuthStore } from "@/store/auth-store"; // ✅ Import auth store
+import { useRouter } from "next/navigation"; // ✅ Import router
+import { toast } from "sonner";
 
 const navLinks = [
   {
@@ -44,13 +47,32 @@ const navLinks = [
 ] as const;
 
 function SideBar({ className }: { className?: string }) {
+  // ✅ Get logout function and user from auth store
+  const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const router = useRouter();
+  // ✅ Handle logout
+  const handleLogout = () => {
+    try {
+      // Clear auth state
+      logout();
+
+      // Show success message
+      toast.success("Logged out successfully");
+
+      // Redirect to login page
+      router.push("/login");
+    } catch (error) {
+      toast.error("Failed to log out. Please try again.");
+    }
+  };
+
   return (
     <>
       {/* TRIGGER */}
       <Sheet>
         <SheetTitle className="sr-only">RVS Health Care Side bar</SheetTitle>
         <SheetTrigger asChild>
-          {/* absolute top-[59px] left-5 */}
           <button
             className={cn(
               "flex size-12 items-center justify-center rounded-full bg-white shadow-[0_24px_56px_-4px_#585C5F29]",
@@ -66,14 +88,7 @@ function SideBar({ className }: { className?: string }) {
           className="flex h-dvh w-[80dvw] flex-col border-0 bg-white p-0 px-5 pb-4.5"
         >
           <div className="flex h-full flex-col">
-            <Link
-              href="/user"
-              className="mt-10 flex h-[57px] items-center gap-3"
-            >
-              {/* <Image src={logo} alt="logo" />
-              <h1 className="text-primary text-[19px] font-normal">
-                RVS-HealthCare
-              </h1> */}
+            <Link href="/" className="mt-10 flex h-[57px] items-center gap-3">
               <div className="relative h-10 w-10">
                 <Image
                   src={logo}
@@ -97,9 +112,14 @@ function SideBar({ className }: { className?: string }) {
                 />
               </div>
               <div>
-                <h3 className="text-[15px] font-medium">Tee Godwin</h3>
+                {/* ✅ Display actual user data from auth store */}
+                <h3 className="text-[15px] font-medium">
+                  {user?.first_name && user?.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : "User"}
+                </h3>
                 <p className="text-[13px] text-[#868C98]">
-                  toksgodwin@gmail.com
+                  {user?.email || "user@example.com"}
                 </p>
               </div>
             </div>
@@ -118,10 +138,12 @@ function SideBar({ className }: { className?: string }) {
               ))}
             </ul>
 
+            {/* ✅ LOGOUT BUTTON */}
             <div className="mt-auto pb-4.5">
               <Button
                 variant="ghost"
-                className="h-12 w-full justify-start gap-3 text-[15px] font-normal text-[#E11414]"
+                onClick={handleLogout} // ✅ Added onClick handler
+                className="h-12 w-full justify-start gap-3 text-[15px] font-normal text-[#E11414] hover:bg-red-50"
               >
                 <LogOut size={24} /> Log out
               </Button>

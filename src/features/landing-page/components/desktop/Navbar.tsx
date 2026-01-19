@@ -41,36 +41,38 @@ export default function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-            <div className="relative h-10 w-10 sm:h-10 sm:w-10 md:h-16 md:w-16">
+            <div className="flex items-center px-4 gap-4">
               <Image
                 src="/img/image.png"
-                alt="RVS Healthcare Logo"
-                fill
-                className="object-contain"
+                alt="Healthcare facility background"
                 priority
+                width={60}
+                height={60}
+                quality={75} className="w-10 h-10 md:w-15 md:h-15"
+
               />
+              <h1 className="text-white text-sm sm:text-base md:text-xl font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+                RSPHCMB
+              </h1>
             </div>
-            <h1 className="text-white text-sm sm:text-base md:text-xl font-semibold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
-              RSPHCMB
-            </h1>
           </Link>
 
           {/* CTA Buttons - Hidden on mobile */}
           <div className="hidden md:flex gap-3 lg:gap-4 items-center">
             <div className="h-10 lg:h-12 w-px bg-white/40" aria-hidden="true" />
-            <Button
+            {/* <Button
               asChild
               size="lg"
               className="bg-transparent border hover:border-none font-semibold transition-all hover:scale-105 rounded-full py-4 lg:py-6 text-base lg:text-lg px-6 lg:px-8"
             >
               <Link href="/user">Explore Facility</Link>
-            </Button>
+            </Button> */}
             <Button
               asChild
               size="lg"
               className="bg-white text-primary hover:bg-white/90 font-semibold transition-all hover:scale-105 rounded-full py-4 lg:py-6 text-base lg:text-lg px-6 lg:px-8"
             >
-              <Link href="/admin">Explore Admin</Link>
+              <Link href="/login">Get Started</Link>
             </Button>
           </div>
         </div>

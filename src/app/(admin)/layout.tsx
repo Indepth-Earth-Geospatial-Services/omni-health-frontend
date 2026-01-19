@@ -16,20 +16,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <QueryProvider>
-          <UnregisterServiceWorker />
-          <div className="flex h-screen overflow-hidden">
-            {/* Sidebar - Fixed width */}
-            <Sidebar />
-            {/* Main Content Area - This will render your pages */}
-            <div className="flex flex-1 flex-col overflow-hidden">
-              {children}
-            </div>
-          </div>
-        </QueryProvider>
-      </body>
-    </html>
+    <QueryProvider>
+      <UnregisterServiceWorker />
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar - Fixed width */}
+        <Sidebar />
+        {/* Main Content Area - This will render your pages */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {children}
+        </div>
+      </div>
+    </QueryProvider>
+
   );
 }

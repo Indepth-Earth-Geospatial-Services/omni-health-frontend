@@ -29,24 +29,53 @@ export interface GetStaffResponse {
   pagination: StaffPagination;
 }
 
-export interface CreateStaffData {
-  full_name: string;
-  gender?: string;
-  rank_cadre?: string;
-  grade_level?: string;
-  qualifications?: Record<string, any>; // Changed from string to object
-  date_first_appointment?: string;
-  date_of_birth?: string;
-  phone_number?: string;
-  email?: string;
-  // Optional fields not in backend schema but kept for form
-  presentAppt?: string;
-  stateOrigin?: string;
-  yearsInStation?: string;
-  facility?: string;
-  lga?: string;
-  status?: string;
-  remark?: string;
+export type CreateStaffData = Record<string, any>;
+
+// Inventory Types
+export interface EquipmentInventory {
+  [equipmentName: string]: number;
+}
+
+export interface InfrastructureInventory {
+  [infrastructureName: string]: number;
+}
+
+export interface FacilityInventory {
+  equipment: EquipmentInventory;
+  infrastructure: InfrastructureInventory;
+}
+
+export interface GetFacilityInventoryResponse {
+  facility_id: string;
+  facility_name: string;
+  inventory: FacilityInventory;
+}
+
+// Add Equipment/Infrastructure Request & Response Types
+export interface AddEquipmentRequest {
+  item_name: string;
+  quantity: number;
+}
+
+export interface AddInfrastructureRequest {
+  item_name: string;
+  quantity: number;
+}
+
+export interface AddEquipmentResponse {
+  facility_id: string;
+  facility_name: string;
+  item_name: string;
+  quantity: number;
+  updated_inventory: EquipmentInventory;
+}
+
+export interface AddInfrastructureResponse {
+  facility_id: string;
+  facility_name: string;
+  item_name: string;
+  quantity: number;
+  updated_inventory: InfrastructureInventory;
 }
 
 class AdminService {
@@ -61,6 +90,9 @@ class AdminService {
     this.updateStaff = this.updateStaff.bind(this);
     this.deleteStaff = this.deleteStaff.bind(this);
     this.getStaffSchema = this.getStaffSchema.bind(this);
+    this.getFacilityInventory = this.getFacilityInventory.bind(this);
+    this.addEquipment = this.addEquipment.bind(this);
+    this.addInfrastructure = this.addInfrastructure.bind(this);
   }
 
   /**
@@ -97,24 +129,17 @@ class AdminService {
     facilityId: string;
     data: CreateStaffData;
   }): Promise<StaffMember> {
-    // Include facility_id in the request body
-    const requestData = {
-      ...data,
-      facility_id: facilityId,
-    };
-    // console.log(`${this.ENDPOINTS.FACILITY}/${facilityId}/staff`)
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/staff`,
-      requestData
+      data
     );
-
-    console.log(response.data)
     return response.data;
   }
 
   /**
    * Update an existing staff member
-   * PUT /admin/staff/{staff_id}
+   * PATCH /admin/staff/{staff_id}
+   * Note: Using PATCH instead of PUT as the backend might expect partial updates
    */
   async updateStaff({
     facilityId,
@@ -125,7 +150,8 @@ class AdminService {
     staffId: string;
     data: Partial<CreateStaffData>;
   }): Promise<StaffMember> {
-    const response = await apiClient.put(
+    // Try PATCH method first (common for partial updates)
+    const response = await apiClient.patch(
       `${this.ENDPOINTS.STAFF}/${staffId}`,
       data
     );
@@ -143,18 +169,133 @@ class AdminService {
     facilityId: string;
     staffId: string;
   }): Promise<void> {
-    await apiClient.delete(
-      `${this.ENDPOINTS.STAFF}/${staffId}`
-    );
+    await apiClient.delete(`${this.ENDPOINTS.STAFF}/${staffId}`);
   }
 
   /**
    * Fetch staff schema for a facility
-   * Assuming: GET /admin/staff/{facility_id}/schema
+   * GET /admin/staff/{facility_id}/schema
    */
   async getStaffSchema(facilityId: string): Promise<Record<string, any>> {
     const response = await apiClient.get(
       `${this.ENDPOINTS.STAFF}/${facilityId}/schema`
+    );
+    return response.data;
+  }
+
+  /**
+   * Fetch Inventory (Equipment and Infrastructure)
+   * GET /admin/facility/{facility_id}/inventory
+   */
+  async getFacilityInventory(
+    facilityId: string
+  ): Promise<GetFacilityInventoryResponse> {
+    const response = await apiClient.get(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory`
+    );
+    return response.data;
+  }
+
+  /**
+   * Add Equipment to Facility Inventory
+   * POST /admin/facility/{facility_id}/inventory/equipment
+   */
+  async addEquipment({
+    facilityId,
+    data,
+  }: {
+    facilityId: string;
+    data: AddEquipmentRequest;
+  }): Promise<AddEquipmentResponse> {
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment`,
+      data
+    );
+    return response.data;
+  }
+
+  /**
+   * Add Infrastructure to Facility Inventory
+   * POST /admin/facility/{facility_id}/inventory/infrastructure
+   */
+  async addInfrastructure({
+    facilityId,
+    data,
+  }: {
+    facilityId: string;
+    data: AddInfrastructureRequest;
+  }): Promise<AddInfrastructureResponse> {
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
+      data
+    );
+    return response.data;
+  }
+
+  /**
+   * Delete Equipment from Facility Inventory
+   * DELETE /admin/facility/{facility_id}/inventory/equipment/{item_name}
+   */
+  async deleteEquipment({
+    facilityId,
+    itemName,
+  }: {
+    facilityId: string;
+    itemName: string;
+  }): Promise<void> {
+    await apiClient.delete(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${itemName}`
+    );
+  }
+
+  /**
+   * Delete Infrastructure from Facility Inventory
+   * DELETE /admin/facility/{facility_id}/inventory/infrastructure/{item_name}
+   */
+  async deleteInfrastructure({
+    facilityId,
+    itemName,
+  }: {
+    facilityId: string;
+    itemName: string;
+  }): Promise<void> {
+    await apiClient.delete(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${itemName}`
+    );
+  }
+
+  /**
+   * Update Equipment in Facility Inventory
+   * PUT /admin/facility/{facility_id}/inventory/equipment/{item_name}
+   */
+  async updateEquipment({
+    facilityId,
+    data,
+  }: {
+    facilityId: string;
+    data: AddEquipmentRequest;
+  }): Promise<AddEquipmentResponse> {
+    const response = await apiClient.put(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${data.item_name}`,
+      { quantity: data.quantity }
+    );
+    return response.data;
+  }
+
+  /**
+   * Update Infrastructure in Facility Inventory
+   * PUT /admin/facility/{facility_id}/inventory/infrastructure/{item_name}
+   */
+  async updateInfrastructure({
+    facilityId,
+    data,
+  }: {
+    facilityId: string;
+    data: AddInfrastructureRequest;
+  }): Promise<AddInfrastructureResponse> {
+    const response = await apiClient.put(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${data.item_name}`,
+      { quantity: data.quantity }
     );
     return response.data;
   }
