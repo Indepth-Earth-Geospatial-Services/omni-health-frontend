@@ -9,9 +9,10 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                geist: ["var(--font-geist)"],
+                geist: ["var(--font-geist-sans)"],
                 inter: ["var(--font-inter)"],
                 mono: ["var(--font-geist-mono)"],
+                "dmsans": ["var(--font-dm-sans)"],
             },
         },
     },
