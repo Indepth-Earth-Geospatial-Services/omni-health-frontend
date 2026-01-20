@@ -89,7 +89,6 @@ class AdminService {
     this.createStaff = this.createStaff.bind(this);
     this.updateStaff = this.updateStaff.bind(this);
     this.deleteStaff = this.deleteStaff.bind(this);
-    this.getStaffSchema = this.getStaffSchema.bind(this);
     this.getFacilityInventory = this.getFacilityInventory.bind(this);
     this.addEquipment = this.addEquipment.bind(this);
     this.addInfrastructure = this.addInfrastructure.bind(this);
@@ -173,17 +172,6 @@ class AdminService {
   }
 
   /**
-   * Fetch staff schema for a facility
-   * GET /admin/staff/{facility_id}/schema
-   */
-  async getStaffSchema(facilityId: string): Promise<Record<string, any>> {
-    const response = await apiClient.get(
-      `${this.ENDPOINTS.STAFF}/${facilityId}/schema`
-    );
-    return response.data;
-  }
-
-  /**
    * Fetch Inventory (Equipment and Infrastructure)
    * GET /admin/facility/{facility_id}/inventory
    */
@@ -243,8 +231,9 @@ class AdminService {
     facilityId: string;
     itemName: string;
   }): Promise<void> {
+    const encodedItemName = encodeURIComponent(itemName);
     await apiClient.delete(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${itemName}`
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${encodedItemName}`
     );
   }
 
@@ -259,14 +248,16 @@ class AdminService {
     facilityId: string;
     itemName: string;
   }): Promise<void> {
+    const encodedItemName = encodeURIComponent(itemName);
     await apiClient.delete(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${itemName}`
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${encodedItemName}`
     );
   }
 
   /**
    * Update Equipment in Facility Inventory
-   * PUT /admin/facility/{facility_id}/inventory/equipment/{item_name}
+   * POST /admin/facility/{facility_id}/inventory/equipment
+   * Note: The same POST endpoint handles both add and update operations
    */
   async updateEquipment({
     facilityId,
@@ -275,16 +266,17 @@ class AdminService {
     facilityId: string;
     data: AddEquipmentRequest;
   }): Promise<AddEquipmentResponse> {
-    const response = await apiClient.put(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${data.item_name}`,
-      { quantity: data.quantity }
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment`,
+      data
     );
     return response.data;
   }
 
   /**
    * Update Infrastructure in Facility Inventory
-   * PUT /admin/facility/{facility_id}/inventory/infrastructure/{item_name}
+   * POST /admin/facility/{facility_id}/inventory/infrastructure
+   * Note: The same POST endpoint handles both add and update operations
    */
   async updateInfrastructure({
     facilityId,
@@ -293,9 +285,9 @@ class AdminService {
     facilityId: string;
     data: AddInfrastructureRequest;
   }): Promise<AddInfrastructureResponse> {
-    const response = await apiClient.put(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${data.item_name}`,
-      { quantity: data.quantity }
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
+      data
     );
     return response.data;
   }

@@ -1,34 +1,43 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
-interface EditEquipmentModalProps {
+interface EditInfrastructureModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit?: (equipmentData: EquipmentFormData) => void;
+    onSubmit?: (infrastructureData: InfrastructureFormData) => void;
     isSubmitting?: boolean;
     initialData: { name: string; displayName: string; quantity: string } | null;
 }
 
-interface EquipmentFormData {
+interface InfrastructureFormData {
     name: string;
     quantity: string;
 }
 
-const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
+const EditInfrastructureModal: React.FC<EditInfrastructureModalProps> = ({
     isOpen,
     onClose,
     onSubmit,
     isSubmitting = false,
     initialData,
 }) => {
-    // Initialize with current data - no useEffect needed!
-    const [formData, setFormData] = useState<EquipmentFormData>({
-        name: initialData?.name || "",
-        quantity: initialData?.quantity || "",
+    const [formData, setFormData] = useState<InfrastructureFormData>({
+        name: "",
+        quantity: "",
     });
+
+    // Sync form data when initialData changes
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                name: initialData.name,
+                quantity: initialData.quantity,
+            });
+        }
+    }, [initialData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -66,14 +75,14 @@ const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                 <div className="sticky top-0 bg-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
                     <div>
                         <h1 className="text-3xl text-slate-900 mb-4 mt-2 font-medium">
-                            Edit Equipment
+                            Edit Infrastructure
                         </h1>
                         <div>
                             <h2 className="text-xl font-medium text-slate-600">
                                 {initialData?.displayName}
                             </h2>
                             <p className="text-sm text-slate-500 mt-1">
-                                Update equipment quantity
+                                Update infrastructure quantity
                             </p>
                         </div>
                     </div>
@@ -81,13 +90,13 @@ const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    {/* Equipment Name (Read-only) */}
+                    {/* Infrastructure Name (Read-only) */}
                     <div>
                         <label
                             htmlFor="name"
                             className="block text-sm font-medium text-slate-700 mb-2"
                         >
-                            Equipment Name
+                            Infrastructure Name
                         </label>
                         <input
                             type="text"
@@ -99,13 +108,13 @@ const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                         />
                     </div>
 
-                    {/* Quantity */}
+                    {/* Quantity/Capacity */}
                     <div>
                         <label
                             htmlFor="quantity"
                             className="block text-sm font-medium text-slate-700 mb-2"
                         >
-                            Quantity
+                            Quantity/Capacity
                         </label>
                         <input
                             type="number"
@@ -113,7 +122,7 @@ const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                             name="quantity"
                             value={formData.quantity}
                             onChange={handleInputChange}
-                            placeholder="Enter quantity"
+                            placeholder="Enter quantity or capacity"
                             min="0"
                             required
                             disabled={isSubmitting}
@@ -147,7 +156,7 @@ const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    Update Equipment
+                                    Update Infrastructure
                                     <ArrowRight size={18} />
                                 </>
                             )}
@@ -159,4 +168,4 @@ const EditEquipmentModal: React.FC<EditEquipmentModalProps> = ({
     );
 };
 
-export default EditEquipmentModal;
+export default EditInfrastructureModal;

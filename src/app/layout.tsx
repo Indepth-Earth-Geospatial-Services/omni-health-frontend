@@ -2,23 +2,31 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 // import { AuthProvider } from "@/features/auth/auth-provider";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, DM_Sans } from "next/font/google";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
+    weight: ["400", "500", "600", "700"]
 });
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-mono",
     subsets: ["latin"],
+    weight: ["400", "500", "600", "700"]
 });
 
 
 const inter = Inter({
     variable: "--font-inter",
     subsets: ["latin"],
-    weight: ["400", "700"],
+    weight: ["400", "500", "600", "700"],
+});
+
+const dmSans = DM_Sans({
+    variable: "--font-dm-sans",
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -52,7 +60,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable}`}>
+            <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${dmSans.variable}`}>
                 {/* <AuthProvider> */}
                 {children}
                 {/* </AuthProvider> */}
