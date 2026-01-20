@@ -10,14 +10,21 @@ const nextConfig: NextConfig = {
         source: "/api/backend/:path*",
         destination: "https://omni-health-backend.onrender.com/api/v1/:path*",
       },
+      {
+        source: "/authentication/:path*",
+        destination: "https://omni-health-backend.onrender.com/:path*",
+      },
     ];
   },
 
   // Suppress hydration warnings caused by browser extensions
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production" ? {
-      exclude: ["error", "warn"],
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? {
+            exclude: ["error", "warn"],
+          }
+        : false,
   },
   images: {
     remotePatterns: [

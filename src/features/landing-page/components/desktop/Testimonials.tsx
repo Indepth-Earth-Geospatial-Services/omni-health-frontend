@@ -25,7 +25,7 @@ const TESTIMONIALS_DATA = [
         id: 3,
         name: "Jessica Claire",
         location: "Port Harcourt",
-        image: "/img/landingpage/testi-3.jpg",
+        image: "/img/testimonials/testi-3.jpg",
         testimonial: "The specialists at RVS-Healthcare provided me with the guidance I needed to manage my health condition. Their expertise and timely support made a huge difference in my recovery, and I'm grateful for the comprehensive care I received.",
         rating: 5,
     },
