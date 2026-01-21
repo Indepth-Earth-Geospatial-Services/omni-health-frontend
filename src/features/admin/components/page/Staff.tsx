@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ArrowUpDown, ChevronLeft, ChevronRight, MinusSquare, PenIcon, Building2 } from 'lucide-react';
-import Loader from '@/components/shared/Loader';
+// import Loader from '@/components/shared/Loader';
 import { toast } from 'sonner';
 import TableHeaders from '../layout/TableHeaders';
 import AddStaffModal from '../layout/AddStaffModal';
@@ -193,7 +193,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 />
                 <div className="w-full bg-white rounded-xl border border-slate-200 p-12 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        {/* <Loader2 className="w-8 h-8 animate-spin text-primary" /> */}
                         <p className="text-sm text-slate-500">Loading staff data...</p>
                     </div>
                 </div>

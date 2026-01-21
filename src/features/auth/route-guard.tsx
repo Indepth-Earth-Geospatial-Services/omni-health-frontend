@@ -31,7 +31,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
 
         // Redirect authenticated users away from login/register pages
         if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
-            const redirectPath = facilityIds && facilityIds.length > 0 ? "/admin" : "/user";
+            const redirectPath = facilityIds && facilityIds.length > 0 ? "/admin/staff" : "/user";
             router.push(redirectPath);
             return;
         }

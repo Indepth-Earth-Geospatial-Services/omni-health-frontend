@@ -144,7 +144,7 @@ function isTokenExpired(token: string): boolean {
 export function getRedirectPath(facilityIds: string[] | null): string {
   // If user has facility_ids, they're admin
   if (facilityIds && facilityIds.length > 0) {
-    return "/admin";
+    return "/admin/staff";
   }
   return "/user";
 }
