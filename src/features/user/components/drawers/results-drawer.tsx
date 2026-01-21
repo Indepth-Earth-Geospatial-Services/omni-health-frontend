@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import { MapPin } from "lucide-react";
+import { MapIcon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -270,6 +270,13 @@ function ResultsDrawer({
                       >
                         <MapPin size={16} />
                         Browse All Facilities
+                      </Button>
+                      <Button
+                        onClick={() => router.push("/explore-facilities")}
+                        className="bg-primary hover:bg-primary/90 rounded-full"
+                      >
+                        <MapIcon size={16} />
+                        Explore Facilities using a map
                       </Button>
                       <Button
                         onClick={() => {

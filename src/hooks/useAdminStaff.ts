@@ -128,17 +128,57 @@ export const useInvalidateStaffCache = () => {
 };
 
 /**
- * Hook to fetch staff schema dynamically
+ * Hook to fetch staff schema dynamically by deriving it from actual staff data
+ * Since there's no dedicated schema endpoint, we fetch staff and extract field names
  */
 export const useStaffSchema = (facilityId: string) => {
   return useQuery<Record<string, any>, Error>({
     queryKey: ["staff-schema", facilityId],
     queryFn: async () => {
-      const response = await adminService.getStaffSchema(facilityId);
-      return response;
+      // Fetch staff data to derive schema from actual records
+      const response = await adminService.getStaff({
+        facilityId,
+        page: 1,
+        limit: 1, // Only need one record to get the schema
+      });
+
+      // If we have staff data, derive schema from the first record
+      if (response.staff && response.staff.length > 0) {
+        const sampleStaff = response.staff[0];
+        const schema: Record<string, any> = {};
+
+        // Extract all keys from the staff object as schema fields
+        Object.keys(sampleStaff).forEach((key) => {
+          // Skip internal fields
+          if (key === "staff_id" || key === "facility_id") return;
+
+          const value = sampleStaff[key as keyof StaffMember];
+          schema[key] = {
+            type: typeof value === "object" ? "object" : typeof value,
+            nullable: value === null || value === undefined,
+          };
+        });
+
+        return schema;
+      }
+
+      // Return default schema if no staff data available
+      return {
+        full_name: { type: "string", nullable: false },
+        gender: { type: "string", nullable: true },
+        rank_cadre: { type: "string", nullable: true },
+        grade_level: { type: "string", nullable: true },
+        phone_number: { type: "string", nullable: true },
+        email: { type: "string", nullable: true },
+        date_first_appointment: { type: "string", nullable: true },
+        date_of_birth: { type: "string", nullable: true },
+        qualifications: { type: "object", nullable: true },
+        is_active: { type: "boolean", nullable: true },
+      };
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    enabled: !!facilityId,
   });
 };
 

@@ -14,6 +14,19 @@ interface StaffListProps {
     facilityId: string;
 }
 
+/**
+ * Converts a string to sentence case (capitalizes first letter of each word)
+ * Handles various input formats: ALL CAPS, all lowercase, mixed case
+ */
+const toSentenceCase = (str: string | undefined | null): string => {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
 const StaffList = ({ facilityId }: StaffListProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editModal, setEditModal] = useState<{ isOpen: boolean; staffData: StaffMember | null }>({
@@ -47,17 +60,24 @@ const StaffList = ({ facilityId }: StaffListProps) => {
         ? data
         : data?.staff ?? [];
 
-    const pagination = !Array.isArray(data)
-        ? data?.pagination
-        : {
-            total_records: staffs.length,
-            current_page: currentPage,
-            total_pages: 2,
-            limit: itemsPerPage,
-        };
+    // Get pagination from API response
+    const apiPagination = !Array.isArray(data) ? data?.pagination : null;
 
-    const totalPages = pagination?.total_pages ?? 1;
-    const totalRecords = pagination?.total_records ?? staffs.length;
+    // Calculate total records - use API value if available, otherwise we can't know the true total
+    // If API doesn't return total_records, we assume there might be more pages if we got a full page
+    const totalRecords = apiPagination?.total_records ?? 0;
+
+    // Calculate total pages from API pagination or estimate based on current data
+    // If we have API pagination with total_records, use that for calculation
+    // Otherwise, if we received a full page of items, assume there might be more
+    const hasMorePages = staffs.length === itemsPerPage && !apiPagination?.total_records;
+    const totalPages = apiPagination?.total_records
+        ? Math.ceil(apiPagination.total_records / itemsPerPage)
+        : apiPagination?.total_pages
+            ? apiPagination.total_pages
+            : hasMorePages
+                ? currentPage + 1  // Assume at least one more page
+                : currentPage;     // Current page is the last
 
     // Pagination handlers
     const handleNextPage = () => {
@@ -232,7 +252,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 buttonLabel="Add New Staff"
                 onButtonClick={() => setIsModalOpen(true)}
             />
-            <div className="w-full bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="w-full bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
                 {/* Loading overlay when fetching new page */}
                 {isFetching && !isLoading && (
                     <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
@@ -240,26 +260,27 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                     </div>
                 )}
 
-                <div className="overflow-x-auto relative">
+                {/* Fixed height container for 10 rows - each row ~72px, so 720px total */}
+                <div className="overflow-x-auto relative" style={{ minHeight: '720px' }}>
                     <table className="w-full text-left border-collapse">
                         {/* Table Header */}
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                        <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                             <tr className="text-slate-500 text-sm font-medium">
                                 <th className="p-4 w-12"><MinusSquare size={18} className="text-primary bg-primary/10 rounded" /></th>
-                                <th className="p-4">S/NO</th>
+                                {/* <th className="p-4">S/NO</th> */}
                                 <th className="p-4 cursor-pointer hover:text-slate-800 transition-colors">
-                                    <div className="flex items-center gap-2">Name <ArrowUpDown size={14} /></div>
+                                    <div className="flex items-center gap-2 text-[11.38px] font-inter-medium font-inter text-[#475467]">Staff Name <ArrowUpDown size={14} /></div>
                                 </th>
-                                {hasGender && <th className="p-4">Gender</th>}
-                                {hasRank && <th className="p-4">Rank/Cadre</th>}
-                                {hasGradeLevel && <th className="p-4">Grade Level</th>}
-                                {hasPhone && <th className="p-4">Phone Number</th>}
-                                {hasEmail && <th className="p-4">Email</th>}
-                                {hasDateFirstAppt && <th className="p-4">Date of 1st Appt</th>}
-                                {hasDateOfBirth && <th className="p-4">Date of Birth</th>}
-                                {hasQualifications && <th className="p-4">Qualifications</th>}
-                                {hasStatus && <th className="p-4">Status</th>}
-                                <th className="p-4 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">Actions</th>
+                                {hasGender && <th className="p-4 text-[11.38px] font-inter-medium font-inter text-[#475467]">Gender</th>}
+                                {hasRank && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Rank/Cadre</th>}
+                                {hasGradeLevel && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Grade Level</th>}
+                                {hasPhone && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Phone Number</th>}
+                                {/* {hasEmail && <th className="p-4 text-[11.38px] font-inter-medium font-inter text-[#475467]">Email</th>} */}
+                                {hasDateFirstAppt && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Date of 1st Appt</th>}
+                                {hasDateOfBirth && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Date of Birth</th>}
+                                {hasQualifications && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Qualifications</th>}
+                                {hasStatus && <th className="p-4 text-[11.38px] font-inter-medium font-dmsans text-[#475467]">Status</th>}
+                                <th className="p-4 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] text-[11.38px] font-dmsans text-[#475467]">Actions</th>
                             </tr>
                         </thead>
 
@@ -267,8 +288,10 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                         <tbody>
                             {staffs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={20} className="p-8 text-center text-slate-500">
-                                        No staff members found
+                                    <td colSpan={20} className="p-8 text-center text-slate-500" style={{ height: '668px' }}>
+                                        <div className="flex flex-col items-center justify-center h-full">
+                                            <p>No staff members found</p>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
@@ -287,7 +310,8 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                                     ];
                                     const gradient = gradients[idx % gradients.length];
 
-                                    const initials = item.full_name
+                                    const formattedName = toSentenceCase(item.full_name);
+                                    const initials = formattedName
                                         ?.split(' ')
                                         .map(n => n[0])
                                         .join('')
@@ -304,14 +328,16 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                                             <td className="p-4">
                                                 <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" />
                                             </td>
-                                            <td className="p-4 text-sm text-slate-600">{idx + 1 + (currentPage - 1) * itemsPerPage}</td>
+
+                                            {/* <td className="p-4 text-sm text-slate-600">{idx + 1 + (currentPage - 1) * itemsPerPage}</td> */}
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shadow-sm`}>
                                                         {initials}
                                                     </div>
-                                                    <div>
-                                                        <p className="font-semibold text-slate-800 text-sm">{item.full_name}</p>
+                                                    <div className="flex flex-col justify-center">
+                                                        <p className="font-dmsans text-slate-900 text-sm text-[13.69px] font-medium">{formattedName}</p>
+                                                        {hasEmail && <p className="text-[12.64px] font-normal font-dmsans text-[#475467] mt-0.5">{item.email}</p>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -321,14 +347,14 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                                                         item.gender?.toLowerCase() === 'female' ? 'bg-pink-100 text-pink-700' :
                                                             'bg-slate-100 text-slate-700'
                                                         }`}>
-                                                        {item.gender || '-'}
+                                                        {toSentenceCase(item.gender) || '-'}
                                                     </span>
                                                 </td>
                                             )}
-                                            {hasRank && <td className="p-4 text-sm text-slate-600">{item.rank_cadre || '-'}</td>}
+                                            {hasRank && <td className="p-4 text-sm text-slate-600">{toSentenceCase(item.rank_cadre) || '-'}</td>}
                                             {hasGradeLevel && <td className="p-4 text-sm text-slate-600">{item.grade_level || '-'}</td>}
                                             {hasPhone && <td className="p-4 text-sm text-slate-600">{item.phone_number || '-'}</td>}
-                                            {hasEmail && <td className="p-4 text-sm text-slate-600">{item.email || '-'}</td>}
+
                                             {hasDateFirstAppt && <td className="p-4 text-sm text-slate-600">{item.date_first_appointment || '-'}</td>}
                                             {hasDateOfBirth && <td className="p-4 text-sm text-slate-600">{item.date_of_birth || '-'}</td>}
                                             {hasQualifications && (
@@ -354,7 +380,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                                                         <PenIcon size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDeleteStaff(item.staff_id, item.full_name)}
+                                                        onClick={() => handleDeleteStaff(item.staff_id, formattedName)}
                                                         disabled={deleteStaffMutation.isPending}
                                                         className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
                                                     >
@@ -371,7 +397,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 </div>
 
                 {/* Pagination Footer */}
-                <div className="p-4 flex flex-col md:flex-row items-center justify-between border-t border-slate-100 gap-4">
+                <div className="p-4 flex flex-col md:flex-row items-center justify-between border-t border-slate-100 gap-4 mt-auto">
                     <button
                         onClick={handlePreviousPage}
                         disabled={currentPage === 1 || isFetching}
@@ -384,10 +410,13 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                     </button>
                     <div className="flex flex-col items-center">
                         <p className="text-sm text-slate-500 font-medium italic">
-                            Page {currentPage} of {totalPages}
+                            Page {currentPage} {totalRecords > 0 ? `of ${totalPages}` : ''}
                         </p>
                         <p className="text-xs text-slate-400">
-                            {totalRecords} total records
+                            {totalRecords > 0
+                                ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalRecords)} of ${totalRecords} records`
+                                : `Showing ${staffs.length} records`
+                            }
                         </p>
                     </div>
                     <button
@@ -409,6 +438,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleAddStaff}
                 facilityId={facilityId}
+                isSubmitting={createStaffMutation.isPending}
             />
 
             {/* Edit Staff Modal - key forces re-render with new data */}
