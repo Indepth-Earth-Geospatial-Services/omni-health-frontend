@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { AuthProvider } from "@/features/auth/auth-provider";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { DM_Sans, Geist, Geist_Mono, Inter } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,15 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 const inter = Inter({
-    variable: "--font-inter",
-    subsets: ["latin"],
-    weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const dmSans = DM_Sans({
-    variable: "--font-dm-sans",
-    subsets: ["latin"],
-    weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
