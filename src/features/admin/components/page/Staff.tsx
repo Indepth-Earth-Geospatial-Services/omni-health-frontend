@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, ArrowUpDown, ChevronLeft, ChevronRight, MinusSquare, PenIcon, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import TableHeaders from './TableHeaders';
-import AddStaffModal from './AddStaffModal';
-import EditStaffModal from './EditStaffModal';
-import DeleteStaffModal from './DeleteStaffModal';
+import { toast } from 'sonner';
+import TableHeaders from '../layout/TableHeaders';
+import AddStaffModal from '../layout/AddStaffModal';
+import EditStaffModal from '../layout/EditStaffModal';
+import DeleteStaffModal from '../layout/DeleteStaffModal';
 import { useAdminStaff, useCreateStaff, useUpdateStaff, useDeleteStaff, type CreateStaffData, type StaffMember } from '@/hooks/useAdminStaff';
 
 interface StaffListProps {
@@ -94,23 +94,17 @@ const StaffList = ({ facilityId }: StaffListProps) => {
 
     // Handle create staff with toast
     const handleAddStaff = (staffData: Record<string, any>) => {
-        const loadingToast = toast.loading('Creating staff member...');
+        const toastId = toast.loading('Creating staff member...');
 
         createStaffMutation.mutate(staffData as CreateStaffData, {
             onSuccess: () => {
-                toast.success('Staff member created successfully!', {
-                    id: loadingToast,
-                    duration: 4000,
-                });
+                toast.success('Staff member created successfully!', { id: toastId });
                 setIsModalOpen(false);
                 setCurrentPage(1);
             },
             onError: (err: any) => {
                 const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create staff member';
-                toast.error(errorMessage, {
-                    id: loadingToast,
-                    duration: 5000,
-                });
+                toast.error(errorMessage, { id: toastId });
                 console.error('Failed to create staff:', err);
             }
         });
@@ -125,7 +119,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     const handleUpdateStaff = (updatedData: Record<string, any>) => {
         if (!editModal.staffData) return;
 
-        const loadingToast = toast.loading('Updating staff member...');
+        const toastId = toast.loading('Updating staff member...');
 
         updateStaffMutation.mutate(
             {
@@ -134,18 +128,12 @@ const StaffList = ({ facilityId }: StaffListProps) => {
             },
             {
                 onSuccess: () => {
-                    toast.success('Staff member updated successfully!', {
-                        id: loadingToast,
-                        duration: 4000,
-                    });
+                    toast.success('Staff member updated successfully!', { id: toastId });
                     setEditModal({ isOpen: false, staffData: null });
                 },
                 onError: (err: any) => {
                     const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update staff member';
-                    toast.error(errorMessage, {
-                        id: loadingToast,
-                        duration: 5000,
-                    });
+                    toast.error(errorMessage, { id: toastId });
                     console.error('Failed to update staff:', err);
                 }
             }
@@ -158,22 +146,16 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     };
 
     const confirmDelete = () => {
-        const loadingToast = toast.loading('Deleting staff member...');
+        const toastId = toast.loading('Deleting staff member...');
 
         deleteStaffMutation.mutate(deleteModal.staffId, {
             onSuccess: () => {
-                toast.success('Staff member deleted successfully!', {
-                    id: loadingToast,
-                    duration: 4000,
-                });
+                toast.success('Staff member deleted successfully!', { id: toastId });
                 setDeleteModal({ isOpen: false, staffId: '', staffName: '' });
             },
             onError: (err: any) => {
                 const errorMessage = err?.response?.data?.message || err?.message || 'Failed to delete staff member';
-                toast.error(errorMessage, {
-                    id: loadingToast,
-                    duration: 5000,
-                });
+                toast.error(errorMessage, { id: toastId });
                 console.error('Failed to delete staff:', err);
             }
         });

@@ -23,6 +23,12 @@ export interface StaffPagination {
   limit: number;
 }
 
+//  ======= GET STAFF RESPONSE INTERFACE ========
+/**
+ * THIS IS CRUCIAL SO THAT TYPSCRIPT WILL KNOW THE 
+ * KIND OF RESPONSE TYPE IT WILL BE EXPECTTING
+ */
+
 export interface GetStaffResponse {
   staff: StaffMember[];
   message: string;
@@ -31,7 +37,7 @@ export interface GetStaffResponse {
 
 export type CreateStaffData = Record<string, any>;
 
-// Inventory Types
+// ========== Inventory Types ============
 export interface EquipmentInventory {
   [equipmentName: string]: number;
 }
@@ -78,6 +84,13 @@ export interface AddInfrastructureResponse {
   updated_inventory: InfrastructureInventory;
 }
 
+/**
+ * ADMIN SERVICE CLASS
+ * Contains method such as:
+ * get staff, Create staff, Update staff, delete Staff, 
+ * get Facility Inventory, Add Equipment, Add Infrastructure
+ */
+
 class AdminService {
   public ENDPOINTS = {
     STAFF: "/admin/staff",
@@ -107,14 +120,18 @@ class AdminService {
     page?: number;
     limit?: number;
   }): Promise<GetStaffResponse> {
-    const skip = (page - 1) * limit;
-    const response = await apiClient.get(
-      `${this.ENDPOINTS.STAFF}/${facilityId}`,
-      {
-        params: { skip, limit },
-      }
-    );
-    return response.data;
+    try {
+      const skip = (page - 1) * limit;
+      const response = await apiClient.get(
+        `${this.ENDPOINTS.STAFF}/${facilityId}`,
+        {
+          params: { skip, limit },
+        }
+      );
+      return response.data;
+    } catch {
+
+    }
   }
 
   /**

@@ -25,7 +25,6 @@ export default function PublicLayout({
       <Providers>
         {children}
       </Providers>
-      {/* NO Toaster here - it's in root layout */}
     </div>
   );
 }

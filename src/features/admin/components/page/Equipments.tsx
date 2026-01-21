@@ -28,7 +28,7 @@ import {
     useUpdateEquipment,
     useUpdateInfrastructure,
 } from "@/hooks/useAdminStaff";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface EquipmentsPageProps {
     facilityId: string;
