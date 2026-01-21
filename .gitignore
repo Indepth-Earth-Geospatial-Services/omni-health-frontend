@@ -12,7 +12,7 @@
 .claude
 # testing
 /coverage
-
+CODE_REVIEW.md
 # next.js
 /.next/
 /out/
