@@ -8,6 +8,7 @@ import FilterBar from "./filter-bar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ExploreFacilitiesError } from "./expore-facilities-error";
+import Link from "next/link";
 
 function ExploreFacilitiesMap() {
   const [selectedLga, setSelectedLga] = useState<string | undefined>();
@@ -30,7 +31,7 @@ function ExploreFacilitiesMap() {
   });
 
   if (isLoading) return <ExploreFacilitiesLoader />;
-  if (true)
+  if (isError)
     return (
       <ExploreFacilitiesError
         onFindNearby="/user"
@@ -41,8 +42,10 @@ function ExploreFacilitiesMap() {
 
   return (
     <div className="relative h-full w-full">
-      <Button className="fixed bottom-0 z-100">
-        <ArrowLeft />
+      <Button asChild className="fixed top-0 z-100 rounded-full">
+        <Link href="/user">
+          <ArrowLeft />
+        </Link>
       </Button>
       <FilterBar
         lgaCounts={lgaCounts}
