@@ -3,9 +3,11 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { AuthHydration } from "@/components/AuthHydration";
+import HydrationLoader from "@/components/shared/atoms/hydration-loader";
 
 interface RouteGuardProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export function RouteGuard({ children }: RouteGuardProps) {
@@ -49,5 +51,20 @@ export function RouteGuard({ children }: RouteGuardProps) {
         );
     }
 
-    return <>{children}</>;
+    // Redirect authenticated users away from login/register pages
+    if (
+      isAuthenticated &&
+      (pathname === "/login" || pathname === "/register")
+    ) {
+      const redirectPath =
+        facilityIds && facilityIds.length > 0 ? "/admin" : "/user";
+      router.push(redirectPath);
+      return;
+    }
+  }, [isAuthenticated, isHydrated, pathname, router, facilityIds]);
+
+  // Show loading spinner while checking auth
+  if (!isHydrated) return <HydrationLoader />;
+
+  return <>{children}</>;
 }

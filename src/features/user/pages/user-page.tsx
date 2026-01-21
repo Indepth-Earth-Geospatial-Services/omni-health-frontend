@@ -44,8 +44,8 @@ function UserPage() {
   const nearestFacility = useFacilityStore((s) => s.nearestFacility);
   const allFacilities = useFacilityStore((s) => s.allFacilities);
 
-  const debounceNearestFacilityData = useDebounce(nearestFacility, 1000);
-  const debounceAllFacilitiesData = useDebounce(allFacilities, 500);
+  const debounceNearestFacilityData = useDebounce(nearestFacility, 500);
+  const debounceAllFacilitiesData = useDebounce(allFacilities, 200);
 
   const allFacilitiesArray = useMemo(() => {
     return debounceAllFacilitiesData
@@ -74,7 +74,7 @@ function UserPage() {
     enabled: shouldFetchRoute,
   });
 
-  // HANDER FOR FACILITY LIST ITEM CLICK AND OTHER RELATED HANDLERS FOR DRAWER STATE ==============
+  // HANDLER FOR FACILITY LIST ITEM CLICK AND OTHER RELATED HANDLERS FOR DRAWER STATE ==============
   const handleViewDetails = useCallback(
     (facility: Facility) => {
       setSelectedFacility(facility);
@@ -126,7 +126,6 @@ function UserPage() {
       <section className="fixed inset-0 z-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
         {activeDrawer !== "directions" && (
           <MapComponent
-            showUserPin={false}
             nearYouFacilities={nearYouFacilitiesArray}
             showNearYouFacilities={true}
             allFacilities={allFacilitiesArray}

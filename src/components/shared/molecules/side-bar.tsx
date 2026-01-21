@@ -13,6 +13,7 @@ import {
   Info,
   List,
   LogOut,
+  MapIcon,
   Menu,
   UserRound,
 } from "lucide-react";
@@ -39,6 +40,11 @@ const navLinks = [
   //   name: "Compare",
   //   href: "/compare-facilities",
   // },
+  {
+    icons: <MapIcon size={24} />,
+    name: "Explore Map",
+    href: "/explore-facilities",
+  },
   {
     icons: <Info size={24} />,
     name: "Help",
