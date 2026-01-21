@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, ArrowUpDown, ChevronLeft, ChevronRight, MinusSquare, PenIcon, Loader2 } from 'lucide-react';
+import { Trash2, ArrowUpDown, ChevronLeft, ChevronRight, MinusSquare, PenIcon, Building2 } from 'lucide-react';
+import Loader from '@/components/shared/Loader';
 import { toast } from 'sonner';
 import TableHeaders from '../layout/TableHeaders';
 import AddStaffModal from '../layout/AddStaffModal';
