@@ -19,6 +19,7 @@ interface MapComponentProps {
   onViewportChange?: (viewState: any) => void;
   showUserPin?: boolean;
   nearYouFacilities?: Facility[];
+  highlightedFacility?: Facility | null;
   showNearYouFacilities?: boolean;
   allFacilities?: Facility[];
   showAllFacilities?: boolean;
@@ -32,6 +33,7 @@ function MapComponent({
   showUserPin = false,
   nearYouFacilities = [],
   showNearYouFacilities = false,
+  highlightedFacility = null,
   allFacilities = [],
   showAllFacilities = false,
 }: MapComponentProps) {
@@ -100,6 +102,18 @@ function MapComponent({
     }
   }, [userLocation]);
 
+  useEffect(() => {
+    if (highlightedFacility && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [highlightedFacility.lon, highlightedFacility.lat],
+        zoom: 16, // Set a comfortable zoom level for viewing a facility
+        duration: 1500,
+        padding: { top: 40, bottom: 350, left: 50, right: 50 }, // Respect your drawer offset
+        essential: true, // Ensures animation runs even if user prefers reduced motion
+      });
+    }
+  }, [highlightedFacility]);
+  console.log("HIGHLIGHTED FACILITY FROM MAP COMPONENT", highlightedFacility);
   return (
     <Map
       ref={mapRef}
@@ -179,6 +193,23 @@ function MapComponent({
             </div>
           </Marker>
         ))}
+
+      {/* Highlighted Facility - Small dot markers with + cross */}
+      {highlightedFacility && (
+        <Marker
+          key={highlightedFacility.facility_id}
+          longitude={highlightedFacility.lon}
+          latitude={highlightedFacility.lat}
+        >
+          <div className="group relative flex size-6 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-400 shadow-sm transition-all hover:scale-125 hover:bg-red-500">
+            <span className="text-[10px] font-bold text-white">+</span>
+            {/* Tooltip on hover */}
+            <div className="absolute bottom-full mb-2 hidden rounded bg-gray-900 px-2 py-1 text-[10px] whitespace-nowrap text-white group-hover:block">
+              {highlightedFacility.facility_name || "Health Centre"}
+            </div>
+          </div>
+        </Marker>
+      )}
 
       {/* Destination Marker */}
       {destination && (
