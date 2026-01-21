@@ -126,7 +126,6 @@ function UserPage() {
       <section className="fixed inset-0 z-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
         {activeDrawer !== "directions" && (
           <MapComponent
-            showUserPin={false}
             nearYouFacilities={nearYouFacilitiesArray}
             showNearYouFacilities={true}
             allFacilities={allFacilitiesArray}
