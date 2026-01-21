@@ -47,7 +47,7 @@ class AuthService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = "https://omni-health-backend.onrender.com";
+    this.baseUrl = "/authentication"; // Updated to match the rewrite rule HOTFIX: HACK: FIXME
   }
 
   /**
@@ -68,9 +68,9 @@ class AuthService {
         {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
+            Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -82,7 +82,8 @@ class AuthService {
   /**
    * Register a new user
    */
-  async register(data: RegisterRequest): Promise<User> { // ✅ CHANGED: Use User directly
+  async register(data: RegisterRequest): Promise<User> {
+    // ✅ CHANGED: Use User directly
     try {
       const response = await axios.post<User>( // ✅ CHANGED: Use User directly
         `${this.baseUrl}/register`,
@@ -96,9 +97,9 @@ class AuthService {
         {
           headers: {
             "Content-Type": "application/json",
-            "Accept": "application/json",
+            Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -121,9 +122,9 @@ class AuthService {
         {
           headers: {
             "Content-Type": "application/json",
-            "Accept": "application/json",
+            Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -146,7 +147,7 @@ class AuthService {
           headers: {
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
