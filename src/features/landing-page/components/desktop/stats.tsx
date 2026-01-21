@@ -7,8 +7,8 @@ import { useInView } from "react-intersection-observer";
 // Statistics data
 const STATS_DATA = [
     {
-        end: 2400,
-        suffix: "+",
+        end: 347,
+        suffix: "",
         description: "Verified facilities",
         decimals: 0,
     },
