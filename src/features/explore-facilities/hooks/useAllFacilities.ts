@@ -9,7 +9,7 @@ export function useAllFacilities({
   selectedLga?: string;
   selectedCategory?: string;
 }) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, refetch, isLoading, isError } = useQuery({
     queryKey: ["all-facilities"],
     queryFn: () => facilityService.getAllFacilities({ limit: 400, page: 1 }),
   });
@@ -89,6 +89,7 @@ export function useAllFacilities({
   return {
     facilities: filteredFacilities,
     isLoading,
+    refetch,
     isError,
     lgaCounts,
     totalLgaCount,
