@@ -1,28 +1,41 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import Map, {
-  Marker,
-} from "react-map-gl/mapbox";
 import { MAPBOX_TOKEN } from "@/constants";
-import "mapbox-gl/dist/mapbox-gl.css";
-import mapboxgl from "mapbox-gl";
+import { useFacilityStore } from "@/features/user/store/facility-store";
 import { Facility } from "@/features/user/types";
+import { Plus } from "lucide-react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import Map, { Layer, Marker, Popup, Source } from "react-map-gl/mapbox";
+import riversLgas from "../data/rivers-lgas.json";
+import FacilityInfoCard from "./facility-info-card";
 
 interface ExploreMapProps {
   allFacilities?: Facility[];
 }
 
-function ExploreMap({
-  allFacilities = [],
-}: ExploreMapProps) {
+function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
+  const router = useRouter();
   const mapRef = useRef<any>(null);
   const [viewState, setViewState] = useState({
     longitude: 7.0498,
     latitude: 4.8156,
-    zoom: 6,
+    zoom: 8,
     pitch: 0,
     bearing: 0,
   });
+
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
+    null,
+  );
+  const setSelectedFacilityInStore = useFacilityStore(
+    (state) => state.setSelectedFacility,
+  );
+  const onViewDetails = () => {
+    setSelectedFacilityInStore(selectedFacility);
+    router.push(`/facilities/${selectedFacility.facility_id}`);
+  };
 
   useEffect(() => {
     if (allFacilities.length > 0 && mapRef.current) {
@@ -54,20 +67,58 @@ function ExploreMap({
       mapStyle="mapbox://styles/mapbox/streets-v12"
       mapboxAccessToken={MAPBOX_TOKEN}
     >
+      <Source id="lga-boundaries" type="geojson" data={riversLgas as any}>
+        <Layer
+          id="lga-fill"
+          type="fill"
+          paint={{
+            "fill-color": "#51a199",
+            "fill-opacity": 0.1,
+          }}
+        />
+        <Layer
+          id="lga-outline"
+          type="line"
+          paint={{
+            "line-color": "#51a199",
+            "line-width": 1,
+          }}
+        />
+      </Source>
       {allFacilities.map((facility) => (
         <Marker
           key={facility.facility_id}
           longitude={facility.lon}
           latitude={facility.lat}
+          onClick={() => setSelectedFacility(facility)}
         >
-          <div className="group relative flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-red-400 shadow-sm transition-all hover:scale-125 hover:bg-red-500">
-            <span className="text-[8px] font-bold text-white">+</span>
-            <div className="absolute bottom-full mb-2 hidden rounded bg-gray-900 px-2 py-1 text-[10px] whitespace-nowrap text-white group-hover:block">
+          <div className="group relative flex cursor-pointer flex-col items-center">
+            <div className="group relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#51a199] shadow-sm transition-all hover:scale-125">
+              <Plus className="h-3 w-3 text-white" />
+            </div>
+            <div className="absolute bottom-full mb-2 hidden rounded bg-white/90 px-2 py-1 text-xs font-semibold whitespace-nowrap text-green-700 shadow-sm backdrop-blur-sm transition-all group-hover:block">
               {facility.facility_name || "Health Centre"}
             </div>
           </div>
         </Marker>
       ))}
+
+      {selectedFacility && (
+        <Popup
+          longitude={selectedFacility.lon!}
+          latitude={selectedFacility.lat!}
+          onClose={() => setSelectedFacility(null)}
+          closeOnClick={false}
+          anchor="top"
+          offset={10}
+          className="facility-popup"
+        >
+          <FacilityInfoCard
+            handleOnViewDetails={onViewDetails}
+            facility={selectedFacility}
+          />
+        </Popup>
+      )}
     </Map>
   );
 }

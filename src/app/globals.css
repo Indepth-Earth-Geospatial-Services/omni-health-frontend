@@ -152,6 +152,20 @@
 [data-slot="drawer-overlay"] {
   @apply pointer-events-none! hidden!;
 }
+.mapboxgl-popup-close-button {
+  font-size: 1.5rem;
+  color: black;
+  background-color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background-color: #f0f0f0;
+}
 
 .loader {
   position: relative;
