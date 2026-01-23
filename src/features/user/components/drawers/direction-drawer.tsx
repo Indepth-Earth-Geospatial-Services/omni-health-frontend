@@ -125,7 +125,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import { useNativeNavigation } from "@/hooks/useNativeNavigation";
+import { useNativeNavigation } from "@/hooks/use-native-navigation";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
 import {
   AlertCircle,
