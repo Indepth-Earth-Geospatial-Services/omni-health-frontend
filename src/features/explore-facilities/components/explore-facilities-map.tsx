@@ -1,14 +1,13 @@
 "use client";
-
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useAllFacilities } from "../hooks/useAllFacilities";
 import { ExploreFacilitiesLoader } from "./explore-facilities-loader";
 import ExploreMap from "./explore-map";
-import FilterBar from "./filter-bar";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { ExploreFacilitiesError } from "./expore-facilities-error";
-import Link from "next/link";
+import FilterBar from "./filter-bar";
 
 function ExploreFacilitiesMap() {
   const [selectedLga, setSelectedLga] = useState<string | undefined>();
