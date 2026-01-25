@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/auth-store";
 
 const AUTH_STORAGE_KEY = "omni_health_auth";
 
-class ApiClient {
+export class ApiClient {
   public instance: AxiosInstance;
   constructor() {
     this.instance = axios.create({
@@ -49,7 +49,7 @@ class ApiClient {
     );
   }
 
-  private isTokenExpired(token: string): boolean {
+  public isTokenExpired(token: string): boolean {
     try {
       const base64Url = token.split(".")[1];
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");

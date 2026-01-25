@@ -1,6 +1,6 @@
 // import PatientTables from "@/components/layout/PatientTables";
 import Header from "@/features/admin/components/layout/Header";
-import FacilityProfile from "@/features/admin/components/layout/Facility";
+import FacilityProfile from "@/features/admin/components/page/Facility";
 
 export default function Facility() {
     return (

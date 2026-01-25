@@ -256,7 +256,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDrawerStore } from "@/features/user/store/drawer-store";
 import { Facility } from "@/features/user/types";
-import { useFacility } from "@/hooks/use-facilities";
+import { useFacility } from "@/hooks/useFacilities";
 import {
   formatDate,
   formatRating,
@@ -286,7 +286,7 @@ import { useState } from "react";
 import { InfoCard } from "../atoms/info-card";
 import { OverviewContent } from "../molecules/overview-content";
 import { StatsContent } from "../molecules/stats-content";
-import { useUserLocation } from "@/features/user/hooks/use-user-location";
+import { useUserLocation } from "@/features/user/hooks/useUserLocation";
 import { useUserStore } from "@/features/user/store/user-store";
 
 interface FacilityDetailsBaseProps {

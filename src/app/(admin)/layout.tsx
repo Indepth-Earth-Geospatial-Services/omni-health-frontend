@@ -1,21 +1,19 @@
-// app/(admin)/layout.tsx (Admin Layout)
-import type { Metadata } from "next";
+"use client";
+
 import "../globals.css";
 import Sidebar from "@/features/admin/components/layout/Sidebar";
 import { UnregisterServiceWorker } from "@/components/UnregisterServiceWorker";
 import QueryProvider from "@/providers/query.provider";
 import { AuthHydration } from "@/components/AuthHydration";
+// import { getSidebarConfig } from "@/features/admin/components/config/ConfigSidebar";
 
-export const metadata: Metadata = {
-  title: "Omni Health Admin",
-  description: "Healthcare facility management dashboard",
-};
-
-export default function RootLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // const sidebarConfig = getSidebarConfig("admin");
+
   return (
     <QueryProvider>
       <AuthHydration>
