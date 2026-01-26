@@ -1,7 +1,7 @@
 import HeaderProps from "@/features/super-admin/components/layouts/HeaderProps";
 import RegistryPage from "@/features/super-admin/components/pages/FacilityRegistry";
 // import Header from "@/features/admin/components/layout/Header";
-export default function Analytics() {
+export default function Registry() {
   return (
     <>
       {/* <Header name="Facility Registry" /> */}

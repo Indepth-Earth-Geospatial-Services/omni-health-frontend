@@ -95,10 +95,13 @@ class SuperAdminService {
    * Requires Super Admin role
    */
   async assignManager(
-    data: AssignManagerRequest
+    data: AssignManagerRequest,
   ): Promise<AssignManagerResponse> {
     try {
-      const response = await apiClient.post(this.ENDPOINTS.ASSIGN_MANAGER, data);
+      const response = await apiClient.post(
+        this.ENDPOINTS.ASSIGN_MANAGER,
+        data,
+      );
       return response.data;
     } catch (error) {
       throw error;
@@ -111,10 +114,13 @@ class SuperAdminService {
    * Requires Super Admin role
    */
   async deactivateUser(
-    data: DeactivateUserRequest
+    data: DeactivateUserRequest,
   ): Promise<DeactivateUserResponse> {
     try {
-      const response = await apiClient.post(this.ENDPOINTS.DEACTIVATE_USER, data);
+      const response = await apiClient.post(
+        this.ENDPOINTS.DEACTIVATE_USER,
+        data,
+      );
       return response.data;
     } catch (error) {
       throw error;

@@ -86,10 +86,10 @@ export default function Map() {
   }
 
   return (
-    <div className="flex h-[40%] flex-1 overflow-hidden rounded-2xl bg-white">
-      <div className="flex flex-1">
-        {/* Map container */}
-        <div className="h-[70%] flex-1 rounded-2xl border">
+    <div className="flex-1 overflow-y-auto bg-white p-6">
+      <div className="flex gap-4">
+        {/* Map container - fixed height using viewport units */}
+        <div className="h-[70vh] flex-1 overflow-hidden rounded-2xl border border-slate-200">
           <SuperAdminMap
             facilities={facilities}
             width="100%"
