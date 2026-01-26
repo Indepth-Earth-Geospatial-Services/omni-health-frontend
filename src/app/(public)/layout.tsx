@@ -22,10 +22,7 @@ export default function PublicLayout({
 }>) {
   return (
     <div className={`${geistSans.variable} ${geistMono.variable}`}>
-      <Providers>
-        {children}
-      </Providers>
-      {/* NO Toaster here - it's in root layout */}
+      <Providers>{children}</Providers>
     </div>
   );
 }

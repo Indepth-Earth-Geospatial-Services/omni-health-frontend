@@ -12,7 +12,7 @@
 .claude
 # testing
 /coverage
-
+CODE_REVIEW.md
 # next.js
 /.next/
 /out/
@@ -42,3 +42,8 @@ next-env.d.ts
 
 # claude code temporary files
 tmpclaude-*
+.claude
+
+# Gemini CLI temporary files
+.gemini/
+.gemini-ignore

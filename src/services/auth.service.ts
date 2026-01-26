@@ -13,6 +13,9 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   facility_ids: string[];
+  full_name: string;
+  email: string;
+  role: "user" | "admin" | "super_admin";
 }
 
 export interface RegisterRequest {
@@ -40,27 +43,26 @@ export interface ResendOtpResponse {
   expires_in_minutes: number;
 }
 
-// ✅ REMOVED: export interface RegisterResponse extends User {}
-// Just use User type directly since the API returns the same structure
-
 class AuthService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/authentication"; // Updated to match the rewrite rule HOTFIX: HACK: FIXME
+    this.baseUrl = "/authentication";
   }
 
   /**
-   * Login with email and password
+   * Login user with email and password
    * Uses OAuth2 form-urlencoded format as required by the API
    */
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const formData = new URLSearchParams();
+      formData.append("grant_type", "password");
       formData.append("username", email);
       formData.append("password", password);
-      formData.append("grant_type", "password");
       formData.append("scope", "");
+      formData.append("client_id", "");
+      formData.append("client_secret", "");
 
       const response = await axios.post<LoginResponse>(
         `${this.baseUrl}/login`,
@@ -70,7 +72,7 @@ class AuthService {
             "Content-Type": "application/x-www-form-urlencoded",
             Accept: "application/json",
           },
-        },
+        }
       );
 
       return response.data;
@@ -83,9 +85,8 @@ class AuthService {
    * Register a new user
    */
   async register(data: RegisterRequest): Promise<User> {
-    // ✅ CHANGED: Use User directly
     try {
-      const response = await axios.post<User>( // ✅ CHANGED: Use User directly
+      const response = await axios.post<User>(
         `${this.baseUrl}/register`,
         {
           email: data.email,
@@ -99,7 +100,7 @@ class AuthService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        },
+        }
       );
 
       return response.data;
@@ -124,7 +125,7 @@ class AuthService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        },
+        }
       );
 
       return response.data;
@@ -147,7 +148,57 @@ class AuthService {
           headers: {
             Accept: "application/json",
           },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Request password reset
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    try {
+      const response = await axios.post<{ message: string }>(
+        `${this.baseUrl}/forgot-password`,
+        { email },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    try {
+      const response = await axios.post<{ message: string }>(
+        `${this.baseUrl}/reset-password`,
+        {
+          token,
+          new_password: newPassword,
         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
       );
 
       return response.data;

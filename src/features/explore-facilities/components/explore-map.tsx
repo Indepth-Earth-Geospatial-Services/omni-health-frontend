@@ -9,11 +9,26 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Map, { Layer, Marker, Popup, Source } from "react-map-gl/mapbox";
 import riversLgas from "../data/rivers-lgas.json";
+import riversLGA from "../data/boundary.json";
 import FacilityInfoCard from "./facility-info-card";
 
 interface ExploreMapProps {
   allFacilities?: Facility[];
 }
+
+const facilityColors = {
+  "Primary Health Center": "#2ECC71",        // fresh green – community-level care
+  "Primary": "#27AE60",                      // deeper green – same tier, slight contrast
+
+  "Health Post": "#1ABC9C",                  // teal – basic outreach facilities
+  "Primary Health Clinic": "#16A085",        // darker teal – related but distinct
+
+  "Secondary Health Care Centre": "#3498DB", // blue – mid-level care
+  "Secondary": "#2980B9",                    // deeper blue – same tier
+
+  "General Hospital": "#9B59B6",             // purple – advanced/general care
+  "Cottage Hospital": "#8E44AD",             // deeper purple – related category
+};
 
 function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
   const router = useRouter();
@@ -67,7 +82,7 @@ function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
       mapStyle="mapbox://styles/mapbox/streets-v12"
       mapboxAccessToken={MAPBOX_TOKEN}
     >
-      <Source id="lga-boundaries" type="geojson" data={riversLgas as any}>
+      <Source id="lga-boundaries" type="geojson" data={riversLGA as any}>
         <Layer
           id="lga-fill"
           type="fill"
@@ -93,7 +108,15 @@ function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
           onClick={() => setSelectedFacility(facility)}
         >
           <div className="group relative flex cursor-pointer flex-col items-center">
-            <div className="group relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#51a199] shadow-sm transition-all hover:scale-125">
+            <div
+              className="group relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-sm transition-all hover:scale-125"
+              style={{
+                backgroundColor:
+                  facilityColors[
+                    facility.facility_category as keyof typeof facilityColors
+                  ] || "#51a199",
+              }}
+            >
               <Plus className="h-3 w-3 text-white" />
             </div>
             <div className="absolute bottom-full mb-2 hidden rounded bg-white/90 px-2 py-1 text-xs font-semibold whitespace-nowrap text-green-700 shadow-sm backdrop-blur-sm transition-all group-hover:block">

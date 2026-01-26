@@ -1,14 +1,13 @@
 "use client";
-
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { useAllFacilities } from "../hooks/useAllFacilities";
 import { ExploreFacilitiesLoader } from "./explore-facilities-loader";
+import { ExploreFacilitiesError } from "./expore-facilities-error";
 import ExploreMap from "./explore-map";
 import FilterBar from "./filter-bar";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { ExploreFacilitiesError } from "./expore-facilities-error";
-import Link from "next/link";
 
 function ExploreFacilitiesMap() {
   const [selectedLga, setSelectedLga] = useState<string | undefined>();
@@ -42,11 +41,18 @@ function ExploreFacilitiesMap() {
 
   return (
     <div className="relative h-full w-full">
-      <Button asChild className="fixed top-0 z-100 rounded-full">
-        <Link href="/user">
-          <ArrowLeft />
-        </Link>
-      </Button>
+      <div className="absolute bottom-10 left-6 z-100">
+        <Button
+          asChild
+          size="icon"
+          className="shadow-primary/20 h-12 w-12 rounded-full shadow-xl transition-transform active:scale-95"
+        >
+          <Link href="/user">
+            <ArrowLeft className="h-6 w-6" />
+          </Link>
+        </Button>
+      </div>
+
       <FilterBar
         lgaCounts={lgaCounts}
         categoryCounts={categoryCounts}
