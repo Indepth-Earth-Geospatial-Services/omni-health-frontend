@@ -239,8 +239,6 @@ export default function Sidebar() {
         onClose={() => setIsProfileModalOpen(false)}
         facility={facility}
         isFacilityLoading={isFacilityLoading}
-        user={user}
-        isSuperAdmin={isSuperAdmin}
       />
     </aside>
   );
