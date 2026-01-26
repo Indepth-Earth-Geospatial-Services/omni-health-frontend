@@ -26,9 +26,12 @@ function FilterBar({
   onCategoryChange,
 }: FilterBarProps) {
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex flex-wrap justify-center gap-4 bg-white/90 p-4 rounded-lg shadow-lg backdrop-blur-sm w-11/12 md:w-auto">
+    <div className="absolute top-4 left-1/2 z-10 flex w-11/12 -translate-x-1/2 flex-wrap justify-center gap-4 rounded-lg bg-white/90 p-4 shadow-lg backdrop-blur-sm md:w-auto">
       <Select onValueChange={onLgaChange}>
-        <SelectTrigger className="w-full md:w-[200px] bg-transparent border-2" style={{ borderColor: '#51a199' }}>
+        <SelectTrigger
+          className="w-full border-2 bg-transparent md:w-[200px]"
+          style={{ borderColor: "#51a199" }}
+        >
           <SelectValue placeholder="Filter by LGA" />
         </SelectTrigger>
         <SelectContent>
@@ -41,7 +44,10 @@ function FilterBar({
         </SelectContent>
       </Select>
       <Select onValueChange={onCategoryChange}>
-        <SelectTrigger className="w-full md:w-[200px] bg-transparent border-2" style={{ borderColor: '#51a199' }}>
+        <SelectTrigger
+          className="w-full border-2 bg-transparent md:w-[200px]"
+          style={{ borderColor: "#51a199" }}
+        >
           <SelectValue placeholder="Filter by Facility Type" />
         </SelectTrigger>
         <SelectContent>

@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MapPin, AlertCircle } from "lucide-react";
-import { useUserLocation } from "../hooks/use-user-location";
+import { useUserLocation } from "../hooks/useUserLocation";
 import { useEffect, useState } from "react";
 import { useUserStore } from "../store/user-store";
 

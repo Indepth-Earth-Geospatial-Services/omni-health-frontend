@@ -18,7 +18,7 @@ function FacilityDetailsDrawer({
   facility,
   onShowDirections,
 }: FacilityDetailsDrawerProps) {
-  const [snap, setSnap] = useState<string | number | null>(0.8);
+  const [snap, setSnap] = useState<string | number | null>(1.1);
   const autoFacility = useFacilityStore((s) => s.selectedFacility);
 
   const facilityToUse = facility || autoFacility;

@@ -1,5 +1,5 @@
 import Header from "@/features/admin/components/layout/Header";
-import SettingsPage from "@/features/admin/components/layout/Settings";
+import SettingsPage from "@/features/admin/components/page/Settings";
 
 export default function Settings() {
     return (

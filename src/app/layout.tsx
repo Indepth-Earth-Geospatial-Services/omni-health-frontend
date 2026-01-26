@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import "./globals.css";
-import { AuthProvider } from "@/features/auth/auth-provider";
-import { DM_Sans, Geist, Geist_Mono, Inter } from "next/font/google";
+// import { AuthProvider } from "@/features/auth/auth-provider";
+import { Geist, Geist_Mono, Inter, DM_Sans } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,56 +61,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable}`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${dmSans.variable}`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        {/* <AuthProvider> */}
+        {children}
+        {/* </AuthProvider> */}
 
         {/* Global Toast Notifications - Works everywhere */}
         <Toaster
           position="top-right"
-          reverseOrder={false}
-          gutter={8}
+          closeButton
+          richColors
           toastOptions={{
             duration: 4000,
-            style: {
-              background: "white",
-              color: "#334155", // slate-700
-              border: "2px solid #e2e8f0", // slate-200
-              borderRadius: "16px",
-              padding: "16px 20px",
-              fontSize: "14px",
-              fontWeight: "500",
-              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-            },
-            success: {
-              duration: 3000,
-              style: {
-                border: "2px solid #10b981", // green
-              },
-              iconTheme: {
-                primary: "#10b981",
-                secondary: "#fff",
-              },
-            },
-            error: {
-              duration: 4000,
-              style: {
-                border: "2px solid #ef4444", // red
-              },
-              iconTheme: {
-                primary: "#ef4444",
-                secondary: "#fff",
-              },
-            },
-            loading: {
-              style: {
-                border: "2px solid #3b82f6", // blue
-              },
-              iconTheme: {
-                primary: "#3b82f6",
-                secondary: "#fff",
-              },
-            },
           }}
         />
       </body>

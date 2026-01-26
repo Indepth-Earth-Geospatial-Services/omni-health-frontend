@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FacilityStats from "@/features/user/components/facility-stats";
 import Overview from "@/features/user/components/overview";
 import { useDrawerStore } from "@/features/user/store/drawer-store";
-import { useFacility } from "@/hooks/use-facilities";
+import { useFacility } from "@/hooks/useFacilities";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
 import exportIcon from "@assets/img/icons/svg/Export.svg";
 import {
