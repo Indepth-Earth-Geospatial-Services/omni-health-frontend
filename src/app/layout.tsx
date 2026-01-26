@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { AuthProvider } from "@/features/auth/auth-provider";
+// import { AuthProvider } from "@/features/auth/auth-provider";
 import { Geist, Geist_Mono, Inter, DM_Sans } from "next/font/google";
 
 const geistSans = Geist({
@@ -14,13 +14,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// const inter = Inter({
-//   variable: "--font-inter",
-//   subsets: ["latin"],
-//   weight: ["400", "500", "600", "700"],
-// });
-
-// ${inter.variable}
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -62,10 +60,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable}`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${dmSans.variable}`}
+      >
+        {/* <AuthProvider> */}
+        {children}
+        {/* </AuthProvider> */}
 
         {/* Global Toast Notifications - Works everywhere */}
         <Toaster

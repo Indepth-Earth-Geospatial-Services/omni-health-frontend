@@ -20,22 +20,24 @@ export default function SuperAdminLayout({
     <QueryProvider>
       <AuthHydration>
         <UnregisterServiceWorker />
-        <div className="flex h-screen overflow-hidden">
-          {/* ✅ Super Admin Sidebar */}
-          <Sidebar />
+        <>
+          <div className="flex h-screen overflow-hidden">
+            {/* ✅ Super Admin Sidebar */}
+            <Sidebar />
 
-          {/* Main Content Area */}
-          <div className="flex flex-1 flex-col overflow-hidden">
-            {/* ✅ Sticky header with search + LGA filter */}
-            <MainHeader className="sticky top-0 z-10" />
+            {/* Main Content Area */}
+            <div className="flex flex-1 flex-col overflow-hidden">
+              {/* ✅ Sticky header with search + LGA filter */}
+              <MainHeader className="sticky top-0 z-10" />
 
-            {/* Page Content */}
-            <main className="flex-1 overflow-y-auto bg-gray-50">
-              {children}
-            </main>
+              {/* Page Content */}
+              <main className="flex-1 overflow-y-auto bg-gray-50">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-        <Toaster position="top-right" closeButton />
+          <Toaster position="top-right" closeButton />
+        </>
       </AuthHydration>
     </QueryProvider>
   );

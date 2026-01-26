@@ -5,7 +5,6 @@ import Sidebar from "@/features/admin/components/layout/Sidebar";
 import { UnregisterServiceWorker } from "@/components/UnregisterServiceWorker";
 import QueryProvider from "@/providers/query.provider";
 import { AuthHydration } from "@/components/AuthHydration";
-// import { getSidebarConfig } from "@/features/admin/components/config/ConfigSidebar";
 
 export default function AdminLayout({
   children,
@@ -18,14 +17,16 @@ export default function AdminLayout({
     <QueryProvider>
       <AuthHydration>
         <UnregisterServiceWorker />
-        <div className="flex h-screen overflow-hidden">
-          {/* Sidebar - Fixed width */}
-          <Sidebar />
-          {/* Main Content Area - This will render your pages */}
-          <div className="flex flex-1 flex-col overflow-hidden">
-            {children}
+        <>
+          <div className="flex h-screen overflow-hidden">
+            {/* Sidebar - Fixed width */}
+            <Sidebar />
+            {/* Main Content Area - This will render your pages */}
+            <div className="flex flex-1 flex-col overflow-hidden">
+              {children}
+            </div>
           </div>
-        </div>
+        </>
       </AuthHydration>
     </QueryProvider>
   );

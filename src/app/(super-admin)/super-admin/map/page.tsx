@@ -1,17 +1,17 @@
 import HeaderProps from "@/features/super-admin/components/layouts/HeaderProps";
-import RegistryPage from "@/features/super-admin/components/pages/FacilityRegistry";
+import MapPage from "@/features/super-admin/components/pages/Map";
 // import Header from "@/features/admin/components/layout/Header";
-export default function Analytics() {
+export default function MapPages() {
   return (
     <>
       {/* <Header name="Facility Registry" /> */}
       <div className="flex-1 overflow-y-auto bg-white p-6">
         <main className="flex min-h-screen flex-col">
           <HeaderProps
-            title="Facility Registry"
-            description="Manage and monitor all registered healthcare facilities"
+            title="Map"
+            description="System health overview and key metrics"
           />
-          <RegistryPage />
+          <MapPage />
         </main>
       </div>
     </>
