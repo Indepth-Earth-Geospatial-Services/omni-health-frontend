@@ -134,7 +134,7 @@ export default function RegisterPage() {
             </Link>
           </motion.div>
 
-          {/* =========== FORM HEADER ======== */}
+          {/* Form Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -149,10 +149,10 @@ export default function RegisterPage() {
             </p>s
           </motion.div>
 
-          {/* =============== REGISTER FORM ============*/}
+          {/* Register Form */}
           <RegisterForm />
 
-          {/* ========= TERMS AND CONDITIONS ========== */}
+          {/* Terms */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

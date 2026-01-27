@@ -5,7 +5,7 @@ import { Facility } from "../../../types/api-response";
 import Image from "next/image";
 import facilityImagePlaceholder from "@assets/img/facilities/facility-placeholder.jpeg";
 import { useUserStore } from "@/features/user/store/user-store";
-import { useDistanceCalculation } from "@/hooks/useDistanceCalculation";
+import { useDistanceCalculation } from "@/hooks/use-distance-calculation";
 import { Spinner } from "@/components/ui/spinner";
 
 interface FacilityListItemProps {
@@ -85,7 +85,10 @@ function FacilityListItem(props: FacilityListItemProps) {
   }
 
   return (
-    <div className="w-full text-left">
+    <div
+      className="w-full text-left"
+      onClick={() => (onViewDetails ? onViewDetails(facility!) : null)}
+    >
       {nearUser && (
         <div className="relative top-1 z-10 flex justify-end pr-2.25">
           <h6 className="bg-primary flex h-5.5 w-16 items-center justify-center rounded-[6px] text-[11px] text-white">
