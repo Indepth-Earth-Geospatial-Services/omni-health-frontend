@@ -78,8 +78,8 @@ export default function AllUserPage() {
               onSearch={(value) => console.log(value)}
               buttonLabel="Add New User"
               onButtonClick={() => console.log("Add new user")}
-              showRolesFilter={true}
-              onRolesFilter={() => console.log("Filter by roles")}
+              showGenderFilter={true}
+              onGenderFilter={() => console.log("Filter by gender")}
               showStatusFilter={true}
               onStatusFilter={() => console.log("Filter by status")}
               showExport={true}

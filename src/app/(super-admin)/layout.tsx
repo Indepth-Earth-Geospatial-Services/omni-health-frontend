@@ -1,13 +1,12 @@
 "use client";
 
 import "../globals.css";
-import Sidebar from "@/features/admin/components/layout/Sidebar";
+import SuperSidebar from "@/features/super-admin/components/layouts/SuperSidebar";
 import { UnregisterServiceWorker } from "@/components/UnregisterServiceWorker";
 import QueryProvider from "@/providers/query.provider";
 import { AuthHydration } from "@/components/AuthHydration";
 import MainHeader from "@/features/super-admin/components/layouts/mainHeader";
 // import { getSidebarConfig } from "@/features/admin/components/config/ConfigSidebar";
-import { Toaster } from "sonner";
 
 export default function SuperAdminLayout({
   children,
@@ -23,7 +22,7 @@ export default function SuperAdminLayout({
         <>
           <div className="flex h-screen overflow-hidden">
             {/* ✅ Super Admin Sidebar */}
-            <Sidebar />
+            <SuperSidebar />
 
             {/* Main Content Area */}
             <div className="flex flex-1 flex-col overflow-hidden">
@@ -36,7 +35,6 @@ export default function SuperAdminLayout({
               </main>
             </div>
           </div>
-          <Toaster position="top-right" closeButton />
         </>
       </AuthHydration>
     </QueryProvider>
