@@ -47,7 +47,7 @@ class AuthService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/authentication";
+    this.baseUrl = "/api/v1";
   }
 
   /**
@@ -72,7 +72,7 @@ class AuthService {
             "Content-Type": "application/x-www-form-urlencoded",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -100,7 +100,7 @@ class AuthService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -125,7 +125,7 @@ class AuthService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -148,7 +148,7 @@ class AuthService {
           headers: {
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -170,7 +170,7 @@ class AuthService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;
@@ -184,7 +184,7 @@ class AuthService {
    */
   async resetPassword(
     token: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<{ message: string }> {
     try {
       const response = await axios.post<{ message: string }>(
@@ -198,7 +198,7 @@ class AuthService {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       return response.data;

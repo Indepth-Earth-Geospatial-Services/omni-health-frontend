@@ -7,12 +7,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/backend/:path*",
+        source: "/api/v1/:path*",
         destination: "https://omni-health-backend.onrender.com/api/v1/:path*",
       },
       {
-        source: "/authentication/:path*",
-        destination: "https://omni-health-backend.onrender.com/:path*",
+        source: "/api/backend/:path*",
+        destination: "https://omni-health-backend.onrender.com/api/v1/:path*",
       },
     ];
   },

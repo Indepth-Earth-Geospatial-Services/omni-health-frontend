@@ -7,6 +7,7 @@ import {
   Settings,
   Search,
   Loader2,
+  BarChart3,
   Map,
   ChevronRight,
 } from "lucide-react";
@@ -16,22 +17,31 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import { useFacility } from "@/hooks/useFacilities";
-import ProfileModal from "./ProfileModal";
+import ProfileModal from "../../../admin/components/layout/ProfileModal";
 
 const adminMenuItems = [
-  // { label: "Overview", icon: MailOpen, href: "/admin" },
-  // { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
-  // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
-  { label: "Staff", icon: UserCog, href: "/admin/staff" },
-  { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
-  { label: "Equipments & Facility", icon: Hospital, href: "/admin/equipments" },
-  // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
-  { label: "Settings", icon: Settings, href: "/admin/settings" },
+  { label: "Map", icon: UserCog, href: "/super-admin/map" },
+  {
+    label: "Facility Registry",
+    icon: Hospital,
+    href: "/super-admin/facility-registry",
+  },
+  { label: "Staff", icon: Hospital, href: "/super-admin/staff" },
+  { label: "Users", icon: BarChart3, href: "/super-admin/allUsers" },
+  // {
+  //   label: "Equipments & Infrastructure",
+  //   icon: Hospital,
+  //   href: "/super-admin/all-equipments",
+  // },
+  //   { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
-const userMenuItems = [{ label: "User Dashboard", icon: Map, href: "/user" }];
+const userMenuItems = [
+  { label: "Admin Dashboard", icon: Map, href: "/admin" },
+  { label: "User Dashboard", icon: Map, href: "/user" },
+];
 
-export default function Sidebar() {
+export default function SuperSidebar() {
   const pathname = usePathname();
   const { facilityIds } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -62,20 +72,9 @@ export default function Sidebar() {
           </h1>
         </div>
       </Link>
-      {/* Search Bar */}
-      <div className="px-4 py-4">
-        <div className="focus-within:border-primary flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 transition-all duration-200 focus-within:bg-white">
-          <Search size={16} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
-          />
-        </div>
-      </div>
 
       {/* Admin Menu Header */}
-      <div className="px-4 pb-2">
+      <div className="px-4 pt-6 pb-2">
         <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
           Admin Menu
         </p>

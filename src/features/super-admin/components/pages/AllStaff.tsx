@@ -1,14 +1,9 @@
 "use client";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import { Users } from "lucide-react";
-import StaffList from "@/features/admin/components/page/Staff";
-import { useAuthStore } from "@/store/auth-store";
-// import StaffTableHeader from "@/features/super-admin/components/layouts/StaffTableHeader";
+import StaffTable from "@/features/super-admin/components/layouts/StaffTable";
 
 export default function StaffPage() {
-  const { facilityIds } = useAuthStore();
-  const facilityId = facilityIds?.[0] ?? "";
-
   return (
     <div className="flex-1 overflow-y-auto bg-white">
       <main className="flex min-h-screen flex-col">
@@ -42,8 +37,7 @@ export default function StaffPage() {
             trend={{ value: "80%", isPositive: true }}
           />
         </div>
-        {/* <StaffTableHeader title="Staff List" /> */}
-        <StaffList facilityId={facilityId} title="Staff List" />
+        <StaffTable />
       </main>
     </div>
   );
