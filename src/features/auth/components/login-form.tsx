@@ -19,8 +19,9 @@ import {
 
 import { loginSchema, LoginFormData } from "../schemas/login.schema";
 import { authService } from "@/services/auth.service";
-import { useAuthStore, getRedirectPath, User } from "@/store/auth-store";
+import { useAuthStore, getRedirectPath } from "@/store/auth-store";
 import { toast } from "sonner";
+// import SocialLogin from "./social-login";
 
 // Shake animation variants
 const shakeVariants = {
@@ -67,37 +68,32 @@ export default function LoginForm() {
     setLoginError(null);
 
     try {
-      // 1. Login and get response from API
+      // 1. Login and get token
       const response = await authService.login(data.email, data.password);
 
-      console.log("Login response:", response); // Debug log
+      // 2. ✅ Decode JWT to extract user info (temporary solution)
+      const tokenPayload = parseJwt(response.access_token);
 
-      // 2. ✅ Create user object from API response
-      const user: User = {
-        email: response.email || data.email,
-        full_name: response.full_name,
-        role: response.role, // This will be "super_admin", "admin", or "user"
+      // 3. Create user object from token or set basic info
+      const user = {
+        user_id: tokenPayload.user_id || 0,
+        email: data.email, // We know the email from login form
+        first_name: tokenPayload.first_name || null,
+        last_name: tokenPayload.last_name || null,
+        role: tokenPayload.role || "user",
         is_active: true,
         created_at: new Date().toISOString(),
       };
 
-      console.log("Created user object:", user); // Debug log
-
-      // 3. ✅ Store auth data with user info
+      // 4. Store auth data with user info
       login(response.access_token, response.facility_ids || [], user);
 
-      toast.success("Login successful!", {
-        description: `Welcome back, ${user.full_name || user.email}!`,
-      });
+      toast.success("Login successful!");
 
-      // 4. ✅ Redirect based on ROLE first, then facilityIds
-      const redirectPath = getRedirectPath(user, response.facility_ids || []);
-      console.log("Redirecting to:", redirectPath); // Debug log
-
+      // 5. Redirect based on role
+      const redirectPath = getRedirectPath(response.facility_ids);
       router.push(redirectPath);
     } catch (error: any) {
-      console.error("Login error:", error); // Debug log
-
       // ✅ Better error handling with specific messages
       let errorMessage = "Invalid email or password";
 
@@ -117,16 +113,29 @@ export default function LoginForm() {
         toast.error("Email not verified", {
           description: "Please check your email and verify your account.",
         });
-      } else {
-        toast.error("Login failed", {
-          description: errorMessage,
-        });
       }
 
       // Reset shake after animation completes
       setTimeout(() => setShouldShake(false), 400);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  // ✅ Helper function to decode JWT token
+  function parseJwt(token: string) {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch {
+      return {};
     }
   }
 

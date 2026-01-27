@@ -19,7 +19,7 @@ export const DataSection: React.FC<DataSectionProps> = ({
 }) => {
   const hasData = Array.isArray(data)
     ? data.length > 0
-    : Object.keys(data).length > 0;
+    : Object.keys(data || {}).length > 0;
 
   if (!hasData) {
     return null;

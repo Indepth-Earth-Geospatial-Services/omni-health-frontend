@@ -1,20 +1,18 @@
 "use client";
 
 import { create } from "zustand";
-import { ApiClient } from "@/lib/client";
 
 const AUTH_STORAGE_KEY = "omni_health_auth";
-const apiClient = new ApiClient();
+
 
 export interface User {
-  user_id?: number;
+  user_id: number;
   email: string;
-  first_name?: string | null;
-  last_name?: string | null;
-  full_name?: string;
+  first_name: string | null;
+  last_name: string | null;
   role: "user" | "admin" | "super_admin";
-  is_active?: boolean;
-  created_at?: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 interface AuthState {
@@ -46,6 +44,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   ...initialState,
 
   login: (token: string, facilityIds: string[], user?: User) => {
+    // Persist to localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem(
         AUTH_STORAGE_KEY,
@@ -63,6 +62,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   logout: () => {
+    // Clear localStorage
     if (typeof window !== "undefined") {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     }
@@ -72,6 +72,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isHydrated: true,
     });
 
+    // Dispatch logout event for API client to handle
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("auth:logout"));
     }
@@ -80,6 +81,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   setUser: (user: User) => {
     const { token, facilityIds } = get();
 
+    // Update localStorage with user
     if (typeof window !== "undefined" && token) {
       localStorage.setItem(
         AUTH_STORAGE_KEY,
@@ -101,7 +103,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (stored) {
         const { token, facilityIds, user } = JSON.parse(stored);
 
-        if (token && apiClient.isTokenExpired(token)) {
+        // Check if token is expired
+        if (token && isTokenExpired(token)) {
           localStorage.removeItem(AUTH_STORAGE_KEY);
           set({ ...initialState, isHydrated: true });
           return;
@@ -117,25 +120,31 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       } else {
         set({ isHydrated: true });
       }
-    } catch (error) {
-      console.error("Error hydrating auth state:", error);
+    } catch {
       set({ isHydrated: true });
     }
   },
 }));
 
-// ✅ UPDATED: Routes without "super-admin" prefix (route group removes it)
-export function getRedirectPath(user: User | null, facilityIds: string[] | null): string {
-  // Priority 1: Check role - super_admin takes precedence
-  if (user?.role === "super_admin") {
-    return "/super-admin/facility-registry"; // ✅ No "/super-admin" prefix
+// Helper to check if JWT token is expired
+function isTokenExpired(token: string): boolean {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(base64));
+
+    // Check if token expires in the next 5 seconds
+    return Date.now() >= payload.exp * 1000 - 5000;
+  } catch {
+    return true;
   }
-  
-  // Priority 2: If user is admin, go to admin dashboard
-  if (user?.role === "admin") {
-    return "/admin/staff";
+}
+
+// Helper to determine redirect path based on role/facilityIds
+export function getRedirectPath(facilityIds: string[] | null): string {
+  // If user has facility_ids, they're admin
+  if (facilityIds && facilityIds.length > 0) {
+    return "/admin";
   }
-  
-  // Priority 3: Default to user dashboard
   return "/user";
 }

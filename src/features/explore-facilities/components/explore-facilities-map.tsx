@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAllFacilities } from "../hooks/useAllFacilities";
 import { ExploreFacilitiesLoader } from "./explore-facilities-loader";
-import { ExploreFacilitiesError } from "./expore-facilities-error";
 import ExploreMap from "./explore-map";
+import { ExploreFacilitiesError } from "./expore-facilities-error";
 import FilterBar from "./filter-bar";
 
 function ExploreFacilitiesMap() {

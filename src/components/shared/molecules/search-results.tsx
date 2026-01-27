@@ -3,14 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FacilityListItem from "@/components/shared/molecules/facility-list-item";
-import { useFacilitySearch } from "@/hooks/useFacilitySearch";
+import { useFacilitySearch } from "@/hooks/use-facility-search";
 import { cn } from "@/lib/utils";
 import { useSearchFilterStore } from "@/store/search-filter-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { ActiveFilters } from "../atoms/active-filters";
 import { SelectedFilters } from "@/types/search-filter";
 import { useShallow } from "zustand/react/shallow";

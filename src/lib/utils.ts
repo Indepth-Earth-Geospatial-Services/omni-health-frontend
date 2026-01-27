@@ -87,7 +87,7 @@ export const getToday = (): string => {
   return new Date().toLocaleString("en-us", { weekday: "long" }).toLowerCase();
 };
 
-export const isEmptyValue = (value: unknown): boolean => {
+export const isEmptyValue = (value: any): boolean => {
   if (value === undefined || value === null) return true;
   if (typeof value === "string" && value.trim() === "") return true;
   if (Array.isArray(value) && value.length === 0) return true;
