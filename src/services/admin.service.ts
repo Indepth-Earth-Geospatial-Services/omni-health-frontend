@@ -25,7 +25,7 @@ export interface StaffPagination {
 
 //  ======= GET STAFF RESPONSE INTERFACE ========
 /**
- * THIS IS CRUCIAL SO THAT TYPSCRIPT WILL KNOW THE 
+ * THIS IS CRUCIAL SO THAT TYPSCRIPT WILL KNOW THE
  * KIND OF RESPONSE TYPE IT WILL BE EXPECTTING
  */
 
@@ -87,7 +87,7 @@ export interface AddInfrastructureResponse {
 /**
  * ADMIN SERVICE CLASS
  * Contains method such as:
- * get staff, Create staff, Update staff, delete Staff, 
+ * get staff, Create staff, Update staff, delete Staff,
  * get Facility Inventory, Add Equipment, Add Infrastructure
  */
 
@@ -126,12 +126,10 @@ class AdminService {
         `${this.ENDPOINTS.STAFF}/${facilityId}`,
         {
           params: { skip, limit },
-        }
+        },
       );
       return response.data;
-    } catch {
-
-    }
+    } catch {}
   }
 
   /**
@@ -147,7 +145,7 @@ class AdminService {
   }): Promise<StaffMember> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/staff`,
-      data
+      data,
     );
     return response.data;
   }
@@ -169,7 +167,7 @@ class AdminService {
     // Try PATCH method first (common for partial updates)
     const response = await apiClient.patch(
       `${this.ENDPOINTS.STAFF}/${staffId}`,
-      data
+      data,
     );
     return response.data;
   }
@@ -193,10 +191,10 @@ class AdminService {
    * GET /admin/facility/{facility_id}/inventory
    */
   async getFacilityInventory(
-    facilityId: string
+    facilityId: string,
   ): Promise<GetFacilityInventoryResponse> {
     const response = await apiClient.get(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory`
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory`,
     );
     return response.data;
   }
@@ -214,7 +212,7 @@ class AdminService {
   }): Promise<AddEquipmentResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment`,
-      data
+      data,
     );
     return response.data;
   }
@@ -232,7 +230,7 @@ class AdminService {
   }): Promise<AddInfrastructureResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
-      data
+      data,
     );
     return response.data;
   }
@@ -250,7 +248,7 @@ class AdminService {
   }): Promise<void> {
     const encodedItemName = encodeURIComponent(itemName);
     await apiClient.delete(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${encodedItemName}`
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment/${encodedItemName}`,
     );
   }
 
@@ -267,7 +265,7 @@ class AdminService {
   }): Promise<void> {
     const encodedItemName = encodeURIComponent(itemName);
     await apiClient.delete(
-      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${encodedItemName}`
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure/${encodedItemName}`,
     );
   }
 
@@ -285,7 +283,7 @@ class AdminService {
   }): Promise<AddEquipmentResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment`,
-      data
+      data,
     );
     return response.data;
   }
@@ -304,7 +302,7 @@ class AdminService {
   }): Promise<AddInfrastructureResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
-      data
+      data,
     );
     return response.data;
   }
