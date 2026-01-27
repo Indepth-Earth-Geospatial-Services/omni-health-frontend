@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAllFacilities } from "@/hooks/useFacilities";
@@ -48,7 +53,7 @@ export function FacilitySelectionDrawer({
       snapPoints={[0.4, 0.9]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
-      modal={false}
+      modal={true}
     >
       <DrawerContent className="h-[90dvh]">
         <div className="mx-auto my-3 h-1.5 w-12 rounded-full bg-gray-300" />
@@ -73,7 +78,7 @@ export function FacilitySelectionDrawer({
             <p className="text-center text-gray-500">No facilities found.</p>
           )}
           {facilities.length > 0 && (
-            <ScrollArea className="h-full">
+            <ScrollArea className="relative h-full">
               <ul className="space-y-2">
                 {facilities.map((facility) => (
                   <li key={facility.facility_id}>
@@ -99,6 +104,7 @@ export function FacilitySelectionDrawer({
                   </Button>
                 </div>
               )}
+              <div className="h-15"></div>
             </ScrollArea>
           )}
         </div>

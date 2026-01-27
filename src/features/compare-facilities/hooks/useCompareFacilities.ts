@@ -23,15 +23,20 @@ export function useCompareFacilities() {
     }
   };
 
+  const clearAll = () => {
+    setFacilities([null, null]);
+  };
+
   const isReadyToCompare = useMemo(
     () => facilities.filter(Boolean).length === 2,
-    [facilities]
+    [facilities],
   );
 
   return {
     facilities,
     addFacility,
     removeFacility,
+    clearAll,
     isReadyToCompare,
     selectedFacilitiesCount: facilities.filter(Boolean).length,
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X, Hospital } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -18,10 +18,17 @@ import { ComparisonResults } from "@/features/compare-facilities/components/Comp
 import { useUserLocation } from "@/features/user/hooks/useUserLocation";
 import { useUserStore } from "@/features/user/store/user-store";
 import { useFacilityDirections } from "../hooks/useFacilityDirections";
+import EmptyState from "@/features/compare-facilities/components/emptyState"; // Import EmptyState
 
 function CompareFacilitiesPage() {
-  const { facilities, addFacility, removeFacility, isReadyToCompare } =
-    useCompareFacilities();
+  const {
+    facilities,
+    addFacility,
+    removeFacility,
+    clearAll,
+    isReadyToCompare,
+    selectedFacilitiesCount,
+  } = useCompareFacilities();
 
   // Location and Directions Hooks
   useUserLocation(); // Initialize location fetching
@@ -50,44 +57,41 @@ function CompareFacilitiesPage() {
   };
 
   const handleReset = () => {
-    removeFacility(0);
-    removeFacility(1);
+    clearAll();
   };
 
   return (
-    <>
-      <main className="relative min-h-dvh px-5 pt-5">
-        <div className="flex items-start gap-3">
-          {isReadyToCompare ? (
-            <Button variant="ghost" size="icon" onClick={handleReset}>
-              <ArrowLeft size={24} />
-            </Button>
-          ) : (
-            <Link href="/user">
-              <ArrowLeft size={24} />
-            </Link>
-          )}
-          <div>
-            <h1 className="text-[23px] font-medium">Compare Facilities</h1>
-            <p className="text-[13px] text-[#868C98]">
-              {isReadyToCompare
-                ? "Showing comparison results"
-                : "Select two facilities to see a side-by-side comparison."}
-            </p>
+    <div className="relative min-h-dvh">
+      {" "}
+      {/* Added relative to allow fixed button */}
+      <main className="min-h-dvh overflow-y-auto px-5 pt-5 pb-20">
+        {" "}
+        {/* Added pb-20 for fixed button */}
+        <div className="sticky top-0 z-10 bg-white pt-5 pb-3">
+          <div className="flex items-start gap-3">
+            {isReadyToCompare ? (
+              <Button variant="ghost" size="icon" onClick={handleReset}>
+                <ArrowLeft size={24} />
+              </Button>
+            ) : (
+              <Link href="/user">
+                <ArrowLeft size={24} />
+              </Link>
+            )}
+            <div>
+              <h1 className="text-[23px] font-medium">Compare Facilities</h1>
+              <p className="text-[13px] text-[#868C98]">
+                {isReadyToCompare
+                  ? "Showing comparison results"
+                  : "Select two facilities to see a side-by-side comparison."}
+              </p>
+            </div>
           </div>
         </div>
-
-        {isReadyToCompare && facilityA && facilityB ? (
-          <ComparisonResults
-            facilityA={facilityA}
-            facilityB={facilityB}
-            removeFacility={removeFacility}
-            directionsA={directionsA}
-            directionsB={directionsB}
-            isLoadingDirections={isLoadingDirections}
-            locationError={!!locationError || isErrorDirections}
-          />
-        ) : (
+        {selectedFacilitiesCount === 0 && (
+          <EmptyState onAddFacility={() => handleAddFacilityClick(0)} />
+        )}
+        {selectedFacilitiesCount === 1 && (
           <div className="mt-8 grid grid-cols-2 items-stretch gap-4">
             {facilities.map((facility, index) =>
               facility ? (
@@ -114,33 +118,53 @@ function CompareFacilitiesPage() {
                 <Card
                   key={index}
                   onClick={() => handleAddFacilityClick(index)}
-                  className="flex h-48 cursor-pointer items-center justify-center border-2 border-dashed bg-gray-50/50"
+                  className="flex h-48 cursor-pointer flex-col items-center justify-center border border-primary-100 bg-primary-50/20 text-primary-900"
                 >
-                  <Button variant="outline" className="pointer-events-none">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Facility
-                  </Button>
+                  <div className="mb-2 rounded-full border-4 border-primary-100/50 bg-primary-100 p-3">
+                    <Hospital className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="font-semibold">Add Facility</p>
+                  <p className="text-center text-xs text-primary-900/70">
+                    Select a facility to start comparing
+                  </p>
                 </Card>
-              )
+              ),
             )}
           </div>
         )}
-
-        {!isReadyToCompare && (
-          <div className="absolute bottom-5 left-5 right-5">
-            <Button disabled={!isReadyToCompare} className="w-full">
-              Compare
-            </Button>
-          </div>
+        {isReadyToCompare && facilityA && facilityB && (
+          <ComparisonResults
+            facilityA={facilityA}
+            facilityB={facilityB}
+            removeFacility={removeFacility}
+            directionsA={directionsA}
+            directionsB={directionsB}
+            isLoadingDirections={isLoadingDirections}
+            locationError={!!locationError || isErrorDirections}
+          />
         )}
+        {!isReadyToCompare &&
+          selectedFacilitiesCount > 0 && ( // Only show compare button if at least one is selected
+            <div className="absolute bottom-5 left-5 right-5">
+              <Button disabled={!isReadyToCompare} className="w-full">
+                Compare
+              </Button>
+            </div>
+          )}
       </main>
-
+      {selectedFacilitiesCount > 0 && ( // Show reset button if any facility is selected
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white p-5 border-t border-gray-200 shadow-lg">
+          <Button onClick={handleReset} variant="outline" className="w-full">
+            Clear All Compared Facilities
+          </Button>
+        </div>
+      )}
       <FacilitySelectionDrawer
         isOpen={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
         onSelectFacility={handleSelectFacility}
       />
-    </>
+    </div>
   );
 }
 
