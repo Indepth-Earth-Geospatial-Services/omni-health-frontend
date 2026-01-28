@@ -47,7 +47,11 @@ const toSentenceCase = (str: string | undefined | null): string => {
     .join(" ");
 };
 
-const StaffList = ({ facilityId, title = "Staff Management", description }: StaffListProps) => {
+const StaffList = ({
+  facilityId,
+  title = "Staff Management",
+  description,
+}: StaffListProps) => {
   // Get user role from auth store
   const user = useAuthStore((state) => state.user);
   const userRole = user?.role;
@@ -336,7 +340,7 @@ const StaffList = ({ facilityId, title = "Staff Management", description }: Staf
         >
           <table className="w-full border-collapse text-left">
             {/* Table Header */}
-            <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
+            <thead className="sticky top-0 border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
                 <th className="w-12 p-4">
                   <MinusSquare

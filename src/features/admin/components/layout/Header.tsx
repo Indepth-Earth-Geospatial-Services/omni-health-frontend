@@ -110,7 +110,7 @@ export default function Header({ name, className }: HeaderProps) {
 
                     {/* Notification Dropdown */}
                     {isDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-96 rounded-xl border-2 border-slate-200 bg-white shadow-lg">
+                        <div className="absolute right-0 z-50 mt-2 w-96 rounded-xl border-2 border-slate-200 bg-white shadow-lg">
                             {/* Dropdown Header */}
                             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                                 <div>
