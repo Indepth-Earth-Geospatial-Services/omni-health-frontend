@@ -13,6 +13,9 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   facility_ids: string[];
+  full_name: string;
+  email: string;
+  role: "user" | "admin" | "super_admin";
 }
 
 export interface RegisterRequest {
@@ -47,7 +50,7 @@ class AuthService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/authentication"; // Updated to match the rewrite rule HOTFIX: HACK: FIXME
+    this.baseUrl = "/api/v1";
   }
 
   /**
@@ -145,6 +148,56 @@ class AuthService {
         {
           params: { email },
           headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Request password reset
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    try {
+      const response = await axios.post<{ message: string }>(
+        `${this.baseUrl}/forgot-password`,
+        { email },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    try {
+      const response = await axios.post<{ message: string }>(
+        `${this.baseUrl}/reset-password`,
+        {
+          token,
+          new_password: newPassword,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
             Accept: "application/json",
           },
         },

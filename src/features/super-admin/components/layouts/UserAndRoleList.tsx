@@ -22,7 +22,6 @@ import ChangeUserRoleModal from "../modals/ChangeUserRoleModal";
 import DeactivateUserModal from "../modals/DeactivateUserModal";
 import type { User } from "../../services/super-admin.service";
 import { superAdminService } from "../../services/super-admin.service";
-import { useAuthStore } from "@/store/auth-store";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -55,10 +54,7 @@ export default function UserAndRoleList() {
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Get facility ID from auth store
-  const { facilityIds } = useAuthStore();
-  const facilityId = facilityIds?.[0] ?? "";
-
+  
   // Fetch users data
   const { data, isLoading, isError, error, isFetching } = useSuperAdminUsers(
     currentPage,
@@ -88,37 +84,31 @@ export default function UserAndRoleList() {
     };
   }, [openDropdownId]);
 
-  // Handle role change
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  // Handle assigning user to facility (promotes to admin)
+  const handleAssignToFacility = async (userId: number, facilityId: string) => {
     try {
-      if (!facilityId) {
-        toast.error("No facility selected");
-        return;
-      }
-
       await superAdminService.assignManager({
-        user_id: parseInt(userId, 10),
+        user_id: userId,
         facility_id: facilityId,
       });
 
-      toast.success("Role changed successfully!");
+      toast.success("User assigned to facility successfully!");
+      setIsChangeRoleModalOpen(false);
       // Optionally refetch the users list here
       window.location.reload();
     } catch (error) {
-      console.error("Failed to change role:", error);
-      toast.error("Failed to change role. Please try again.");
+      console.error("Failed to assign user to facility:", error);
+      toast.error("Failed to assign user to facility. Please try again.");
     }
   };
 
   // Handle user deactivation
-  const handleDeactivateUser = async (userId: string, reason: string) => {
+  const handleDeactivateUser = async (_userId: string, password: string) => {
     try {
-      await superAdminService.deactivateUser({
-        user_id: parseInt(userId, 10),
-        reason: reason || undefined,
-      });
+      await superAdminService.deactivateAccount(password);
 
       toast.success("User deactivated successfully!");
+      setIsDeactivateModalOpen(false);
       // Optionally refetch the users list here
       window.location.reload();
     } catch (error) {
@@ -189,16 +179,26 @@ export default function UserAndRoleList() {
                   />
                 </th>
                 <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
-                  <div className="flex items-center gap-2">
+                  <div className="font-inter-medium font-inter flex items-center gap-2 text-[11.38px] text-[#475467]">
                     Full Name <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th className="p-4">Email</th>
-                <th className="p-4 text-center">Role</th>
-                <th className="p-4">Managed Facilities</th>
-                <th className="p-4">Created Date</th>
-                <th className="p-4 text-center">Status</th>
-                <th className="p-4 text-center">Actions</th>
+                {/* <th className="p-4">Email</th> */}
+                <th className="font-inter-medium font-inter p-4 text-center text-[11.38px] text-[#475467]">
+                  Role
+                </th>
+                <th className="font-inter-medium font-inter p-4 text-[11.38px] text-[#475467]">
+                  Managed Facilities
+                </th>
+                <th className="font-inter-medium font-inter p-4 text-[11.38px] text-[#475467]">
+                  Created Date
+                </th>
+                <th className="font-inter-medium font-inter p-4 text-center text-[11.38px] text-[#475467]">
+                  Status
+                </th>
+                <th className="font-inter-medium font-inter p-4 text-center text-[11.38px] text-[#475467]">
+                  Actions
+                </th>
               </tr>
             </thead>
 
@@ -246,15 +246,18 @@ export default function UserAndRoleList() {
                             {initials}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-slate-800">
+                            <p className="font-dmsans text-sm text-[13.69px] font-medium text-slate-900">
                               {user.full_name}
+                            </p>
+                            <p className="font-dmsans mt-0.5 text-[12.64px] font-normal text-[#475467]">
+                              {user.email}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-sm text-slate-600">
+                      {/* <td className="p-4 text-sm text-slate-600">
                         {user.email}
-                      </td>
+                      </td> */}
                       <td className="p-4 text-center">
                         <span
                           className={`rounded-full border px-4 py-1 text-xs font-medium ${getRoleBadgeColor(user.role)}`}
@@ -454,7 +457,7 @@ export default function UserAndRoleList() {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onSubmit={handleRoleChange}
+        onSubmit={handleAssignToFacility}
       />
 
       {/* Deactivate User Modal */}

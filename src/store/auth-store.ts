@@ -4,7 +4,6 @@ import { create } from "zustand";
 
 const AUTH_STORAGE_KEY = "omni_health_auth";
 
-
 export interface User {
   user_id: number;
   email: string;
@@ -48,7 +47,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (typeof window !== "undefined") {
       localStorage.setItem(
         AUTH_STORAGE_KEY,
-        JSON.stringify({ token, facilityIds, user })
+        JSON.stringify({ token, facilityIds, user }),
       );
     }
 
@@ -85,7 +84,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (typeof window !== "undefined" && token) {
       localStorage.setItem(
         AUTH_STORAGE_KEY,
-        JSON.stringify({ token, facilityIds, user })
+        JSON.stringify({ token, facilityIds, user }),
       );
     }
 
@@ -100,6 +99,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     try {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+
       if (stored) {
         const { token, facilityIds, user } = JSON.parse(stored);
 
@@ -118,10 +118,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isHydrated: true,
         });
       } else {
-        set({ isHydrated: true });
+        // No stored data - explicitly reset to unauthenticated state
+        set({
+          ...initialState,
+          isHydrated: true,
+        });
       }
     } catch {
-      set({ isHydrated: true });
+      // Error parsing - reset to unauthenticated state
+      set({
+        ...initialState,
+        isHydrated: true,
+      });
     }
   },
 }));
@@ -140,11 +148,18 @@ function isTokenExpired(token: string): boolean {
   }
 }
 
-// Helper to determine redirect path based on role/facilityIds
-export function getRedirectPath(facilityIds: string[] | null): string {
-  // If user has facility_ids, they're admin
-  if (facilityIds && facilityIds.length > 0) {
+// Helper to determine redirect path based on role
+export function getRedirectPath(
+  facilityIds: string[] | null,
+  userRole?: string,
+): string {
+  if (userRole === "super_admin") {
+    return "/super-admin/staff";
+  }
+
+  if (userRole === "admin" && facilityIds && facilityIds.length > 0) {
     return "/admin";
   }
+
   return "/user";
 }

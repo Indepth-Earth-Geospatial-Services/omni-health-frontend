@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
-import { AuthHydration } from "@/components/AuthHydration";
 import HydrationLoader from "@/components/shared/atoms/hydration-loader";
 
 interface RouteGuardProps {
@@ -13,14 +12,26 @@ interface RouteGuardProps {
 export function RouteGuard({ children }: RouteGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isHydrated, facilityIds } = useAuthStore();
+  const { isAuthenticated, isHydrated, facilityIds, user, hydrate } =
+    useAuthStore();
+
+  // Re-hydrate on pathname change to sync with localStorage
+  useEffect(() => {
+    hydrate();
+  }, [pathname, hydrate]);
 
   useEffect(() => {
     // Wait for auth state to hydrate from localStorage
     if (!isHydrated) return;
 
     // Define protected routes
-    const protectedRoutes = ["/user", "/admin", "/profile", "/facilities"];
+    const protectedRoutes = [
+      "/user",
+      "/admin",
+      "/super-admin",
+      "/profile",
+      "/facilities",
+    ];
     const isProtectedRoute = protectedRoutes.some((route) =>
       pathname.startsWith(route),
     );
@@ -36,12 +47,20 @@ export function RouteGuard({ children }: RouteGuardProps) {
       isAuthenticated &&
       (pathname === "/login" || pathname === "/register")
     ) {
-      const redirectPath =
-        facilityIds && facilityIds.length > 0 ? "/admin" : "/user";
-      router.push(redirectPath);
+      if (user?.role === "super_admin") {
+        router.push("/super-admin/map");
+        return;
+      }
+
+      if (user?.role === "admin" && facilityIds && facilityIds.length > 0) {
+        router.push("/admin");
+        return;
+      }
+
+      router.push("/user");
       return;
     }
-  }, [isAuthenticated, isHydrated, pathname, router, facilityIds]);
+  }, [isAuthenticated, isHydrated, pathname, router, facilityIds, user]);
 
   // Show loading spinner while checking auth
   if (!isHydrated) return <HydrationLoader />;
