@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "@/features/auth/auth-provider";
 import { Geist, Geist_Mono, Inter, DM_Sans } from "next/font/google";
