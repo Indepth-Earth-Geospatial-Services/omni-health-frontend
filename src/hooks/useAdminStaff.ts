@@ -33,7 +33,7 @@ export const useAdminStaff = (
   facilityId: string,
   page: number = 1,
   limit: number = 10,
-  options?: Omit<UseQueryOptions<GetStaffResponse>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<GetStaffResponse>, "queryKey" | "queryFn">,
 ) => {
   return useQuery({
     queryKey: adminStaffKeys.list(facilityId, page, limit),
@@ -232,7 +232,11 @@ export const useAddEquipment = (facilityId: string) => {
 export const useAddInfrastructure = (facilityId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation<AddInfrastructureResponse, Error, AddInfrastructureRequest>({
+  return useMutation<
+    AddInfrastructureResponse,
+    Error,
+    AddInfrastructureRequest
+  >({
     mutationFn: (data: AddInfrastructureRequest) => {
       return adminService.addInfrastructure({ facilityId, data });
     },
@@ -319,7 +323,11 @@ export const useUpdateEquipment = (facilityId: string) => {
 export const useUpdateInfrastructure = (facilityId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation<AddInfrastructureResponse, Error, AddInfrastructureRequest>({
+  return useMutation<
+    AddInfrastructureResponse,
+    Error,
+    AddInfrastructureRequest
+  >({
     mutationFn: (data: AddInfrastructureRequest) => {
       return adminService.updateInfrastructure({ facilityId, data });
     },

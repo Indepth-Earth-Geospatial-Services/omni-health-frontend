@@ -68,30 +68,46 @@ export default function LoginForm() {
     setLoginError(null);
 
     try {
-      // 1. Login and get token
+      // 1. Login and get token + user info from API
       const response = await authService.login(data.email, data.password);
 
-      // 2. ✅ Decode JWT to extract user info (temporary solution)
+      // DEBUG: Log API response
+      console.log("=== LOGIN DEBUG ===");
+      console.log("API Response:", response);
+      console.log("Role from API:", response.role);
+      console.log("Facility IDs:", response.facility_ids);
+
+      // 2. Parse full_name into first_name and last_name
+      const nameParts = response.full_name?.split(" ") || [];
+      const firstName = nameParts[0] || null;
+      const lastName = nameParts.slice(1).join(" ") || null;
+
+      // 3. Decode JWT for user_id (if needed)
       const tokenPayload = parseJwt(response.access_token);
 
-      // 3. Create user object from token or set basic info
+      // 4. Create user object from API response (NOT from JWT)
       const user = {
-        user_id: tokenPayload.user_id || 0,
-        email: data.email, // We know the email from login form
-        first_name: tokenPayload.first_name || null,
-        last_name: tokenPayload.last_name || null,
-        role: tokenPayload.role || "user",
+        user_id: tokenPayload.user_id || tokenPayload.sub || 0,
+        email: response.email || data.email,
+        first_name: firstName,
+        last_name: lastName,
+        role: response.role, // Use role from API response!
         is_active: true,
         created_at: new Date().toISOString(),
       };
 
-      // 4. Store auth data with user info
+      console.log("User object:", user);
+
+      // 5. Store auth data with user info
       login(response.access_token, response.facility_ids || [], user);
 
       toast.success("Login successful!");
 
-      // 5. Redirect based on role
-      const redirectPath = getRedirectPath(response.facility_ids);
+      // 6. Redirect based on role
+      const redirectPath = getRedirectPath(response.facility_ids, user.role);
+      console.log("Redirect path:", redirectPath);
+      console.log("=== END LOGIN DEBUG ===");
+
       router.push(redirectPath);
     } catch (error: any) {
       // ✅ Better error handling with specific messages
@@ -131,7 +147,7 @@ export default function LoginForm() {
         atob(base64)
           .split("")
           .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
+          .join(""),
       );
       return JSON.parse(jsonPayload);
     } catch {
@@ -141,7 +157,7 @@ export default function LoginForm() {
 
   // Clear login error when user starts typing
   const handleInputChange = (
-    originalOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    originalOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
   ) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       if (loginError) {
@@ -183,8 +199,9 @@ export default function LoginForm() {
                   </FieldLabel>
                   <div className="relative">
                     <Mail
-                      className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${loginError ? "text-red-400" : "text-gray-400"
-                        }`}
+                      className={`absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 ${
+                        loginError ? "text-red-400" : "text-gray-400"
+                      }`}
                     />
                     <Input
                       {...field}
@@ -193,7 +210,7 @@ export default function LoginForm() {
                       type="email"
                       aria-invalid={fieldState.invalid || !!loginError}
                       placeholder="you@example.com"
-                      className={`h-12 pl-12 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all bg-gray-100 ${errorInputClass}`}
+                      className={`h-12 rounded-lg border bg-gray-100 pl-12 text-sm transition-all focus:ring-2 focus:outline-none ${errorInputClass}`}
                       disabled={isLoading}
                     />
                   </div>
@@ -226,8 +243,9 @@ export default function LoginForm() {
                   </div>
                   <div className="relative">
                     <Lock
-                      className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${loginError ? "text-red-400" : "text-gray-400"
-                        }`}
+                      className={`absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 ${
+                        loginError ? "text-red-400" : "text-gray-400"
+                      }`}
                     />
                     <Input
                       {...field}
@@ -236,13 +254,13 @@ export default function LoginForm() {
                       type={showPassword ? "text" : "password"}
                       aria-invalid={fieldState.invalid || !!loginError}
                       placeholder="Enter your password"
-                      className={`h-12 pl-12 pr-12 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all bg-gray-100 ${errorInputClass}`}
+                      className={`h-12 rounded-lg border bg-gray-100 pr-12 pl-12 text-sm transition-all focus:ring-2 focus:outline-none ${errorInputClass}`}
                       disabled={isLoading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       tabIndex={-1}
                     >
                       {showPassword ? (
@@ -264,7 +282,7 @@ export default function LoginForm() {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 text-red-500 text-sm"
+                className="flex items-center gap-2 text-sm text-red-500"
               >
                 <AlertCircle className="h-4 w-4" />
                 <span>{loginError}</span>

@@ -13,6 +13,9 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   facility_ids: string[];
+  full_name: string;
+  email: string;
+  role: "user" | "admin" | "super_admin";
 }
 
 export interface RegisterRequest {
