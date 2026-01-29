@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   ArrowUpDown,
   MinusSquare,
@@ -11,47 +11,125 @@ import {
   Loader2,
 } from "lucide-react";
 import RegistryHeader from "../layouts/RegistryHeader";
+import {
+  type FacilityFilterState,
+  type ExportFormat,
+  INITIAL_FILTER_STATE,
+} from "@/features/super-admin/components/types/types";
 import AddFacilityModal from "../modals/AddFacilityModal";
 import FacilityDetailsModal from "../modals/FacilityDetailsModal";
-import { useFacilities } from "../hooks/useFacilities";
+import { useFacilities } from "../../hooks/useSuperAdminUsers";
 import { formatDate, formatRelativeDate } from "@/lib/format-date";
+import type { Facility } from "../../services/super-admin.service";
 
 export default function FacilityRegistry() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] =
+    useState<FacilityFilterState>(INITIAL_FILTER_STATE);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<any>(null);
   const itemsPerPage = 10;
 
-  const { data, isLoading, isError, error, isFetching } = useFacilities({
-    page: currentPage,
-    limit: itemsPerPage,
-    searchQuery,
-  });
+  // Build search params from filters for the API
+  const searchParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: itemsPerPage,
+      name: filters.searchQuery || undefined,
+      category:
+        filters.selectedCategory !== "all"
+          ? filters.selectedCategory
+          : undefined,
+      lga_name: filters.selectedLGA !== "all" ? filters.selectedLGA : undefined,
+    }),
+    [
+      currentPage,
+      filters.searchQuery,
+      filters.selectedCategory,
+      filters.selectedLGA,
+    ],
+  );
 
-  const facilities = data?.facilities || [];
+  const { data, isLoading, isError, error, isFetching } =
+    useFacilities(searchParams);
+
+  const rawFacilities = useMemo(
+    () => data?.facilities || [],
+    [data?.facilities],
+  );
   const pagination = data?.pagination;
   const totalPages = pagination?.total_pages || 1;
   const totalRecords = pagination?.total_records || 0;
 
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
+  // Client-side sorting (API doesn't support sort params)
+  const facilities = useMemo(() => {
+    if (!filters.sortBy) return rawFacilities;
+
+    const sorted = [...rawFacilities];
+    sorted.sort((a, b) => {
+      switch (filters.sortBy) {
+        case "name_asc":
+          return (a.facility_name || "").localeCompare(b.facility_name || "");
+        case "name_desc":
+          return (b.facility_name || "").localeCompare(a.facility_name || "");
+        case "lga_asc":
+          return (a.facility_lga || "").localeCompare(b.facility_lga || "");
+        case "category_asc":
+          return (a.facility_category || "").localeCompare(
+            b.facility_category || "",
+          );
+        case "updated_desc":
+          return (
+            new Date(b.last_updated || 0).getTime() -
+            new Date(a.last_updated || 0).getTime()
+          );
+        case "updated_asc":
+          return (
+            new Date(a.last_updated || 0).getTime() -
+            new Date(b.last_updated || 0).getTime()
+          );
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [rawFacilities, filters.sortBy]);
+
+  const handleSearch = useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, searchQuery: value }));
     setCurrentPage(1);
-  };
+  }, []);
+
+  const handleSortChange = useCallback((sortValue: string) => {
+    setFilters((prev) => ({ ...prev, sortBy: sortValue }));
+  }, []);
+
+  const handleFilterChange = useCallback(
+    (partial: Partial<FacilityFilterState>) => {
+      setFilters((prev) => ({ ...prev, ...partial }));
+      setCurrentPage(1);
+    },
+    [],
+  );
+
+  const handleExport = useCallback((format: ExportFormat) => {
+    // TODO: Implement export functionality for facilities
+    console.log("Export facilities as:", format);
+  }, []);
 
   const handleAddNew = () => {
     setSelectedFacility(null);
     setIsModalOpen(true);
   };
 
-  const handleRowClick = (facility: any) => {
+  const handleRowClick = (facility: Facility) => {
     setSelectedFacility(facility);
     setIsDetailsModalOpen(true);
   };
 
-  const handleEdit = (facility: any, e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Prevent row click when clicking edit button
+  const handleEdit = (facility: Facility, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedFacility(facility);
     setIsModalOpen(true);
   };
@@ -62,16 +140,9 @@ export default function FacilityRegistry() {
   };
 
   const handleDelete = (facilityId: string, e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Prevent row click when clicking delete button
+    e?.stopPropagation();
     // TODO: Implement delete functionality
     console.log("Delete facility:", facilityId);
-  };
-
-  const categoryClasses = {
-    "model healthcare": "bg-yellow-700 rounded-full p-4 text-white",
-    hospital: "bg-blue-700 rounded-full p-4 text-white",
-    "hospital post": "bg-purple-700 rounded-full p-4 text-white",
-    "Health clinic": "bg-red-700 rounded-full p-4 text-white",
   };
 
   return (
@@ -79,6 +150,10 @@ export default function FacilityRegistry() {
       <RegistryHeader
         searchPlaceholder="Search facilities..."
         onSearch={handleSearch}
+        onSortChange={handleSortChange}
+        onFilterChange={handleFilterChange}
+        onExport={handleExport}
+        filters={filters}
         buttonLabel="Add New Facility"
         onButtonClick={handleAddNew}
       />
@@ -146,7 +221,7 @@ export default function FacilityRegistry() {
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-500">
                     No facilities found
-                    {searchQuery && (
+                    {filters.searchQuery && (
                       <p className="mt-2 text-sm">
                         Try adjusting your search query
                       </p>

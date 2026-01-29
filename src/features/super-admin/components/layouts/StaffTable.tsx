@@ -1,31 +1,28 @@
+// StaffTables.tsx
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import {
-  Trash2,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  MinusSquare,
-  Loader2,
-  PenIcon,
-} from "lucide-react";
+import { useState, useMemo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowUpDown, MinusSquare, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import TableHeaders, { FilterState } from "./StaffTableHeader";
 import AddStaffModal from "../modals/AddStaffModal";
+import DownloadNominalRollModal from "../modals/DownloadNominalRollModal";
+import ConfirmationModal from "@/components/shared/modals/ConfirmationModal";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
-
-// Helper function to convert text to sentence case
-const toSentenceCase = (str: string | undefined | null): string => {
-  if (!str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
+import type { StaffMember } from "@/services/admin.service";
+import { useStaffQuery } from "../../hooks/seStaffQuery"; // Adjust path
+import { StaffRow } from "../layouts/StaffRow"; // Adjust path
+import { StaffPagination } from "../layouts/Staff.Pagination"; // Adjust path
 
 const StaffTables = () => {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
 
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: "",
@@ -35,157 +32,115 @@ const StaffTables = () => {
     selectedStatus: "all",
   });
 
-  // Determine if we should use search or getAllStaff
-  const hasActiveFilters =
-    filters.searchQuery !== "" ||
-    filters.selectedFacility !== "all" ||
-    filters.selectedGender !== "all" ||
-    filters.selectedStatus !== "all";
+  // --- Data Fetching ---
+  const { data, isLoading, isError, error, refetch } = useStaffQuery(
+    page,
+    limit,
+    filters,
+  );
 
-  // Use search API when filters are active and a facility is selected
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["all-staff", page, limit, filters],
-    queryFn: async () => {
-      // If facility is selected and we have filters, use search endpoint
-      if (filters.selectedFacility !== "all" && hasActiveFilters) {
-        return await superAdminService.searchStaff({
-          facility_id: filters.selectedFacility,
-          name: filters.searchQuery || undefined,
-          gender:
-            filters.selectedGender !== "all"
-              ? filters.selectedGender
-              : undefined,
-          is_active:
-            filters.selectedStatus !== "all"
-              ? filters.selectedStatus === "true"
-              : undefined,
-          page,
-          limit,
-        });
-      }
-
-      // Otherwise use the getAllStaff endpoint
-      return await superAdminService.getAllStaff({ page, limit });
-    },
-    // Refetch when filters change
-    staleTime: 0,
-  });
-
-  const staff = data?.staff ?? [];
   const pagination = data?.pagination;
   const totalPages = pagination?.total_pages ?? 1;
 
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
+  // --- Client-side filtering ---
+  const staff = useMemo(() => {
+    const rawStaff = data?.staff ?? [];
+
+    if (filters.selectedFacility !== "all") {
+      return rawStaff;
+    }
+
+    return rawStaff.filter((member) => {
+      // Name Search
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const nameMatch = member.full_name?.toLowerCase().includes(query);
+        const emailMatch = member.email?.toLowerCase().includes(query);
+        if (!nameMatch && !emailMatch) return false;
+      }
+      // Gender
+      if (
+        filters.selectedGender !== "all" &&
+        member.gender?.toLowerCase() !== filters.selectedGender.toLowerCase()
+      ) {
+        return false;
+      }
+      // Status
+      if (filters.selectedStatus !== "all") {
+        const isActive = filters.selectedStatus === "true";
+        if (member.is_active !== isActive) return false;
+      }
+      return true;
+    });
+  }, [data?.staff, filters]);
+
+  // --- Mutations ---
+  const deleteStaffMutation = useMutation({
+    mutationFn: (staffId: string) => superAdminService.deleteStaff(staffId),
+    onSuccess: () => {
+      toast.success("Staff member deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["all-staff"] });
+      setIsDeleteModalOpen(false);
+      setStaffToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete staff: ${error.message}`);
+    },
+  });
+
+  // --- Handlers ---
+  const handleDeleteClick = (staff: StaffMember) => {
+    setStaffToDelete(staff);
+    setIsDeleteModalOpen(true);
   };
 
-  const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
+  const handleConfirmDelete = () => {
+    if (staffToDelete) {
+      deleteStaffMutation.mutate(staffToDelete.staff_id);
+    }
   };
 
-  const handleAddStaffSuccess = () => {
-    // Refetch the staff list after successful addition
-    refetch();
+  const handleCloseDeleteModal = () => {
+    if (!deleteStaffMutation.isPending) {
+      setIsDeleteModalOpen(false);
+      setStaffToDelete(null);
+    }
   };
 
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters);
-    // Reset to page 1 when filters change
     setPage(1);
   };
 
-  // Animation Variants
-  const rowVars = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-  };
-
-  // Gradient colors for avatar
-  const gradients = [
-    "from-blue-500 to-indigo-600",
-    "from-purple-500 to-pink-600",
-    "from-green-500 to-teal-600",
-    "from-orange-500 to-red-600",
-    "from-cyan-500 to-blue-600",
-    "from-violet-500 to-purple-600",
-    "from-emerald-500 to-green-600",
-    "from-rose-500 to-pink-600",
-    "from-amber-500 to-orange-600",
-    "from-sky-500 to-cyan-600",
-  ];
-
-  const getInitials = (name: string) => {
-    const formattedName = toSentenceCase(name);
-    return (
-      formattedName
-        ?.split(" ")
-        .map((n) => n[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase() || "?"
-    );
-  };
-
+  // --- Render ---
   if (isLoading) {
     return (
-      <>
-        <TableHeaders
-          title="Staff List"
-          searchPlaceholder="Search by name..."
-          showLGAFilter={false}
-          showFacilitiesFilter={true}
-          showGenderFilter={true}
-          showStatusFilter={true}
-          showDownload={true}
-          onDownload={(scope) => console.log("Download:", scope)}
-          buttonLabel="Add New Staff"
-          onButtonClick={() => setIsAddStaffModalOpen(true)}
-          totalRecords={0}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-        />
-        <div className="flex h-64 w-full items-center justify-center rounded-xl border border-slate-200 bg-white">
+      <TableWrapper
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        setIsAddStaffModalOpen={setIsAddStaffModalOpen}
+      >
+        <div className="flex h-64 w-full items-center justify-center">
           <Loader2 className="text-primary h-8 w-8 animate-spin" />
         </div>
-        <AddStaffModal
-          isOpen={isAddStaffModalOpen}
-          onClose={() => setIsAddStaffModalOpen(false)}
-          onSuccess={handleAddStaffSuccess}
-        />
-      </>
+      </TableWrapper>
     );
   }
 
   if (isError) {
     return (
-      <>
-        <TableHeaders
-          title="Staff List"
-          searchPlaceholder="Search by name..."
-          showLGAFilter={false}
-          showFacilitiesFilter={true}
-          showGenderFilter={true}
-          showStatusFilter={true}
-          showDownload={true}
-          onDownload={(scope) => console.log("Download:", scope)}
-          buttonLabel="Add New Staff"
-          onButtonClick={() => setIsAddStaffModalOpen(true)}
-          totalRecords={0}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-        />
-        <div className="flex h-64 w-full items-center justify-center rounded-xl border border-slate-200 bg-white">
+      <TableWrapper
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        setIsAddStaffModalOpen={setIsAddStaffModalOpen}
+      >
+        <div className="flex h-64 w-full items-center justify-center">
           <p className="text-red-500">
             Error loading staff:{" "}
             {error instanceof Error ? error.message : "Unknown error"}
           </p>
         </div>
-        <AddStaffModal
-          isOpen={isAddStaffModalOpen}
-          onClose={() => setIsAddStaffModalOpen(false)}
-          onSuccess={handleAddStaffSuccess}
-        />
-      </>
+      </TableWrapper>
     );
   }
 
@@ -199,7 +154,6 @@ const StaffTables = () => {
         showGenderFilter={true}
         showStatusFilter={true}
         showDownload={true}
-        onDownload={(scope) => console.log("Download:", scope)}
         buttonLabel="Add New Staff"
         onButtonClick={() => setIsAddStaffModalOpen(true)}
         totalRecords={pagination?.total_records ?? 0}
@@ -212,7 +166,6 @@ const StaffTables = () => {
           style={{ minHeight: "720px" }}
         >
           <table className="w-full border-collapse text-left">
-            {/* Table Header */}
             <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
                 <th className="w-12 p-4">
@@ -256,7 +209,6 @@ const StaffTables = () => {
               </tr>
             </thead>
 
-            {/* Table Body */}
             <tbody>
               {staff.length === 0 ? (
                 <tr>
@@ -266,162 +218,89 @@ const StaffTables = () => {
                     style={{ height: "668px" }}
                   >
                     <div className="flex h-full flex-col items-center justify-center">
-                      {hasActiveFilters ? (
-                        <>
-                          <p className="font-medium">No staff members found</p>
-                          <p className="mt-1 text-sm">
-                            Try adjusting your filters
-                          </p>
-                        </>
-                      ) : (
-                        <p>No staff members found</p>
-                      )}
+                      <p>No staff members found</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                staff.map((item, idx) => {
-                  const gradient = gradients[idx % gradients.length];
-                  const formattedName = toSentenceCase(item.full_name);
-                  const initials = getInitials(item.full_name);
-
-                  return (
-                    <motion.tr
-                      key={item.staff_id}
-                      variants={rowVars}
-                      initial="initial"
-                      animate="animate"
-                      whileHover={{ backgroundColor: "#f8fafc" }}
-                      className="group border-b border-slate-100 transition-colors last:border-0"
-                    >
-                      <td className="p-4">
-                        <input
-                          type="checkbox"
-                          className="text-primary focus:ring-primary h-4 w-4 rounded border-slate-300"
-                        />
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br ${gradient} text-xs font-bold text-white shadow-sm`}
-                          >
-                            {initials}
-                          </div>
-                          <div className="flex flex-col justify-center">
-                            <p className="text-[13.69px] font-medium text-slate-900">
-                              {formattedName}
-                            </p>
-                            <p className="mt-0.5 text-[12.64px] font-normal text-[#475467]">
-                              {item.email || "-"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        <span
-                          className={`rounded-md px-2 py-1 text-xs font-medium ${
-                            item.gender?.toLowerCase() === "male"
-                              ? "bg-blue-100 text-blue-700"
-                              : item.gender?.toLowerCase() === "female"
-                                ? "bg-pink-100 text-pink-700"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {toSentenceCase(item.gender) || "-"}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        {toSentenceCase(item.rank_cadre) || "-"}
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        {item.grade_level || "-"}
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        {item.phone_number || "-"}
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        {item.date_first_appointment || "-"}
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        {item.date_of_birth || "-"}
-                      </td>
-                      <td className="max-w-48 truncate p-4 text-sm text-slate-600">
-                        {item.qualifications
-                          ? Object.keys(item.qualifications).join(", ")
-                          : "-"}
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        <span
-                          className={`rounded-md px-2 py-1 text-xs font-medium ${
-                            item.is_active
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {item.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="sticky right-0 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] group-hover:bg-slate-50">
-                        <div className="flex items-center justify-center gap-2">
-                          <button className="hover:text-primary rounded-lg p-2 text-slate-400 transition-all hover:bg-teal-50">
-                            <PenIcon size={18} />
-                          </button>
-                          <button className="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500">
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  );
-                })
+                staff.map((item, idx) => (
+                  <StaffRow
+                    key={item.staff_id}
+                    item={item}
+                    index={idx}
+                    onDelete={handleDeleteClick}
+                    onEdit={() => {}} // Placeholder
+                  />
+                ))
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Footer */}
-        <div className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-slate-100 p-4 md:flex-row">
-          <button
-            onClick={handlePrevPage}
-            disabled={page <= 1}
-            className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors ${
-              page <= 1
-                ? "cursor-not-allowed bg-slate-50 text-slate-400"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            <ChevronLeft size={16} /> Previous
-          </button>
-          <div className="flex flex-col items-center">
-            <p className="text-sm font-medium text-slate-500">
-              Page {page} of {totalPages}
-            </p>
-            <p className="text-xs text-slate-400">
-              {pagination?.total_records ?? 0} total records
-            </p>
-          </div>
-          <button
-            onClick={handleNextPage}
-            disabled={page >= totalPages}
-            className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors ${
-              page >= totalPages
-                ? "cursor-not-allowed bg-slate-50 text-slate-400"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            Next <ChevronRight size={16} />
-          </button>
-        </div>
+        <StaffPagination
+          page={page}
+          totalPages={totalPages}
+          totalRecords={pagination?.total_records ?? 0}
+          onPrevPage={() => page > 1 && setPage(page - 1)}
+          onNextPage={() => page < totalPages && setPage(page + 1)}
+        />
       </div>
 
-      {/* Add Staff Modal */}
+      {/* Modals */}
       <AddStaffModal
         isOpen={isAddStaffModalOpen}
         onClose={() => setIsAddStaffModalOpen(false)}
-        onSuccess={handleAddStaffSuccess}
+        onSuccess={() => refetch()}
+      />
+      <DownloadNominalRollModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        totalRecords={pagination?.total_records ?? 0}
+      />
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Delete Staff Member"
+        message="Are you sure you want to delete this staff member?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={deleteStaffMutation.isPending}
+        variant="danger"
+        itemName={staffToDelete?.full_name}
+        itemDetails={staffToDelete?.email}
       />
     </>
   );
 };
+
+// Helper wrapper to reduce duplication in Loading/Error states
+const TableWrapper = ({
+  children,
+  filters,
+  onFiltersChange,
+  setIsAddStaffModalOpen,
+}: any) => (
+  <>
+    <TableHeaders
+      title="Staff List"
+      searchPlaceholder="Search by name..."
+      showLGAFilter={false}
+      showFacilitiesFilter={true}
+      showGenderFilter={true}
+      showStatusFilter={true}
+      showDownload={true}
+      buttonLabel="Add New Staff"
+      onButtonClick={() => setIsAddStaffModalOpen(true)}
+      totalRecords={0}
+      filters={filters}
+      onFiltersChange={onFiltersChange}
+    />
+    <div className="w-full rounded-xl border border-slate-200 bg-white">
+      {children}
+    </div>
+  </>
+);
 
 export default StaffTables;
