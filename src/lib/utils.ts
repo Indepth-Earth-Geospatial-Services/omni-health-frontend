@@ -148,3 +148,15 @@ export function formatDistance(distanceInMeters: number): string {
   }
   return `${(distanceInMeters / 1000).toFixed(1)}km`;
 }
+
+/**
+ * Generates initials from a given name string.
+ * E.g., "Lagos University Teaching Hospital" -> "LUTH"
+ */
+export const getInitials = (name: string): string => {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+};
