@@ -35,11 +35,11 @@ const navLinks = [
     name: "Facilities",
     href: "/facilities",
   },
-  // {
-  //   icons: <GitCompareArrows size={24} />,
-  //   name: "Compare",
-  //   href: "/compare-facilities",
-  // },
+  {
+    icons: <GitCompareArrows size={24} />,
+    name: "Compare Facilities",
+    href: "/compare-facilities",
+  },
   {
     icons: <MapIcon size={24} />,
     name: "Explore Map",
