@@ -56,7 +56,7 @@ export function FacilitySelectionDrawer({
       modal={true}
     >
       <DrawerContent className="h-[90dvh]">
-        <div className="mx-auto my-3 h-1.5 w-12 rounded-full bg-gray-300" />
+        <div className="mx-auto my-3 h-1.5 w-12 rounded-full bg-[#E2E4E9]" />
         <DrawerHeader>
           <DrawerTitle>Select a Facility</DrawerTitle>
           <div className="p-4">
@@ -75,7 +75,7 @@ export function FacilitySelectionDrawer({
             </p>
           )}
           {!isLoading && !isError && facilities.length === 0 && (
-            <p className="text-center text-gray-500">No facilities found.</p>
+            <p className="text-center text-[#868C98]">No facilities found.</p>
           )}
           {facilities.length > 0 && (
             <ScrollArea className="relative h-full">
@@ -83,11 +83,11 @@ export function FacilitySelectionDrawer({
                 {facilities.map((facility) => (
                   <li key={facility.facility_id}>
                     <button
-                      className="w-full rounded-md p-4 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="w-full rounded-md p-4 text-left hover:bg-[#F8F9FA]"
                       onClick={() => handleSelect(facility)}
                     >
                       <p className="font-semibold">{facility.facility_name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-[#868C98]">
                         {facility.address}
                       </p>
                     </button>

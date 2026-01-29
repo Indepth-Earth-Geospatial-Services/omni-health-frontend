@@ -26,7 +26,7 @@ export function ComparisonRow({ result, isLoading, error }: ComparisonRowProps) 
   if (isLocationDependent) {
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center gap-1 py-3 text-center text-xs text-slate-500">
+        <div className="flex flex-col items-center justify-center gap-1 py-3 text-center text-xs text-[#868C98]">
           <HelpCircle className="h-4 w-4" />
           Enable location for insights
         </div>
@@ -45,16 +45,16 @@ export function ComparisonRow({ result, isLoading, error }: ComparisonRowProps) 
     <div className="flex items-center justify-between py-3">
       <div
         className={cn(
-          "w-1/3 text-left font-semibold text-[#36454F]",
+          "w-1/3 text-left font-semibold text-[#343434]",
           winner === "A" && "text-primary",
         )}
       >
         {displayValue(valueA)}
       </div>
-      <div className="w-1/3 text-center text-sm text-slate-500">{label}</div>
+      <div className="w-1/3 text-center text-sm text-[#868C98]">{label}</div>
       <div
         className={cn(
-          "w-1/3 text-right font-semibold text-[#36454F]",
+          "w-1/3 text-right font-semibold text-[#343434]",
           winner === "B" && "text-primary",
         )}
       >

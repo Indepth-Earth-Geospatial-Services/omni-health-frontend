@@ -54,15 +54,15 @@ export function ComparisonResults({
 
   return (
     <div className="mt-6">
-      <h2 className="text-center text-lg font-bold text-[#36454F]">
+      <h2 className="text-center text-lg font-bold text-[#343434]">
         {facilityA.facility_name} vs {facilityB.facility_name}
       </h2>
 
       <div className="mt-4 text-center">
-        <h3 className="text-md font-semibold text-[#36454F]">
+        <h3 className="text-md font-semibold text-[#343434]">
           Overall Comparison Score
         </h3>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[#868C98]">
           A higher score suggests a better overall choice based on our metrics.
         </p>
         <div className="mt-4 flex justify-around">
@@ -73,8 +73,8 @@ export function ComparisonResults({
             </p>
           </div>
           <div className="flex flex-col items-center">
-            <CircularProgress score={scoreB} color="#36454F" />
-            <p className="mt-2 font-semibold text-[#36454F]">
+            <CircularProgress score={scoreB} color="#868C98" />
+            <p className="mt-2 font-semibold text-[#343434]">
               {facilityB.facility_name}
             </p>
           </div>
@@ -99,7 +99,7 @@ export function ComparisonResults({
         <TabsContent value="overview">
           <div className="grid grid-cols-2 gap-4">
             <Card
-              className="cursor-pointer border-t-4 border-primary bg-[#F5F5DC]"
+              className="cursor-pointer border-t-4 border-primary bg-white"
               onClick={() => setActiveTab("facilityA")}
             >
               <CardHeader className="relative">
@@ -123,11 +123,11 @@ export function ComparisonResults({
               </CardContent>
             </Card>
             <Card
-              className="cursor-pointer border-t-4 border-slate-300 bg-[#F8F8F8]"
+              className="cursor-pointer border-t-4 border-[#E2E4E9] bg-white"
               onClick={() => setActiveTab("facilityB")}
             >
               <CardHeader className="relative">
-                <CardTitle className="pr-8 text-base text-[#36454F]">
+                <CardTitle className="pr-8 text-base text-[#343434]">
                   {facilityB.facility_name}
                 </CardTitle>
                 <Button
@@ -149,7 +149,7 @@ export function ComparisonResults({
           </div>
         </TabsContent>
         <TabsContent value="facilityA">
-          <Card className="bg-[#F5F5DC]">
+          <Card className="bg-white">
             <CardContent className="pt-6">
               <ReasonsList reasons={reasonsA} />
               <ServicesList services={facilityA.services_list ?? []} />
@@ -157,7 +157,7 @@ export function ComparisonResults({
           </Card>
         </TabsContent>
         <TabsContent value="facilityB">
-          <Card className="bg-[#F8F8F8]">
+          <Card className="bg-white">
             <CardContent className="pt-6">
               <ReasonsList reasons={reasonsB} />
               <ServicesList services={facilityB.services_list ?? []} />
@@ -167,11 +167,11 @@ export function ComparisonResults({
       </Tabs>
 
       <div className="mt-8">
-        <h3 className="mb-4 text-lg font-bold text-[#36454F]">
+        <h3 className="mb-4 text-lg font-bold text-[#343434]">
           Detailed Comparison
         </h3>
-        <Card className="bg-[#F8F8F8]">
-          <CardContent className="divide-y divide-slate-200 p-0">
+        <Card className="bg-white">
+          <CardContent className="divide-y divide-[#E2E4E9] p-0">
             {detailedResults.map((result) => (
               <div key={result.key} className="px-6">
                 <ComparisonRow

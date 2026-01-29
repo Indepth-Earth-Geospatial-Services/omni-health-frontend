@@ -118,13 +118,13 @@ function CompareFacilitiesPage() {
                 <Card
                   key={index}
                   onClick={() => handleAddFacilityClick(index)}
-                  className="flex h-48 cursor-pointer flex-col items-center justify-center border border-primary-100 bg-primary-50/20 text-primary-900"
+                  className="flex h-48 cursor-pointer flex-col items-center justify-center border border-[#E2E4E9] bg-[#F8F9FA] text-[#343434]"
                 >
-                  <div className="mb-2 rounded-full border-4 border-primary-100/50 bg-primary-100 p-3">
-                    <Hospital className="h-6 w-6 text-primary" />
+                  <div className="mb-2 rounded-full bg-[#E2E4E9] p-3">
+                    <Hospital className="h-6 w-6 text-[#343434]" />
                   </div>
                   <p className="font-semibold">Add Facility</p>
-                  <p className="text-center text-xs text-primary-900/70">
+                  <p className="text-center text-xs text-[#868C98]">
                     Select a facility to start comparing
                   </p>
                 </Card>
