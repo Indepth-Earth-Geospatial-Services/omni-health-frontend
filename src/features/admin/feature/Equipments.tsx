@@ -355,7 +355,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
       <div className="w-full">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
           {/* Medical Equipment */}
-          <div className="flex max-h-125 flex-col rounded-2xl border-2 border-slate-200 bg-white">
+          <div className="flex max-h-190 flex-col rounded-2xl border-2 border-slate-200 bg-white">
             {/* Header */}
             <div className="flex w-full shrink-0 items-center justify-between px-4 py-4 transition-colors hover:bg-slate-50">
               <div className="flex items-center gap-3">
@@ -447,7 +447,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           </div>
 
           {/* Facility Infrastructure */}
-          <div className="h-fit overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+          <div className="flex max-h-190 flex-col rounded-2xl border-2 border-slate-200 bg-white">
             {/* Header */}
             <div className="flex w-full items-center justify-between px-4 py-4 transition-colors hover:bg-slate-50">
               <div className="flex items-center gap-3">
