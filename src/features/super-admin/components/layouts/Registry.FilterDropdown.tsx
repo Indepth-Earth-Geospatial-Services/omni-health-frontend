@@ -61,10 +61,13 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
     if (filters.selectedLGA === "all") {
       return facilities;
     }
-    return facilities.filter(
-      (f) =>
-        f.facility_lga?.toLowerCase() === filters.selectedLGA.toLowerCase()
-    );
+    // Normalize both strings for comparison (trim, lowercase)
+    const selectedLGA = filters.selectedLGA.toLowerCase().trim();
+    return facilities.filter((f) => {
+      const facilityLGA = f.facility_lga?.toLowerCase().trim() || "";
+      // Check for exact match or if the facility LGA contains the selected LGA
+      return facilityLGA === selectedLGA || facilityLGA.includes(selectedLGA);
+    });
   }, [facilities, filters.selectedLGA]);
 
   // Build facility options with "All Facilities" at the top
@@ -151,12 +154,19 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
             <Building2 size={18} />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-900">Facilities</p>
+            <p className="text-sm font-medium text-slate-900">
+              Facilities
+              {filters.selectedLGA !== "all" && (
+                <span className="ml-1 text-xs font-normal text-slate-400">
+                  ({filteredFacilitiesByLGA.length} found)
+                </span>
+              )}
+            </p>
             <p className="text-xs text-slate-500">
               {getSelectedFacilityLabel()}
               {filters.selectedLGA !== "all" && (
                 <span className="ml-1 text-purple-600">
-                  (in {getSelectedLGALabel()})
+                  in {getSelectedLGALabel()}
                 </span>
               )}
             </p>
@@ -322,7 +332,9 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
 
           {filterView === "facility" &&
             renderFilterList(
-              "Select Facility",
+              filters.selectedLGA !== "all"
+                ? `Facilities in ${getSelectedLGALabel()}`
+                : "Select Facility",
               facilityOptions,
               filters.selectedFacility,
               (val) => onFilterChange?.({ selectedFacility: val }),

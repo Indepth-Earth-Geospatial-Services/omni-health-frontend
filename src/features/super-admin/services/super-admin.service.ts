@@ -100,6 +100,17 @@ export interface ExportStaffParams {
   facility_ids?: string[];
 }
 
+export interface ExportUsersParams {
+  format: "CSV" | "EXCEL";
+}
+
+export interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  name?: string;
+  is_active?: boolean;
+}
+
 // Search facility interface
 // Add these new interfaces for Facility Search
 export interface SearchFacilityParams {
@@ -168,6 +179,7 @@ class SuperAdminService {
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
     DELETE_STAFF: "/admin/staff", // DELETE /admin/staff/{staff_id}
     EXPORT_STAFF: "/admin/export/staff", // Export staff to CSV or Excel
+    EXPORT_USERS: "/admin/export/users", // Export users to CSV or Excel
     FACILITIES_SEARCH: "/facilities/search",
   };
 
@@ -179,6 +191,7 @@ class SuperAdminService {
     this.searchStaff = this.searchStaff.bind(this);
     this.deleteStaff = this.deleteStaff.bind(this);
     this.exportStaff = this.exportStaff.bind(this);
+    this.exportUsers = this.exportUsers.bind(this);
     this.searchFacilities = this.searchFacilities.bind(this);
   }
 
@@ -201,20 +214,42 @@ class SuperAdminService {
   }
 
   /**
-   * Get all active users with pagination
+   * Get all active users with pagination and optional filters
    * GET /api/v1/admin/users
    * Requires Super Admin role
    */
-  async getUsers({
-    page = 1,
-    limit = 20,
-  }: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<GetUsersResponse> {
+  async getUsers(params: GetUsersParams = {}): Promise<GetUsersResponse> {
     try {
+      const { page = 1, limit = 20, name, is_active } = params;
+
+      // Build clean params object
+      const cleanParams: Record<string, string | number | boolean> = { page, limit };
+      if (name && name.trim()) {
+        cleanParams.name = name.trim();
+      }
+      if (is_active !== undefined) {
+        cleanParams.is_active = is_active;
+      }
+
       const response = await apiClient.get(this.ENDPOINTS.USERS, {
-        params: { page, limit },
+        params: cleanParams,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Export users to CSV or Excel
+   * GET /api/v1/admin/export/users
+   * Requires Super Admin role
+   */
+  async exportUsers(params: ExportUsersParams): Promise<Blob> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.EXPORT_USERS, {
+        params: { format: params.format },
+        responseType: "blob",
       });
       return response.data;
     } catch (error) {

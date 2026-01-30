@@ -31,11 +31,16 @@ export default function FacilityRegistry() {
   const [selectedFacility, setSelectedFacility] = useState<any>(null);
   const itemsPerPage = 10;
 
+  // When sorting is active, we need to fetch ALL data to sort properly
+  // Otherwise, sorting only applies to the current page which is misleading
+  const isSorting = !!filters.sortBy;
+
   // Build search params from filters for the API
   const searchParams = useMemo(
     () => ({
-      page: currentPage,
-      limit: itemsPerPage,
+      // When sorting, fetch all data (use large limit), otherwise paginate normally
+      page: isSorting ? 1 : currentPage,
+      limit: isSorting ? 1000 : itemsPerPage,
       name: filters.searchQuery || undefined,
       category:
         filters.selectedCategory !== "all"
@@ -48,6 +53,7 @@ export default function FacilityRegistry() {
       filters.searchQuery,
       filters.selectedCategory,
       filters.selectedLGA,
+      isSorting,
     ],
   );
 
@@ -59,11 +65,9 @@ export default function FacilityRegistry() {
     [data?.facilities],
   );
   const pagination = data?.pagination;
-  const totalPages = pagination?.total_pages || 1;
-  const totalRecords = pagination?.total_records || 0;
 
   // Client-side sorting (API doesn't support sort params)
-  const facilities = useMemo(() => {
+  const sortedFacilities = useMemo(() => {
     if (!filters.sortBy) return rawFacilities;
 
     const sorted = [...rawFacilities];
@@ -95,6 +99,22 @@ export default function FacilityRegistry() {
     });
     return sorted;
   }, [rawFacilities, filters.sortBy]);
+
+  // When sorting, handle pagination client-side
+  const facilities = useMemo(() => {
+    if (!isSorting) return sortedFacilities;
+
+    // Client-side pagination when sorting
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sortedFacilities.slice(startIndex, endIndex);
+  }, [sortedFacilities, isSorting, currentPage]);
+
+  // Calculate pagination values
+  const totalRecords = isSorting ? sortedFacilities.length : (pagination?.total_records || 0);
+  const totalPages = isSorting
+    ? Math.ceil(sortedFacilities.length / itemsPerPage)
+    : (pagination?.total_pages || 1);
 
   const handleSearch = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, searchQuery: value }));

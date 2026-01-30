@@ -355,9 +355,9 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
       <div className="w-full">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
           {/* Medical Equipment */}
-          <div className="h-fit overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+          <div className="flex max-h-125 flex-col rounded-2xl border-2 border-slate-200 bg-white">
             {/* Header */}
-            <div className="flex w-full items-center justify-between px-4 py-4 transition-colors hover:bg-slate-50">
+            <div className="flex w-full shrink-0 items-center justify-between px-4 py-4 transition-colors hover:bg-slate-50">
               <div className="flex items-center gap-3">
                 <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-slate-100">
                   <Activity size={20} className="text-slate-600" />
@@ -394,7 +394,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
 
             {/* Equipment Content */}
             {isEquipmentOpen && (
-              <div className="space-y-4 px-4 pt-2 pb-4">
+              <div className="flex-1 space-y-3 overflow-y-auto px-4 pt-2 pb-4">
                 {equipmentItems.length === 0 ? (
                   <div className="py-8 text-center text-slate-500">
                     <p>No equipment found. Add your first equipment item.</p>

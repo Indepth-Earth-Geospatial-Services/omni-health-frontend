@@ -12,9 +12,10 @@ export default function Map() {
   );
 
   // Fetch all facilities with a large limit to show on map
+  // Note: API maximum limit is 100
   const { data, isLoading, isError } = useFacilities({
     page: 1,
-    limit: 1000, // Get all facilities for the map
+    limit: 1000,
   });
 
   // Layer visibility state
@@ -41,6 +42,11 @@ export default function Map() {
 
   // Extract facilities from API response
   const facilities = data?.facilities || [];
+  const pagination = data?.pagination;
+
+  // Calculate statistics for debugging
+  const facilitiesWithCoords = facilities.filter((f) => f.lat && f.lon);
+  const facilitiesWithoutCoords = facilities.filter((f) => !f.lat || !f.lon);
 
   // Loading state
   if (isLoading) {
@@ -144,6 +150,41 @@ export default function Map() {
               </div>
             </div>
           </div>
+          {/* Facility Statistics */}
+          <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">
+              Map Statistics
+            </h3>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Total Loaded:</span>
+                <span className="font-medium text-slate-700">
+                  {facilities.length}
+                </span>
+              </div>
+              {pagination && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Total in Database:</span>
+                  <span className="font-medium text-slate-700">
+                    {pagination.total_records}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-slate-500">With Coordinates:</span>
+                <span className="font-medium text-green-600">
+                  {facilitiesWithCoords.length}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Missing Coordinates:</span>
+                <span className="font-medium text-amber-600">
+                  {facilitiesWithoutCoords.length}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Selected Facility Info (if any) */}
           {selectedFacility && (
             <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
