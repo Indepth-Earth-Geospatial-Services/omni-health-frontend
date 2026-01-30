@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-// import { motion } from "framer-motion";
 import {
   Trash2,
   ArrowUpDown,
@@ -8,7 +7,6 @@ import {
   ChevronRight,
   MinusSquare,
   Building2,
-  PenLine,
   Pen,
   Eye,
   Mail,
@@ -45,7 +43,15 @@ const getRoleBadgeColor = (role: string) => {
   }
 };
 
-export default function UserAndRoleList() {
+interface UserAndRoleListProps {
+  searchQuery?: string;
+  statusFilter?: string;
+}
+
+export default function UserAndRoleList({
+  searchQuery = "",
+  statusFilter = "all",
+}: UserAndRoleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -54,20 +60,38 @@ export default function UserAndRoleList() {
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  
-  // Fetch users data
-  const { data, isLoading, isError, error, isFetching } = useSuperAdminUsers(
-    currentPage,
-    itemsPerPage,
-  );
+  // Fetch ALL users (large limit for client-side filtering)
+  const { data, isLoading, isError, error, isFetching, refetch } =
+    useSuperAdminUsers({ page: 1, limit: 100 });
 
   // Extract data from query response
-  const users = data?.users ?? [];
-  const pagination = data?.pagination;
+  const allUsers = data?.users ?? [];
 
-  // Get total pages from API response
-  const totalPages = pagination?.total_pages ?? 1;
-  const totalRecords = pagination?.total_records ?? 0;
+  // Client-side filtering
+  const filteredUsers = allUsers.filter((user) => {
+    // Search filter - match name or email
+    const matchesSearch =
+      !searchQuery ||
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status filter
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "true" && user.is_active) ||
+      (statusFilter === "false" && !user.is_active);
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Client-side pagination
+  const totalRecords = filteredUsers.length;
+  const totalPages = Math.max(1, Math.ceil(totalRecords / itemsPerPage));
+
+  // Clamp current page to valid range (handles case when filters reduce results)
+  const effectivePage = Math.min(currentPage, totalPages);
+  const startIndex = (effectivePage - 1) * itemsPerPage;
+  const users = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   // Close dropdown when clicking anywhere
   useEffect(() => {
@@ -95,7 +119,8 @@ export default function UserAndRoleList() {
       toast.success("User assigned to facility successfully!");
       setIsChangeRoleModalOpen(false);
       // Optionally refetch the users list here
-      window.location.reload();
+      // window.location.reload();
+      refetch();
     } catch (error) {
       console.error("Failed to assign user to facility:", error);
       toast.error("Failed to assign user to facility. Please try again.");
@@ -110,7 +135,8 @@ export default function UserAndRoleList() {
       toast.success("User deactivated successfully!");
       setIsDeactivateModalOpen(false);
       // Optionally refetch the users list here
-      window.location.reload();
+      // window.location.reload();
+      // refetch();
     } catch (error) {
       console.error("Failed to deactivate user:", error);
       toast.error("Failed to deactivate user. Please try again.");
@@ -119,14 +145,14 @@ export default function UserAndRoleList() {
 
   // Pagination handlers
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
+    if (effectivePage < totalPages) {
+      setCurrentPage(effectivePage + 1);
     }
   };
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
+    if (effectivePage > 1) {
+      setCurrentPage(effectivePage - 1);
     }
   };
 
@@ -406,9 +432,9 @@ export default function UserAndRoleList() {
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 p-4 md:flex-row">
           <button
             onClick={handlePreviousPage}
-            disabled={currentPage === 1 || isFetching}
+            disabled={effectivePage === 1 || isFetching}
             className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors ${
-              currentPage === 1 || isFetching
+              effectivePage === 1 || isFetching
                 ? "cursor-not-allowed bg-slate-50 text-slate-400"
                 : "text-slate-600 hover:bg-slate-50"
             }`}
@@ -417,19 +443,19 @@ export default function UserAndRoleList() {
           </button>
           <div className="flex flex-col items-center">
             <p className="text-sm font-medium text-slate-500 italic">
-              Page {currentPage} {totalRecords > 0 ? `of ${totalPages}` : ""}
+              Page {effectivePage} {totalRecords > 0 ? `of ${totalPages}` : ""}
             </p>
             <p className="text-xs text-slate-400">
               {totalRecords > 0
-                ? `Showing ${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalRecords)} of ${totalRecords} users`
+                ? `Showing ${(effectivePage - 1) * itemsPerPage + 1}-${Math.min(effectivePage * itemsPerPage, totalRecords)} of ${totalRecords} users`
                 : `Showing ${users.length} users`}
             </p>
           </div>
           <button
             onClick={handleNextPage}
-            disabled={currentPage === totalPages || isFetching}
+            disabled={effectivePage === totalPages || isFetching}
             className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors ${
-              currentPage === totalPages || isFetching
+              effectivePage === totalPages || isFetching
                 ? "cursor-not-allowed bg-slate-50 text-slate-400"
                 : "text-slate-600 hover:bg-slate-50"
             }`}

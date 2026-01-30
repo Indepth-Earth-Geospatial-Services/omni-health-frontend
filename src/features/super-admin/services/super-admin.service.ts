@@ -94,6 +94,75 @@ export interface SearchStaffResponse {
   staff: StaffMember[];
 }
 
+export interface ExportStaffParams {
+  format: "CSV" | "EXCEL";
+  lga_ids?: number[];
+  facility_ids?: string[];
+}
+
+export interface ExportUsersParams {
+  format: "CSV" | "EXCEL";
+}
+
+export interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  name?: string;
+  is_active?: boolean;
+}
+
+// Search facility interface
+// Add these new interfaces for Facility Search
+export interface SearchFacilityParams {
+  name?: string;
+  category?: string;
+  lga_name?: string;
+  specialist?: string;
+  inventory_item?: string;
+  service?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface FacilityInventory {
+  equipment: Record<string, any>;
+  infrastructure: Record<string, any>;
+}
+
+export interface Facility {
+  facility_id: string;
+  hfr_id: string;
+  facility_name: string;
+  facility_category: string;
+  facility_lga: string;
+  town: string;
+  address: string;
+  lat: number;
+  lon: number;
+  avg_daily_patients: number;
+  doctor_patient_ratio: number;
+  inventory: FacilityInventory;
+  services_list: string[];
+  specialists: string[];
+  image_urls: string[];
+  working_hours: Record<string, any>;
+  contact_info: Record<string, any>;
+  average_rating: number;
+  total_reviews: number;
+  last_updated: string;
+}
+
+export interface SearchFacilityResponse {
+  message: string;
+  pagination: {
+    total_records: number;
+    current_page: number;
+    total_pages: number;
+    limit: number;
+  };
+  facilities: Facility[];
+}
+
 /**
  * SUPER ADMIN SERVICE CLASS
  * Contains methods for super admin operations such as:
@@ -108,6 +177,10 @@ class SuperAdminService {
     STAFF: "/admin/staff/all",
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
+    DELETE_STAFF: "/admin/staff", // DELETE /admin/staff/{staff_id}
+    EXPORT_STAFF: "/admin/export/staff", // Export staff to CSV or Excel
+    EXPORT_USERS: "/admin/export/users", // Export users to CSV or Excel
+    FACILITIES_SEARCH: "/facilities/search",
   };
 
   constructor() {
@@ -116,6 +189,10 @@ class SuperAdminService {
     this.deactivateAccount = this.deactivateAccount.bind(this);
     this.createStaff = this.createStaff.bind(this);
     this.searchStaff = this.searchStaff.bind(this);
+    this.deleteStaff = this.deleteStaff.bind(this);
+    this.exportStaff = this.exportStaff.bind(this);
+    this.exportUsers = this.exportUsers.bind(this);
+    this.searchFacilities = this.searchFacilities.bind(this);
   }
 
   /**
@@ -137,20 +214,42 @@ class SuperAdminService {
   }
 
   /**
-   * Get all active users with pagination
+   * Get all active users with pagination and optional filters
    * GET /api/v1/admin/users
    * Requires Super Admin role
    */
-  async getUsers({
-    page = 1,
-    limit = 20,
-  }: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<GetUsersResponse> {
+  async getUsers(params: GetUsersParams = {}): Promise<GetUsersResponse> {
     try {
+      const { page = 1, limit = 20, name, is_active } = params;
+
+      // Build clean params object
+      const cleanParams: Record<string, string | number | boolean> = { page, limit };
+      if (name && name.trim()) {
+        cleanParams.name = name.trim();
+      }
+      if (is_active !== undefined) {
+        cleanParams.is_active = is_active;
+      }
+
       const response = await apiClient.get(this.ENDPOINTS.USERS, {
-        params: { page, limit },
+        params: cleanParams,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Export users to CSV or Excel
+   * GET /api/v1/admin/export/users
+   * Requires Super Admin role
+   */
+  async exportUsers(params: ExportUsersParams): Promise<Blob> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.EXPORT_USERS, {
+        params: { format: params.format },
+        responseType: "blob",
       });
       return response.data;
     } catch (error) {
@@ -245,6 +344,66 @@ class SuperAdminService {
           params: cleanParams,
         },
       );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a staff member by staff_id
+   * DELETE /api/v1/admin/staff/{staff_id}
+   * Requires Super Admin role
+   * Returns 204 No Content on success
+   */
+  async deleteStaff(staffId: string): Promise<void> {
+    await apiClient.delete(`${this.ENDPOINTS.DELETE_STAFF}/${staffId}`);
+  }
+
+  /**
+   * Export staff records to CSV or Excel
+   * GET /api/v1/admin/export/staff
+   * Requires Super Admin role
+   * Supports filtering by multiple LGA IDs or Facility IDs
+   * If no filters are provided, exports all staff records
+   */
+  async exportStaff(params: ExportStaffParams): Promise<Blob> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.EXPORT_STAFF, {
+        params: {
+          format: params.format,
+          lga_ids: params.lga_ids,
+          facility_ids: params.facility_ids,
+        },
+        responseType: "blob",
+        paramsSerializer: {
+          indexes: null, // This sends multiple values as ?lga_ids=1&lga_ids=2
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async searchFacilities(
+    params: SearchFacilityParams,
+  ): Promise<SearchFacilityResponse> {
+    try {
+      // Clean undefined/empty params
+      const cleanParams = Object.entries(params).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+
+      const response = await apiClient.get(this.ENDPOINTS.FACILITIES_SEARCH, {
+        params: cleanParams,
+      });
       return response.data;
     } catch (error) {
       throw error;

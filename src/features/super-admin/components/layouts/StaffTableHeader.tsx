@@ -53,8 +53,8 @@ const LGAs = [
 
 const genderOptions = [
   { value: "all", label: "All Genders" },
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
+  { value: "M", label: "Male" },
+  { value: "F", label: "Female" },
 ];
 
 const statusOptions = [
@@ -85,7 +85,6 @@ interface StaffTableHeadersProps {
   showStatusFilter?: boolean;
   onStatusFilter?: (value: string) => void;
   showDownload?: boolean;
-  onDownload?: (scope: string) => void;
   showExport?: boolean;
   onExport?: () => void;
   totalRecords?: number;
@@ -110,7 +109,6 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
   showStatusFilter = false,
   onStatusFilter,
   showDownload = false,
-  onDownload,
   showExport = false,
   onExport,
   totalRecords = 25,
@@ -235,10 +233,6 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
 
   const clearSearch = () => {
     updateFilter("searchQuery", "");
-  };
-
-  const handleDownload = (scope: string) => {
-    onDownload?.(scope);
   };
 
   const activeFiltersCount = Object.entries(localFilters).filter(
@@ -598,7 +592,6 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
       <DownloadNominalRollModal
         isOpen={isDownloadModalOpen}
         onClose={() => setIsDownloadModalOpen(false)}
-        onDownload={handleDownload}
         totalRecords={totalRecords}
       />
     </div>

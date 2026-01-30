@@ -242,7 +242,6 @@ const StaffList = ({
             showFacilitiesFilter={true}
             showDownload={true}
             totalRecords={totalRecords}
-            onDownload={(scope) => console.log("Downloading:", scope)}
           />
         ) : null}
         <div className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white p-12">
@@ -280,7 +279,6 @@ const StaffList = ({
             showFacilitiesFilter={true}
             showDownload={true}
             totalRecords={totalRecords}
-            onDownload={(scope) => console.log("Downloading:", scope)}
           />
         ) : null}
         <div className="flex w-full items-center justify-center rounded-xl border border-red-200 bg-white p-12">
@@ -322,7 +320,6 @@ const StaffList = ({
           showFacilitiesFilter={true}
           showDownload={true}
           totalRecords={totalRecords}
-          onDownload={(scope) => console.log("Downloading:", scope)}
         />
       ) : null}
       <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
