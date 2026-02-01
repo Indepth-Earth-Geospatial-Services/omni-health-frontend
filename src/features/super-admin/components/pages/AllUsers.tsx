@@ -1,5 +1,6 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import { Calendar, Users } from "lucide-react";
 import StaffTableHeader, {
@@ -13,8 +14,27 @@ import UserPermissionTab from "../layouts/User.PermissionTab";
 import { toast } from "sonner";
 
 export default function AllUserPage() {
+  const searchParams = useSearchParams();
+  const actionParam = searchParams.get("action");
   const [activeTab, setActiveTab] = useState("user-directory");
   const [isExporting, setIsExporting] = useState(false);
+
+  // Show toast message based on action query parameter
+  useEffect(() => {
+    if (actionParam) {
+      const actionMessages: Record<string, string> = {
+        add: "Click 'Add New User' button to create a new account",
+        changeRole: "Select a user from the list and click the edit icon, then 'Change Role'",
+        suspend: "Select a user from the list and click the edit icon, then 'Suspend Account'",
+        deactivate: "Select a user from the list and click the edit icon, then 'Deactivate'",
+      };
+
+      const message = actionMessages[actionParam];
+      if (message) {
+        toast.info(message, { duration: 5000 });
+      }
+    }
+  }, [actionParam]);
 
   // Filter state for user search and filtering
   const [filters, setFilters] = useState<FilterState>({

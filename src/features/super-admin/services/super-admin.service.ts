@@ -105,6 +105,10 @@ export interface ExportUsersParams {
   format: "CSV" | "EXCEL";
 }
 
+export interface ExportFacilitiesParams {
+  format: "CSV" | "EXCEL";
+}
+
 export interface GetUsersParams {
   page?: number;
   limit?: number;
@@ -199,6 +203,28 @@ export interface AnalyticsOverviewResponse {
   active_appointments: number;
 }
 
+export interface FacilityAnalytics {
+  facility_id: string;
+  facility_name: string;
+  review_count: number;
+  average_rating: number;
+  staff_count: number;
+}
+
+export interface FacilitiesAnalyticsResponse extends Array<FacilityAnalytics> {}
+
+// Notification Types
+export interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: "info" | "warning" | "critical";
+  is_read: boolean;
+  created_at: string;
+}
+
+export type NotificationsResponse = Notification[];
+
 /**
  * SUPER ADMIN SERVICE CLASS
  * Contains methods for super admin operations such as:
@@ -222,6 +248,9 @@ class SuperAdminService {
     FACILITIES_BY_INVENTORY: "/facilities", // GET /facilities?inventory_item={name}&page={page}&limit={limit}
     UNIQUE_INVENTORY: "/admin/inventory/unique", // Get all unique equipment and infrastructure items
     ANALYTICS_OVERVIEW: "/admin/analytics/overview", // GET analytics KPIs and charts data
+    ANALYTICS_FACILITIES: "/admin/analytics/facilities", // GET facilities analytics with rating and reviews
+    NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
+    EXPORT_FACILITIES: "/admin/export/facilities", // Export facilities to CSV or Excel
   };
 
   constructor() {
@@ -233,12 +262,14 @@ class SuperAdminService {
     this.deleteStaff = this.deleteStaff.bind(this);
     this.exportStaff = this.exportStaff.bind(this);
     this.exportUsers = this.exportUsers.bind(this);
+    this.exportFacilities = this.exportFacilities.bind(this);
     this.searchFacilities = this.searchFacilities.bind(this);
     this.getFacilitiesByInventory = this.getFacilitiesByInventory.bind(this);
     this.getUniqueInventory = this.getUniqueInventory.bind(this);
     this.suspendUser = this.suspendUser.bind(this);
     this.unsuspendUser = this.unsuspendUser.bind(this);
     this.getAnalyticsOverview = this.getAnalyticsOverview.bind(this);
+    this.getNotifications = this.getNotifications.bind(this);
   }
 
   /**
@@ -435,6 +466,25 @@ class SuperAdminService {
     }
   }
 
+  /**
+   * Export facilities to CSV or Excel
+   * GET /api/v1/admin/export/facilities
+   * Requires Super Admin role
+   */
+  async exportFacilities(params: ExportFacilitiesParams): Promise<Blob> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.EXPORT_FACILITIES, {
+        params: {
+          format: params.format,
+        },
+        responseType: "blob",
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async searchFacilities(
     params: SearchFacilityParams,
   ): Promise<SearchFacilityResponse> {
@@ -550,6 +600,38 @@ class SuperAdminService {
       return response.data;
     } catch (error) {
       console.error("Error fetching analytics overview:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get facilities analytics sorted by rating
+   * GET /api/v1/admin/analytics/facilities
+   * Returns: list of facilities with review_count, average_rating, staff_count
+   */
+  async getFacilitiesAnalytics(): Promise<FacilitiesAnalyticsResponse> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.ANALYTICS_FACILITIES);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching facilities analytics:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get notifications for a specific user
+   * GET /api/v1/admin/notifications?user_id={user_id}
+   * Returns: array of notifications
+   */
+  async getNotifications(userId: number): Promise<NotificationsResponse> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.NOTIFICATIONS, {
+        params: { user_id: userId },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
       throw error;
     }
   }

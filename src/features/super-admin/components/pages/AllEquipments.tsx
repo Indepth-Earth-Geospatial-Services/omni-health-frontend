@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import { Package, Building2 } from "lucide-react";
 import StaffTableHeader, {
@@ -7,13 +8,28 @@ import StaffTableHeader, {
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
 import Tabs from "@/features/super-admin/components/ui/Tabs";
 import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
+import { useFacilitiesInventory } from "../../hooks/useFacilitiesInventory";
 import EquipmentList from "../layouts/EquipmentList";
 import InfrastructureList from "../layouts/InfrastructureList";
+import InventoryItemModal, {
+  type InventoryFormData,
+} from "@/features/admin/feature/InventoryItemModal";
+import {
+  useAddEquipment,
+  useAddInfrastructure,
+} from "@/features/admin/hooks/use-admin-staff";
+import { toast } from "sonner";
 
 export default function EquipmentPage() {
   // ========== TAB STATE ==========
   // Tracks which tab is currently active (Equipment or Infrastructure)
   const [activeTab, setActiveTab] = useState("equipment");
+
+  // ========== MODAL STATE ==========
+  const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
+  const [isInfrastructureModalOpen, setIsInfrastructureModalOpen] =
+    useState(false);
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
 
   // ========== FILTER STATE ==========
   // Manages search and filtering for equipment and infrastructure
@@ -29,6 +45,17 @@ export default function EquipmentPage() {
   // Fetch unique equipment and infrastructure items
   const { data: inventoryData, isLoading: isLoadingInventory } =
     useUniqueInventory();
+
+  // Fetch facilities for the dropdown
+  const { data: facilitiesData, isLoading: isLoadingFacilities } =
+    useFacilitiesInventory();
+
+  // ========== QUERY CLIENT ==========
+  const queryClient = useQueryClient();
+
+  // ========== MUTATIONS ==========
+  const addEquipmentMutation = useAddEquipment(selectedFacilityId);
+  const addInfrastructureMutation = useAddInfrastructure(selectedFacilityId);
 
   // ========== TAB CONFIGURATION ==========
   // Define available tabs (Equipment and Infrastructure only)
@@ -52,6 +79,69 @@ export default function EquipmentPage() {
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
   }, []);
+
+  // Handle adding new equipment
+  const handleAddEquipment = useCallback(
+    async (data: InventoryFormData) => {
+      if (!data.facilityId) return;
+
+      setSelectedFacilityId(data.facilityId);
+
+      try {
+        await addEquipmentMutation.mutateAsync({
+          item_name: data.name,
+          quantity: parseInt(data.quantity, 10),
+        });
+
+        toast.success(`${data.name} added successfully!`);
+        // Refresh the inventory list
+        await queryClient.invalidateQueries({ queryKey: ["unique-inventory"] });
+        setIsEquipmentModalOpen(false);
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        toast.error(
+          err?.response?.data?.message ||
+            "Failed to add equipment. Please try again.",
+        );
+      }
+    },
+    [addEquipmentMutation, queryClient],
+  );
+
+  // Handle adding new infrastructure
+  const handleAddInfrastructure = useCallback(
+    async (data: InventoryFormData) => {
+      if (!data.facilityId) return;
+
+      setSelectedFacilityId(data.facilityId);
+
+      try {
+        await addInfrastructureMutation.mutateAsync({
+          item_name: data.name,
+          quantity: parseInt(data.quantity, 10),
+        });
+
+        toast.success(`${data.name} added successfully!`);
+        // Refresh the inventory list
+        await queryClient.invalidateQueries({ queryKey: ["unique-inventory"] });
+        setIsInfrastructureModalOpen(false);
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        toast.error(
+          err?.response?.data?.message ||
+            "Failed to add infrastructure. Please try again.",
+        );
+      }
+    },
+    [addInfrastructureMutation, queryClient],
+  );
+
+  // Format facilities for the dropdown
+  const facilityOptions =
+    facilitiesData?.facilities?.map((f) => ({
+      facility_id: f.facility_id,
+      facility_name: f.facility_name,
+    })) || [];
 
   return (
     <div className="flex-1 overflow-y-auto bg-white">
@@ -87,7 +177,7 @@ export default function EquipmentPage() {
               searchPlaceholder="Search equipment..."
               onSearch={handleSearch}
               buttonLabel="Add New Equipment"
-              onButtonClick={() => console.log("Add new Equipment")}
+              onButtonClick={() => setIsEquipmentModalOpen(true)}
               showGenderFilter={false}
               showStatusFilter={false}
               showExport={false}
@@ -116,7 +206,7 @@ export default function EquipmentPage() {
               searchPlaceholder="Search infrastructure..."
               onSearch={handleSearch}
               buttonLabel="Add New Infrastructure"
-              onButtonClick={() => console.log("Add new Infrastructure")}
+              onButtonClick={() => setIsInfrastructureModalOpen(true)}
               showGenderFilter={false}
               showStatusFilter={false}
               showExport={false}
@@ -139,6 +229,30 @@ export default function EquipmentPage() {
           </>
         )}
       </main>
+
+      {/* Add Equipment Modal */}
+      <InventoryItemModal
+        isOpen={isEquipmentModalOpen}
+        onClose={() => setIsEquipmentModalOpen(false)}
+        onSubmit={handleAddEquipment}
+        isSubmitting={addEquipmentMutation.isPending}
+        type="equipment"
+        showFacilitySelector
+        facilities={facilityOptions}
+        isLoadingFacilities={isLoadingFacilities}
+      />
+
+      {/* Add Infrastructure Modal */}
+      <InventoryItemModal
+        isOpen={isInfrastructureModalOpen}
+        onClose={() => setIsInfrastructureModalOpen(false)}
+        onSubmit={handleAddInfrastructure}
+        isSubmitting={addInfrastructureMutation.isPending}
+        type="infrastructure"
+        showFacilitySelector
+        facilities={facilityOptions}
+        isLoadingFacilities={isLoadingFacilities}
+      />
     </div>
   );
 }

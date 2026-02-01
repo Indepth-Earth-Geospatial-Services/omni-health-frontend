@@ -47,6 +47,11 @@ const EquipmentList: React.FC<EquipmentListProps> = ({
     new Set(),
   );
 
+  // ========== HELPERS ==========
+  // Format equipment name: replace underscores with spaces and capitalize
+  const formatName = (name: string) =>
+    name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
   // ========== FILTERING ==========
   // Filter equipment based on search query
   const filteredEquipment = useMemo(() => {
@@ -183,7 +188,7 @@ const EquipmentList: React.FC<EquipmentListProps> = ({
                     </span>
                     {/* Equipment Name */}
                     <span className="text-left font-semibold text-gray-900">
-                      {equipment}
+                      {formatName(equipment)}
                     </span>
                   </div>
                   {/* Facility Count Badge */}

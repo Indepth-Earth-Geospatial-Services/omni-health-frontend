@@ -47,6 +47,11 @@ const InfrastructureList: React.FC<InfrastructureListProps> = ({
     Set<string>
   >(new Set());
 
+  // ========== HELPERS ==========
+  // Format infrastructure name: replace underscores with spaces and capitalize
+  const formatName = (name: string) =>
+    name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
   // ========== FILTERING ==========
   // Filter infrastructure based on search query
   const filteredInfrastructure = useMemo(() => {
@@ -185,7 +190,7 @@ const InfrastructureList: React.FC<InfrastructureListProps> = ({
                     </span>
                     {/* Infrastructure Name */}
                     <span className="text-left font-semibold text-gray-900">
-                      {infrastructure}
+                      {formatName(infrastructure)}
                     </span>
                   </div>
                   {/* Facility Count Badge */}

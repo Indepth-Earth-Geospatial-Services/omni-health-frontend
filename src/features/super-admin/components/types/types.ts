@@ -1,6 +1,6 @@
 // types.ts
 
-export type ExportFormat = "pdf" | "excel" | "svg";
+export type ExportFormat = "CSV" | "EXCEL";
 
 export interface FacilityOption {
   facility_id: string;

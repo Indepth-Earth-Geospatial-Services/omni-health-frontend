@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Switch } from "@/features/admin/components/ui/switch";
 import SuperAdminMap from "../ui/SuperAdminMap";
 import { Facility } from "@/types/api-response";
 import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
 
 export default function Map() {
+  const searchParams = useSearchParams();
+  const facilityIdFromUrl = searchParams.get("facility_id");
+
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null,
   );
@@ -17,6 +21,18 @@ export default function Map() {
     page: 1,
     limit: 1000,
   });
+
+  // Auto-select facility from URL query param
+  useEffect(() => {
+    if (facilityIdFromUrl && data?.facilities) {
+      const facility = data.facilities.find(
+        (f) => f.facility_id === facilityIdFromUrl,
+      );
+      if (facility) {
+        setSelectedFacility(facility as unknown as Facility);
+      }
+    }
+  }, [facilityIdFromUrl, data?.facilities]);
 
   // Layer visibility state
   const [visibleLayers, setVisibleLayers] = useState({

@@ -12,49 +12,106 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
+import { useFacilitiesInventory } from "../../hooks/useFacilitiesInventory";
+import { Spinner } from "@/components/ui/spinner";
+
+interface ChartDataPoint {
+  name: string;
+  facilities: number;
+  specialists: number;
+  beds: number;
+}
+
+/**
+ * Helper function to count all bed-related equipment in a facility's inventory
+ * Filters equipment keys that contain 'bed' or 'beds' (case-insensitive)
+ */
+const countBeds = (
+  equipment: Record<string, unknown> | undefined,
+): number => {
+  if (!equipment) return 0;
+
+  let totalBeds = 0;
+
+  Object.entries(equipment).forEach(([key, value]) => {
+    // Check if the key contains 'bed' or 'beds' (case-insensitive)
+    if (key.toLowerCase().includes("bed")) {
+      if (Array.isArray(value)) {
+        totalBeds += value.length;
+      } else if (typeof value === "number") {
+        totalBeds += value;
+      } else if (value) {
+        totalBeds += 1;
+      }
+    }
+  });
+
+  return totalBeds;
+};
 
 const FacilityInventoryChart = ({
-  title = "Facility & Inventory Distribution",
-  data = [
-    { name: "Abua/Odual", facilities: 29, specialists: 45, beds: 59 },
-    { name: "Ahoada East", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Ahoada West", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Akuku-Toru", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Andoni", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Asari-Toru", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Bonny", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Degema", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Eleme", facilities: 28, specialists: 89, beds: 70 },
-    { name: "Emouha", facilities: 9, specialists: 85, beds: 84 },
-    { name: "Etche", facilities: 11, specialists: 18, beds: 88 },
-    { name: "Gokana", facilities: 46, specialists: 43, beds: 67 },
-  ],
+  title = "Top 10 Facility & Inventory Distribution",
 }) => {
+  const { data: facilitiesData, isLoading, error } = useFacilitiesInventory();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-96 items-center justify-center text-red-500">
+        <p>Failed to load facilities inventory data</p>
+      </div>
+    );
+  }
+
+  // Transform data: Get top 10 facilities with specialists and beds
+  const chartData: ChartDataPoint[] = (facilitiesData?.facilities || [])
+    .slice(0, 10)
+    .map((facility) => ({
+      name:
+        facility.facility_name && facility.facility_name.length > 20
+          ? facility.facility_name.substring(0, 20) + "..."
+          : facility.facility_name || "Unknown",
+      facilities: 1,
+      specialists: facility.specialists ? facility.specialists.length : 0,
+      beds: countBeds(facility.inventory?.equipment),
+    }));
   return (
-    <div className="w-full max-w-5xl rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="w-full max-w-full rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
       {/* Header Section */}
-      <div className="relative mb-6 flex items-end justify-between">
-        <div className="relative z-10 w-full">
-          <h2 className="mb-1 text-xl font-bold text-gray-900">{title}</h2>
-          <div className="flex items-center">
+      <div className="relative mb-8 flex items-baseline justify-between border-b border-gray-200 pb-2">
+        {/* Left Side: Title + Custom Underline */}
+        <div className="relative z-10">
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+
+          {/* Decorative underline - Push down using mt-2 or mt-3 */}
+          {/* <div className="absolute -bottom-[14px] left-0 flex w-full items-center">
             <div className="h-1 w-12 rounded-full bg-cyan-400"></div>
-            <div className="-ml-0.5 h-px w-full bg-gray-200"></div>
-          </div>
+            <div className="ml-[-2px] h-[1px] flex-grow bg-gray-200"></div>
+          </div> */}
         </div>
-        <button className="text-xs font-semibold tracking-wide text-gray-400 uppercase hover:text-gray-600">
+
+        {/* Right Side: More Button */}
+        {/* <button className="text-xs font-semibold tracking-wide text-gray-400 uppercase hover:text-gray-600">
           More
-        </button>
+        </button> */}
       </div>
 
       {/* Chart Container */}
       {/* We set a dynamic minimum height to accommodate many rows without squashing */}
       <div
         className="w-full font-sans"
-        style={{ height: `${Math.max(600, data.length * 60)}px` }}
+        style={{ height: `${Math.max(600, chartData.length * 60)}px` }}
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
+            data={chartData}
             layout="vertical" // KEY: Switches to Horizontal Bars
             barGap={4} // Adds slight spacing between bars in a group
             barCategoryGap={20} // Spacing between different locations

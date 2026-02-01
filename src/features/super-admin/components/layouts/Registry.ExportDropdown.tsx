@@ -1,5 +1,5 @@
 import React from "react";
-import { Download, FileText, FileSpreadsheet, FileImage } from "lucide-react";
+import { Download, FileText, FileSpreadsheet } from "lucide-react";
 import { ExportFormat } from "@/features/super-admin/components/types/types";
 
 interface ExportDropdownProps {
@@ -35,33 +35,23 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
           <div className="py-1">
             <button
               onClick={() => {
-                onExport?.("pdf");
+                onExport?.("CSV");
                 onToggle();
               }}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50"
             >
-              <FileText size={16} className="text-red-500" />
-              PDF
+              <FileText size={16} className="text-blue-500" />
+              CSV
             </button>
             <button
               onClick={() => {
-                onExport?.("excel");
+                onExport?.("EXCEL");
                 onToggle();
               }}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50"
             >
               <FileSpreadsheet size={16} className="text-green-600" />
               Excel
-            </button>
-            <button
-              onClick={() => {
-                onExport?.("svg");
-                onToggle();
-              }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-50"
-            >
-              <FileImage size={16} className="text-blue-500" />
-              SVG
             </button>
           </div>
         </div>

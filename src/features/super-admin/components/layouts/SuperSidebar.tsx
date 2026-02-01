@@ -17,9 +17,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import { useFacility } from "@/hooks/useFacilities";
-import ProfileModal from "../../../admin/components/layout/ProfileModal";
+import ProfileModal from "../../../admin/components/modals/ProfileModal";
 
 const adminMenuItems = [
+  {
+    label: "Dashboard",
+    icon: Hospital,
+    href: "/super-admin/dashboard",
+  },
   { label: "Map", icon: UserCog, href: "/super-admin/map" },
   {
     label: "Facility Registry",

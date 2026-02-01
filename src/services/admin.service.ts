@@ -78,10 +78,13 @@ export interface AddInfrastructureResponse {
   updated_inventory: InfrastructureInventory;
 }
 
+export type ExportFormat = "excel" | "csv" | "pdf";
+
 class AdminService {
   public ENDPOINTS = {
     STAFF: "/admin/staff",
     FACILITY: "/admin/facility",
+    EXPORT_STAFF: "/admin/export/staff",
   };
 
   constructor() {
@@ -92,6 +95,7 @@ class AdminService {
     this.getFacilityInventory = this.getFacilityInventory.bind(this);
     this.addEquipment = this.addEquipment.bind(this);
     this.addInfrastructure = this.addInfrastructure.bind(this);
+    this.exportStaff = this.exportStaff.bind(this);
   }
 
   /**
@@ -288,6 +292,25 @@ class AdminService {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
       data,
+    );
+    return response.data;
+  }
+
+  /**
+   * Export Staff List
+   * GET /admin/export/staff/{facility_id}?format={format}
+   * Returns a Blob for file download
+   */
+  async exportStaff(
+    facilityId: string,
+    format: ExportFormat = "excel",
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      `${this.ENDPOINTS.EXPORT_STAFF}/${facilityId}`,
+      {
+        params: { format },
+        responseType: "blob",
+      },
     );
     return response.data;
   }

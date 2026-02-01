@@ -61,17 +61,22 @@ const FacilityGeographicDistributionChart = ({
   return (
     <div className="w-full max-w-4xl rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
       {/* Header Section */}
-      <div className="relative mb-6 flex items-end justify-between">
-        <div className="relative z-10 w-full">
-          <h2 className="mb-1 text-xl font-bold text-gray-900">{title}</h2>
-          <div className="flex items-center">
+      <div className="relative mb-8 flex items-baseline justify-between border-b border-gray-200 pb-2">
+        {/* Left Side: Title + Custom Underline */}
+        <div className="relative z-10">
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+
+          {/* Decorative underline - Push down using mt-2 or mt-3 */}
+          {/* <div className="absolute -bottom-[14px] left-0 flex w-full items-center">
             <div className="h-1 w-12 rounded-full bg-cyan-400"></div>
-            <div className="-ml-0.5 h-px w-full bg-gray-200"></div>
-          </div>
+            <div className="ml-[-2px] h-[1px] flex-grow bg-gray-200"></div>
+          </div> */}
         </div>
-        <button className="text-xs font-semibold tracking-wide text-gray-400 uppercase hover:text-gray-600">
+
+        {/* Right Side: More Button */}
+        {/* <button className="text-xs font-semibold tracking-wide text-gray-400 uppercase hover:text-gray-600">
           More
-        </button>
+        </button> */}
       </div>
 
       {/* Chart Container */}

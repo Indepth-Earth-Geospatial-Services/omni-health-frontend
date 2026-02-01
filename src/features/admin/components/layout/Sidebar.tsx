@@ -16,7 +16,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
-import ProfileModal from "./ProfileModal";
+import ProfileModal from "../modals/ProfileModal";
 
 const adminMenuItems = [
   // { label: "Overview", icon: MailOpen, href: "/admin" },
