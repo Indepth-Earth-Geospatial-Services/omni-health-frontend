@@ -52,11 +52,47 @@ const navLinks = [
   },
 ] as const;
 
+// Admin Dashboard Links
+const adminLinks = [
+  {
+    icons: <MapIcon size={24} />,
+    name: "Admin Dashboard",
+    href: "/admin",
+  },
+] as const;
+
+// Super Admin Dashboard Links (includes both admin and super-admin)
+const superAdminLinks = [
+  {
+    icons: <MapIcon size={24} />,
+    name: "Admin Dashboard",
+    href: "/admin",
+  },
+  {
+    icons: <MapIcon size={24} />,
+    name: "Super Admin Dashboard",
+    href: "/super-admin/map",
+  },
+] as const;
+
 function SideBar({ className }: { className?: string }) {
   // ✅ Get logout function and user from auth store
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
+
+  // ✅ Determine which dashboard links to show based on user role
+  const getDashboardLinks = () => {
+    if (user?.role === "super_admin") {
+      return superAdminLinks;
+    } else if (user?.role === "admin") {
+      return adminLinks;
+    }
+    return [];
+  };
+
+  const dashboardLinks = getDashboardLinks();
+
   // ✅ Handle logout
   const handleLogout = () => {
     try {
@@ -143,6 +179,31 @@ function SideBar({ className }: { className?: string }) {
                 </li>
               ))}
             </ul>
+
+            {/* ✅ DASHBOARD LINKS - Role-based conditional rendering */}
+            {dashboardLinks.length > 0 && (
+              <>
+                <div className="my-4 border-t border-gray-200" />
+                <div className="mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                  Dashboard
+                </div>
+                <ul className="flex flex-col gap-3">
+                  {dashboardLinks.map((nav) => (
+                    <li
+                      key={nav.href}
+                      className="flex h-12 items-center text-[15px]"
+                    >
+                      <Link
+                        className="hover:text-primary flex items-center gap-3 transition-colors"
+                        href={nav.href}
+                      >
+                        {nav.icons} {nav.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             {/* ✅ LOGOUT BUTTON */}
             <div className="mt-auto pb-4.5">

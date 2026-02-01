@@ -18,6 +18,7 @@ import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import UserProfileModal from "../modals/UserProfileModal";
 import ChangeUserRoleModal from "../modals/ChangeUserRoleModal";
 import DeactivateUserModal from "../modals/DeactivateUserModal";
+import SuspendUserModal from "../modals/SuspendUserModal";
 import type { User } from "../../services/super-admin.service";
 import { superAdminService } from "../../services/super-admin.service";
 
@@ -46,11 +47,13 @@ const getRoleBadgeColor = (role: string) => {
 interface UserAndRoleListProps {
   searchQuery?: string;
   statusFilter?: string;
+  suspensionFilter?: "all" | "active" | "suspended";
 }
 
 export default function UserAndRoleList({
   searchQuery = "",
   statusFilter = "all",
+  suspensionFilter = "all",
 }: UserAndRoleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -58,6 +61,11 @@ export default function UserAndRoleList({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isChangeRoleModalOpen, setIsChangeRoleModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [suspendMode, setSuspendMode] = useState<"suspend" | "unsuspend">(
+    "suspend",
+  );
+  const [isSuspendLoading, setIsSuspendLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Fetch ALL users (large limit for client-side filtering)
@@ -81,7 +89,13 @@ export default function UserAndRoleList({
       (statusFilter === "true" && user.is_active) ||
       (statusFilter === "false" && !user.is_active);
 
-    return matchesSearch && matchesStatus;
+    // Suspension filter
+    const matchesSuspension =
+      suspensionFilter === "all" ||
+      (suspensionFilter === "active" && !user.is_suspended) ||
+      (suspensionFilter === "suspended" && user.is_suspended);
+
+    return matchesSearch && matchesStatus && matchesSuspension;
   });
 
   // Client-side pagination
@@ -140,6 +154,32 @@ export default function UserAndRoleList({
     } catch (error) {
       console.error("Failed to deactivate user:", error);
       toast.error("Failed to deactivate user. Please try again.");
+    }
+  };
+
+  // Handle user suspension/unsuspension
+  const handleSuspendUser = async (
+    userId: string,
+    reason: string,
+    mode: "suspend" | "unsuspend",
+  ) => {
+    setIsSuspendLoading(true);
+    try {
+      if (mode === "suspend") {
+        await superAdminService.suspendUser(userId, reason);
+        toast.success("User account suspended successfully!");
+      } else {
+        await superAdminService.unsuspendUser(userId);
+        toast.success("User account unsuspended successfully!");
+      }
+
+      setIsSuspendModalOpen(false);
+      refetch();
+    } catch (error) {
+      console.error(`Failed to ${mode} user:`, error);
+      toast.error(`Failed to ${mode} user. Please try again.`);
+    } finally {
+      setIsSuspendLoading(false);
     }
   };
 
@@ -317,15 +357,22 @@ export default function UserAndRoleList({
                         {formatDate(user.created_at)}
                       </td>
                       <td className="p-4 text-center">
-                        <span
-                          className={`rounded-full border px-4 py-1 text-xs font-medium ${
-                            user.is_active
-                              ? "bg-primary text-white"
-                              : "bg-[#E2E4E9] text-gray-600"
-                          }`}
-                        >
-                          {user.is_active ? "Active" : "Not Active"}
-                        </span>
+                        <div className="flex flex-col gap-2">
+                          <span
+                            className={`rounded-full border px-4 py-1 text-xs font-medium ${
+                              user.is_active
+                                ? "bg-primary text-white"
+                                : "bg-[#E2E4E9] text-gray-600"
+                            }`}
+                          >
+                            {user.is_active ? "Active" : "Not Active"}
+                          </span>
+                          {user.is_suspended && (
+                            <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
+                              Suspended
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-center">
                         <div className="relative flex items-center justify-center gap-1">
@@ -365,14 +412,37 @@ export default function UserAndRoleList({
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    console.log("Edit User", user.user_id);
+                                    setSelectedUser(user);
+                                    setSuspendMode("suspend");
+                                    setIsSuspendModalOpen(true);
                                     setOpenDropdownId(null);
                                   }}
                                   className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
                                 >
-                                  <Pen size={16} className="text-slate-400" />
-                                  Edit User
+                                  <Trash2
+                                    size={16}
+                                    className="text-amber-400"
+                                  />
+                                  Suspend Account
                                 </button>
+                                {user.is_suspended && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedUser(user);
+                                      setSuspendMode("unsuspend");
+                                      setIsSuspendModalOpen(true);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
+                                  >
+                                    <Trash2
+                                      size={16}
+                                      className="text-green-500"
+                                    />
+                                    Unsuspend Account
+                                  </button>
+                                )}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -388,7 +458,7 @@ export default function UserAndRoleList({
                                   />
                                   Change Role
                                 </button>
-                                <button
+                                {/* <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     console.log("Send Email", user.user_id);
@@ -398,7 +468,7 @@ export default function UserAndRoleList({
                                 >
                                   <Mail size={16} className="text-slate-400" />
                                   Send Email
-                                </button>
+                                </button> */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -415,9 +485,9 @@ export default function UserAndRoleList({
                             )}
                           </div>
 
-                          <button className="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500">
+                          {/* <button className="rounded-lg p-2 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500">
                             <Trash2 size={18} />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -495,6 +565,19 @@ export default function UserAndRoleList({
         }}
         user={selectedUser}
         onSubmit={handleDeactivateUser}
+      />
+
+      {/* Suspend User Modal */}
+      <SuspendUserModal
+        isOpen={isSuspendModalOpen}
+        onClose={() => {
+          setIsSuspendModalOpen(false);
+          setSelectedUser(null);
+        }}
+        user={selectedUser}
+        onSubmit={handleSuspendUser}
+        isLoading={isSuspendLoading}
+        mode={suspendMode}
       />
     </>
   );

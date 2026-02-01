@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Switch } from "@/features/admin/components/ui/switch";
 import SuperAdminMap from "../ui/SuperAdminMap";
 import { Facility } from "@/types/api-response";
-import { useFacilities } from "../hooks/useFacilities";
+import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
 
 export default function Map() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
@@ -97,7 +97,7 @@ export default function Map() {
         {/* Map container - fixed height using viewport units */}
         <div className="h-[70vh] flex-1 overflow-hidden rounded-2xl border border-slate-200">
           <SuperAdminMap
-            facilities={facilities}
+            facilities={facilities as unknown as Facility[]}
             width="100%"
             height="100%"
             visibleLayers={visibleLayers}

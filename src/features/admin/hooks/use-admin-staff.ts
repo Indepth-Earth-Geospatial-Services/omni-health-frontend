@@ -176,7 +176,7 @@ export const useStaffSchema = (facilityId: string) => {
         is_active: { type: "boolean", nullable: true },
       };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
     refetchOnWindowFocus: false,
     enabled: !!facilityId,
   });

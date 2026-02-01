@@ -13,7 +13,7 @@ import {
 import { Button } from "../ui/button";
 import { useAuthStore } from "@/store/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
-import { useAdminStaff } from "@/hooks/use-admin-staff";
+import { useAdminStaff } from "@/features/admin/hooks/use-admin-staff";
 
 const LoadingSkeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse rounded bg-slate-200 ${className}`} />

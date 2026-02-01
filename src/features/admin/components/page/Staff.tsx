@@ -26,7 +26,7 @@ import {
   useDeleteStaff,
   type CreateStaffData,
   type StaffMember,
-} from "@/hooks/useAdminStaff";
+} from "@/features/admin/hooks/useAdminStaff";
 
 interface StaffListProps {
   facilityId: string;

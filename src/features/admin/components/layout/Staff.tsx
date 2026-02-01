@@ -23,7 +23,7 @@ import {
   useDeleteStaff,
   type CreateStaffData,
   type StaffMember,
-} from "@/hooks/use-admin-staff";
+} from "@/features/admin/hooks/use-admin-staff";
 
 interface StaffListProps {
   facilityId: string;

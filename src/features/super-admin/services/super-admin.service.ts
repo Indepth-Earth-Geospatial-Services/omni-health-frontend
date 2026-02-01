@@ -15,6 +15,7 @@ export interface User {
   managed_facilities: ManagedFacility[];
   created_at: string;
   is_active: boolean;
+  is_suspended?: boolean;
 }
 
 export interface UserPagination {
@@ -124,6 +125,16 @@ export interface SearchFacilityParams {
   limit?: number;
 }
 
+// Unique Equipment and Infrastructure Response Type
+export interface UniqueEquipmentItem {
+  equipment: string[];
+  infrastructure: string[];
+}
+
+export interface GetUniqueEquipmentParams {
+  // No parameters required
+}
+
 export interface FacilityInventory {
   equipment: Record<string, any>;
   infrastructure: Record<string, any>;
@@ -163,6 +174,31 @@ export interface SearchFacilityResponse {
   facilities: Facility[];
 }
 
+// Search facilities by inventory item (equipment or infrastructure)
+export interface SearchFacilitiesByInventoryParams {
+  inventory_item: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SearchFacilitiesByInventoryResponse {
+  message: string;
+  pagination: {
+    total_records: number;
+    current_page: number;
+    total_pages: number;
+    limit: number;
+  };
+  facilities: Facility[];
+}
+
+export interface AnalyticsOverviewResponse {
+  total_facilities: number;
+  total_users: number;
+  total_reviews: number;
+  active_appointments: number;
+}
+
 /**
  * SUPER ADMIN SERVICE CLASS
  * Contains methods for super admin operations such as:
@@ -174,6 +210,8 @@ class SuperAdminService {
     USERS: "/admin/users",
     ASSIGN_MANAGER: "/admin/assign-manager",
     DEACTIVATE_ACCOUNT: "/deactivate-account",
+    SUSPEND_USER: "/admin/users", // PATCH /admin/users/{user_id}/suspend
+    UNSUSPEND_USER: "/admin/users", // PATCH /admin/users/{user_id}/unsuspend
     STAFF: "/admin/staff/all",
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
@@ -181,6 +219,9 @@ class SuperAdminService {
     EXPORT_STAFF: "/admin/export/staff", // Export staff to CSV or Excel
     EXPORT_USERS: "/admin/export/users", // Export users to CSV or Excel
     FACILITIES_SEARCH: "/facilities/search",
+    FACILITIES_BY_INVENTORY: "/facilities", // GET /facilities?inventory_item={name}&page={page}&limit={limit}
+    UNIQUE_INVENTORY: "/admin/inventory/unique", // Get all unique equipment and infrastructure items
+    ANALYTICS_OVERVIEW: "/admin/analytics/overview", // GET analytics KPIs and charts data
   };
 
   constructor() {
@@ -193,6 +234,11 @@ class SuperAdminService {
     this.exportStaff = this.exportStaff.bind(this);
     this.exportUsers = this.exportUsers.bind(this);
     this.searchFacilities = this.searchFacilities.bind(this);
+    this.getFacilitiesByInventory = this.getFacilitiesByInventory.bind(this);
+    this.getUniqueInventory = this.getUniqueInventory.bind(this);
+    this.suspendUser = this.suspendUser.bind(this);
+    this.unsuspendUser = this.unsuspendUser.bind(this);
+    this.getAnalyticsOverview = this.getAnalyticsOverview.bind(this);
   }
 
   /**
@@ -223,7 +269,10 @@ class SuperAdminService {
       const { page = 1, limit = 20, name, is_active } = params;
 
       // Build clean params object
-      const cleanParams: Record<string, string | number | boolean> = { page, limit };
+      const cleanParams: Record<string, string | number | boolean> = {
+        page,
+        limit,
+      };
       if (name && name.trim()) {
         cleanParams.name = name.trim();
       }
@@ -406,6 +455,101 @@ class SuperAdminService {
       });
       return response.data;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get all unique equipment and infrastructure items across all facilities
+   * GET /api/v1/admin/inventory/unique
+   * Only Super Admins can access this endpoint
+   * Returns an object with equipment and infrastructure arrays
+   */
+  async getUniqueInventory(): Promise<UniqueEquipmentItem> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.UNIQUE_INVENTORY);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching unique inventory:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Search facilities by inventory item (equipment or infrastructure)
+   * GET /api/v1/facilities?inventory_item={name}&page={page}&limit={limit}
+   * Returns facilities that contain the specified equipment or infrastructure
+   */
+  async getFacilitiesByInventory(
+    params: SearchFacilitiesByInventoryParams,
+  ): Promise<SearchFacilitiesByInventoryResponse> {
+    try {
+      const { inventory_item, page = 1, limit = 10 } = params;
+
+      const response = await apiClient.get(
+        this.ENDPOINTS.FACILITIES_BY_INVENTORY,
+        {
+          params: {
+            inventory_item,
+            page,
+            limit,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching facilities by inventory:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Suspend a user account
+   * POST /api/v1/admin/users/{user_id}/suspend
+   * @param userId - The ID of the user to suspend
+   * @param reason - The reason for suspending the user
+   */
+  async suspendUser(userId: string, reason: string): Promise<any> {
+    try {
+      const response = await apiClient.post(
+        `${this.ENDPOINTS.SUSPEND_USER}/${userId}/suspend`,
+        { reason },
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error suspending user:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Unsuspend a user account
+   * POST /api/v1/admin/users/{user_id}/unsuspend
+   * @param userId - The ID of the user to unsuspend
+   */
+  async unsuspendUser(userId: string): Promise<any> {
+    try {
+      const response = await apiClient.post(
+        `${this.ENDPOINTS.UNSUSPEND_USER}/${userId}/unsuspend`,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error unsuspending user:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analytics overview with KPIs
+   * GET /api/v1/admin/analytics/overview
+   * Returns: total_facilities, total_users, total_reviews, active_appointments
+   */
+  async getAnalyticsOverview(): Promise<AnalyticsOverviewResponse> {
+    try {
+      const response = await apiClient.get(this.ENDPOINTS.ANALYTICS_OVERVIEW);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching analytics overview:", error);
       throw error;
     }
   }

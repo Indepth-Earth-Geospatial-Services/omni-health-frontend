@@ -30,6 +30,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.26.1",
+    "highcharts": "^12.5.0",
+    "highcharts-react-official": "^3.2.3",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.561.0",
     "mapbox-gl": "^3.17.0",

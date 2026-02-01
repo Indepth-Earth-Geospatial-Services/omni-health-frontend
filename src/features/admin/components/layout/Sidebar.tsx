@@ -30,14 +30,20 @@ const adminMenuItems = [
 ];
 
 const userMenuItems = [{ label: "User Dashboard", icon: Map, href: "/user" }];
+const SuperAdminMenuItems = [
+  { label: "Super Admin", icon: Map, href: "/super-admin/map" },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { facilityIds } = useAuthStore();
+  const { facilityIds, user } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Get the first facility ID (admin may manage multiple facilities)
   const facilityId = facilityIds?.[0] || "";
+
+  // Check if user is super admin
+  const isSuperAdmin = user?.role === "super_admin";
 
   // Fetch facility details
   const { data: facilityData, isLoading: isFacilityLoading } =
@@ -136,6 +142,40 @@ export default function Sidebar() {
             );
           })}
         </div>
+
+        {/* Super Admin Menu - Only visible to super admins */}
+        {isSuperAdmin && (
+          <>
+            <div className="px-2 pt-6 pb-2">
+              <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                Super Admin Portal
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              {SuperAdminMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "text-primary bg-gray-100"
+                        : "text-gray-700 hover:translate-x-1 hover:bg-gray-200",
+                    )}
+                  >
+                    <Icon size={18} />
+                    <span className="truncate">{item.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </>
+        )}
       </nav>
 
       {/* Facility Profile - Clickable */}
