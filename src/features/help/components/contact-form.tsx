@@ -33,7 +33,7 @@ function FeedbackForm() {
   });
   function onSubmit(data: FeedbackData) {
     toast.success("message sent successfully");
-    console.log(data);
+    // console.log(data);
   }
   return (
     <div className="mt-4 h-full w-full font-normal">

@@ -57,6 +57,8 @@ export default function AllUserPage() {
   const totalUsers = allUsersData?.pagination?.total_records ?? 0;
   const activeUsers =
     allUsersData?.users?.filter((user) => user.is_active).length ?? 0;
+  const inactiveUsers =
+    allUsersData?.users?.filter((user) => !user.is_active).length ?? 0;
   const totalSuperAdmins =
     allUsersData?.users?.filter((user) => user.role === "super_admin").length ??
     0;
@@ -122,11 +124,11 @@ export default function AllUserPage() {
             trend={{ value: "2% Decrease", isPositive: false }}
           />
           <KPIStatsCards
-            title="Pending Approvals"
-            value={1}
+            title="Inactive Users"
+            value={inactiveUsers}
             subtitle=""
             icon={<Calendar size={24} />}
-            trend={{ value: "80%", isPositive: true }}
+            trend={{ value: inactiveUsers > 0 ? "Needs attention" : "All active", isPositive: inactiveUsers === 0 }}
           />
           <KPIStatsCards
             title="Super Admins"

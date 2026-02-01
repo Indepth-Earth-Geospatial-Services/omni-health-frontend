@@ -32,7 +32,8 @@ export default function SuperDashboard() {
   // Calculate KPI metrics
   const kpiMetrics = useMemo(() => {
     const totalFacilities = analyticsData?.total_facilities ?? 0;
-    const totalUsers = analyticsData?.total_users ?? 0;
+    // Use pagination.total_records for accurate user count (consistent with AllUsers page)
+    const totalUsers = usersData?.pagination?.total_records ?? 0;
     const totalStaff = staffData?.pagination?.total_records ?? 0;
 
     // Count admins (users with role containing 'admin')

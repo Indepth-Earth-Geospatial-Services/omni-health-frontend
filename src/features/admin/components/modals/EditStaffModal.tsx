@@ -227,7 +227,7 @@ const EditStaffModal = ({
       }
     }
 
-    console.log("Update Payload:", updatePayload); // Debug log
+    // console.log("Update Payload:", updatePayload); // Debug log
 
     onSubmit(updatePayload);
   };
