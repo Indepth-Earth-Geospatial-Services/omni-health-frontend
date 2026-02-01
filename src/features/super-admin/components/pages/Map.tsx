@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Switch } from "@/features/admin/components/ui/switch";
 import SuperAdminMap from "../ui/SuperAdminMap";
 import { Facility } from "@/types/api-response";
-import { useFacilities } from "../hooks/useFacilities";
+import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
 
 export default function Map() {
+  const searchParams = useSearchParams();
+  const facilityIdFromUrl = searchParams.get("facility_id");
+
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null,
   );
@@ -17,6 +21,18 @@ export default function Map() {
     page: 1,
     limit: 1000,
   });
+
+  // Auto-select facility from URL query param
+  useEffect(() => {
+    if (facilityIdFromUrl && data?.facilities) {
+      const facility = data.facilities.find(
+        (f) => f.facility_id === facilityIdFromUrl,
+      );
+      if (facility) {
+        setSelectedFacility(facility as unknown as Facility);
+      }
+    }
+  }, [facilityIdFromUrl, data?.facilities]);
 
   // Layer visibility state
   const [visibleLayers, setVisibleLayers] = useState({
@@ -97,7 +113,7 @@ export default function Map() {
         {/* Map container - fixed height using viewport units */}
         <div className="h-[70vh] flex-1 overflow-hidden rounded-2xl border border-slate-200">
           <SuperAdminMap
-            facilities={facilities}
+            facilities={facilities as unknown as Facility[]}
             width="100%"
             height="100%"
             visibleLayers={visibleLayers}

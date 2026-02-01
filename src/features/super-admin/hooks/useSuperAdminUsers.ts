@@ -7,6 +7,8 @@ import {
   type SearchFacilityResponse,
   type GetAllStaffResponse,
   type GetUsersParams,
+  type GetUniqueEquipmentParams,
+  type UniqueEquipmentItem,
 } from "../services/super-admin.service";
 
 /**
@@ -22,6 +24,20 @@ export function useSuperAdminUsers(params: GetUsersParams = {}) {
     queryFn: () => superAdminService.getUsers({ page, limit, name, is_active }),
     staleTime: 0,
     placeholderData: (previousData) => previousData, // Keep previous data while fetching
+  });
+}
+
+/**
+ * Hook to fetch all Unique equipment and infrastructure (Super Admin only)
+ * Uses TanStack Query for caching and state management
+ * Returns equipment and infrastructure arrays for filtering/display
+ */
+export function useUniqueInventory() {
+  return useQuery<UniqueEquipmentItem>({
+    queryKey: ["unique-inventory"],
+    queryFn: () => superAdminService.getUniqueInventory(),
+    staleTime: 1000 * 60 * 5, // 5 minutes - cache for 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes garbage collection
   });
 }
 

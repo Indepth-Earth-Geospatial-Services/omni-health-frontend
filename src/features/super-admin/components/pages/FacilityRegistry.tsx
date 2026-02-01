@@ -20,7 +20,8 @@ import AddFacilityModal from "../modals/AddFacilityModal";
 import FacilityDetailsModal from "../modals/FacilityDetailsModal";
 import { useFacilities } from "../../hooks/useSuperAdminUsers";
 import { formatDate, formatRelativeDate } from "@/lib/format-date";
-import type { Facility } from "../../services/super-admin.service";
+import { superAdminService, type Facility } from "../../services/super-admin.service";
+import { toast } from "sonner";
 
 export default function FacilityRegistry() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,9 +134,27 @@ export default function FacilityRegistry() {
     [],
   );
 
-  const handleExport = useCallback((format: ExportFormat) => {
-    // TODO: Implement export functionality for facilities
-    console.log("Export facilities as:", format);
+  const handleExport = useCallback(async (format: ExportFormat) => {
+    try {
+      toast.loading("Exporting facilities...", { id: "export-facilities" });
+
+      const blob = await superAdminService.exportFacilities({ format });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `facilities_export.${format === "CSV" ? "csv" : "xlsx"}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Facilities exported successfully", { id: "export-facilities" });
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error("Failed to export facilities", { id: "export-facilities" });
+    }
   }, []);
 
   const handleAddNew = () => {

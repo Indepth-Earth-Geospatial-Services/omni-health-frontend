@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useStaffSchema } from "@/hooks/use-admin-staff";
+import { useStaffSchema } from "@/features/admin/hooks/use-admin-staff";
 
 interface AddStaffModalProps {
   isOpen: boolean;

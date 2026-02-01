@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { X, Pen, KeyRound, ShieldAlert, Ban, Building2 } from "lucide-react";
+import { X } from "lucide-react";
 import { User } from "../../services/super-admin.service";
 import { Button } from "@/features/admin/components/ui/button";
 
@@ -73,26 +73,6 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <X size={20} />
             </button>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <button className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
-              <Pen size={14} />
-              Edit
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
-              <ShieldAlert size={14} />
-              Change Pass
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
-              <KeyRound size={14} />
-              Reset Password
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
-              <Ban size={14} />
-              Deactivate
-            </button>
-          </div>
         </div>
 
         {/* Tabs */}
@@ -153,23 +133,6 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     {formatLastActive(user.created_at)}
                   </p>
                 </div>
-
-                {/* <div>
-                  <label className="text-xs font-medium text-slate-500">
-                    Status
-                  </label>
-                  <div className="mt-1">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                        user.is_active
-                          ? "bg-primary text-white"
-                          : "bg-[#E2E4E9] text-gray-600"
-                      }`}
-                    >
-                      {user.is_active ? "Active" : "Not Active"}
-                    </span>
-                  </div>
-                </div> */}
               </div>
 
               {/* Managed Facilities */}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import SlideInModal from "./SlideInModal";
 import { Button } from "@/features/admin/components/ui/button";
 import {
@@ -16,6 +17,30 @@ import {
   Calendar,
   X,
 } from "lucide-react";
+
+/**
+ * Helper function to count all bed-related equipment in a facility's inventory
+ * Filters equipment keys that contain 'bed' or 'beds' (case-insensitive)
+ */
+const countBeds = (equipment: Record<string, unknown> | undefined): number => {
+  if (!equipment) return 0;
+
+  let totalBeds = 0;
+
+  Object.entries(equipment).forEach(([key, value]) => {
+    if (key.toLowerCase().includes("bed")) {
+      if (Array.isArray(value)) {
+        totalBeds += value.length;
+      } else if (typeof value === "number") {
+        totalBeds += value;
+      } else if (value) {
+        totalBeds += 1;
+      }
+    }
+  });
+
+  return totalBeds;
+};
 
 interface FacilityDetailsModalProps {
   isOpen: boolean;
@@ -33,6 +58,11 @@ interface FacilityDetailsModalProps {
       phone?: string;
       email?: string;
     };
+    inventory?: {
+      equipment?: Record<string, unknown>;
+      infrastructure?: Record<string, unknown>;
+    };
+    specialists?: string[];
     total_beds?: number;
     staff_count?: number;
     average_rating?: number;
@@ -42,7 +72,7 @@ interface FacilityDetailsModalProps {
   onEditFacility?: () => void;
 }
 
-type TabType = "overview" | "metrics" | "audit";
+type TabType = "overview";
 
 export default function FacilityDetailsModal({
   isOpen,
@@ -50,18 +80,32 @@ export default function FacilityDetailsModal({
   facility,
   onEditFacility,
 }: FacilityDetailsModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
-  if (!facility) return null;
+  // Calculate bed capacity from equipment inventory
+  const totalBeds = useMemo(() => {
+    if (!facility) return 0;
+    if (facility.total_beds) return facility.total_beds;
+    return countBeds(facility.inventory?.equipment);
+  }, [facility]);
 
-  const bedsFilled = facility.total_beds
-    ? Math.floor(facility.total_beds * 0.18)
-    : 0;
-  const totalBeds = facility.total_beds || 450;
-  const staffOnDuty = facility.staff_count || 48;
-  const rating = facility.average_rating || 4.2;
-  const reviewCount = facility.total_reviews || 0;
-  const lastReport = facility.last_updated || "06/01/2026";
+  // Get staff count from specialists array or staff_count
+  const staffOnDuty = useMemo(() => {
+    if (!facility) return 0;
+    if (facility.staff_count) return facility.staff_count;
+    if (facility.specialists?.length) return facility.specialists.length;
+    return 0;
+  }, [facility]);
+
+  // Get rating from facility endpoint
+  const rating = facility?.average_rating ?? 0;
+  const reviewCount = facility?.total_reviews ?? 0;
+
+  // Get last report date from last_updated
+  const lastReport = facility?.last_updated || null;
+
+  if (!facility) return null;
 
   const handleEditFacility = () => {
     onClose();
@@ -75,11 +119,9 @@ export default function FacilityDetailsModal({
   };
 
   const handleOpenMap = () => {
-    if (facility.lat && facility.lon) {
-      window.open(
-        `https://www.google.com/maps?q=${facility.lat},${facility.lon}`,
-        "_blank",
-      );
+    if (facility.facility_id) {
+      onClose();
+      router.push(`/super-admin/map?facility_id=${facility.facility_id}`);
     }
   };
 
@@ -126,19 +168,19 @@ export default function FacilityDetailsModal({
             <MessageSquare size={14} />
             Contact
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+          {/* <Button size="sm" variant="outline" className="gap-1.5 text-xs">
             <FileText size={14} />
             Request Report
-          </Button>
+          </Button> */}
           <Button
             onClick={handleOpenMap}
             size="sm"
             variant="outline"
             className="gap-1.5 text-xs"
-            disabled={!facility.lat || !facility.lon}
+            disabled={!facility.facility_id}
           >
             <MapPinIcon size={14} />
-            Open Map
+            View on Map
           </Button>
         </div>
 
@@ -155,7 +197,8 @@ export default function FacilityDetailsModal({
             >
               Overview
             </button>
-            <button
+
+            {/* <button
               onClick={() => setActiveTab("metrics")}
               className={`rounded-2xl px-12 py-3 text-sm font-medium transition-all ${
                 activeTab === "metrics"
@@ -164,9 +207,9 @@ export default function FacilityDetailsModal({
               }`}
             >
               Metrics
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={() => setActiveTab("audit")}
               className={`rounded-2xl px-12 py-3 text-sm font-medium transition-all ${
                 activeTab === "audit"
@@ -175,7 +218,7 @@ export default function FacilityDetailsModal({
               }`}
             >
               Audit
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -197,9 +240,11 @@ export default function FacilityDetailsModal({
                       </p>
                     </div>
                     <p className="text-xl font-medium text-slate-900">
-                      {bedsFilled}/{totalBeds}
+                      {totalBeds}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">Beds filled</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Total beds available
+                    </p>
                   </div>
                 </div>
 
@@ -211,14 +256,16 @@ export default function FacilityDetailsModal({
                   <div className="ml-4">
                     <div className="mb-2 flex items-center gap-2">
                       <p className="text-xs font-medium text-slate-600">
-                        Staff on Duty
+                        Staff Count
                       </p>
                     </div>
                     <p className="text-xl font-medium text-slate-900">
                       {staffOnDuty}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Medical Workers
+                      {facility.specialists?.length
+                        ? "Specialists"
+                        : "Medical staff"}
                     </p>
                   </div>
                 </div>
@@ -255,12 +302,15 @@ export default function FacilityDetailsModal({
                       </p>
                     </div>
                     <p className="text-xl font-medium text-slate-900">
-                      {new Date(lastReport).toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
+                      {lastReport
+                        ? new Date(lastReport).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })
+                        : "N/A"}
                     </p>
+                    <p className="mt-1 text-xs text-slate-500">Last updated</p>
                   </div>
                 </div>
               </div>
@@ -325,7 +375,7 @@ export default function FacilityDetailsModal({
             </div>
           )}
 
-          {activeTab === "metrics" && (
+          {/* {activeTab === "metrics" && (
             <div className="p-6">
               <div className="flex h-64 items-center justify-center text-slate-500">
                 <div className="text-center">
@@ -337,9 +387,9 @@ export default function FacilityDetailsModal({
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
-          {activeTab === "audit" && (
+          {/* {activeTab === "audit" && (
             <div className="p-6">
               <div className="flex h-64 items-center justify-center text-slate-500">
                 <div className="text-center">
@@ -352,6 +402,7 @@ export default function FacilityDetailsModal({
               </div>
             </div>
           )}
+        </div> */}
         </div>
 
         {/* Footer */}
