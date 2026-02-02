@@ -9,10 +9,10 @@ import {
 } from "@/features/super-admin/hooks/useSuperAdminUsers";
 
 export default function StaffPage() {
-  // Fetch all staff for KPI calculations (using a large limit to get all staff)
+  // Fetch staff with small limit - we only need pagination.total_records for KPIs
   const { data: allStaffData, isLoading: isLoadingStaff } = useSuperAdminStaff(
     1,
-    1000,
+    10,
   );
 
   // Fetch all facilities for KPI calculations

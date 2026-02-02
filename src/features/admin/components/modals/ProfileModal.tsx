@@ -1,241 +1,439 @@
 "use client";
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuthStore, User } from "@/store/auth-store";
 import { Facility } from "@/types/api-response";
 import {
-    User as UserIcon,
-    Mail,
-    Shield,
-    Building2,
-    MapPin,
-    Phone,
-    Clock,
-    Star,
-    LogOut,
-    Loader2,
+  User as UserIcon,
+  Mail,
+  Shield,
+  Building2,
+  MapPin,
+  Phone,
+  LogOut,
+  Loader2,
+  Camera,
+  Trash2,
+  X,
+  Maximize2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useRef, useState, ChangeEvent } from "react";
+import { toast } from "sonner";
+import {
+  useUploadFacilityImages,
+  useDeleteFacilityImage,
+} from "@/features/admin/hooks/useAdminStaff";
 
+// --- NEW: Image Viewer Modal Component ---
+interface ImageViewerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  imageUrl: string | null;
+}
+
+function ImageViewer({ isOpen, onClose, imageUrl }: ImageViewerProps) {
+  if (!imageUrl) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className="max-w-screen-md border-none bg-transparent p-0 shadow-none"
+        aria-describedby={undefined}
+      >
+        <span className="sr-only">
+          <DialogTitle>Profile Image Viewer</DialogTitle>
+        </span>
+        <div className="relative flex flex-col items-center justify-center">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute -top-10 right-0 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/40"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Full Image */}
+          <img
+            src={imageUrl}
+            alt="Full Profile"
+            className="max-h-[80vh] w-full rounded-lg object-contain shadow-2xl"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --- Main Profile Modal ---
 interface ProfileModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    facility: Facility | undefined;
-    isFacilityLoading: boolean;
+  isOpen: boolean;
+  onClose: () => void;
+  facility: Facility | undefined;
+  isFacilityLoading: boolean;
 }
 
 export default function ProfileModal({
-    isOpen,
-    onClose,
-    facility,
-    isFacilityLoading,
+  isOpen,
+  onClose,
+  facility,
+  isFacilityLoading,
 }: ProfileModalProps) {
-    const { user, logout } = useAuthStore();
-    const router = useRouter();
+  const { user, logout } = useAuthStore();
+  const router = useRouter();
 
-    const handleLogout = () => {
-        logout();
-        onClose();
-        router.push("/login");
-    };
+  const facilityId = facility?.facility_id || "";
 
-    const getUserInitials = (user: User | null) => {
-        if (!user) return "U";
-        const first = user.first_name?.[0] || "";
-        const last = user.last_name?.[0] || "";
-        return (first + last).toUpperCase() || user.email[0].toUpperCase();
-    };
+  // Hooks
+  const uploadMutation = useUploadFacilityImages(facilityId);
+  const deleteMutation = useDeleteFacilityImage(facilityId);
 
-    const getUserFullName = (user: User | null) => {
-        if (!user) return "Unknown User";
-        if (user.first_name || user.last_name) {
-            return `${user.first_name || ""} ${user.last_name || ""}`.trim();
-        }
-        return user.email.split("@")[0];
-    };
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const getRoleBadgeColor = (role: string) => {
-        switch (role) {
-            case "super_admin":
-                return "bg-purple-100 text-purple-700 border-purple-200";
-            case "admin":
-                return "bg-blue-100 text-blue-700 border-blue-200";
-            default:
-                return "bg-gray-100 text-gray-700 border-gray-200";
-        }
-    };
+  // State
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false); // State for Viewer
 
-    const formatRole = (role: string) => {
-        return role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
-    };
+  const serverImage = (facility as any)?.image_urls?.[0] || null;
 
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-md bg-white p-0 overflow-hidden">
-                {/* Header with gradient background */}
-                <div className="bg-gradient-to-br from-primary/90 to-primary px-6 pt-6 pb-12 relative">
-                    <DialogHeader>
-                        <DialogTitle className="text-white text-lg font-semibold">
-                            Profile
-                        </DialogTitle>
-                    </DialogHeader>
+  const activeImage = previewImage || serverImage;
 
-                    {/* Decorative circles */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+  // Handle modal close - reset preview image
+  const handleClose = () => {
+    setPreviewImage(null);
+    onClose();
+  };
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+    router.push("/login");
+  };
+
+  // --- Actions ---
+
+  const handleViewImage = () => {
+    if (activeImage) {
+      setIsViewerOpen(true);
+    }
+  };
+
+  const handleAvatarClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening viewer
+    if (!facilityId) {
+      toast.error("Facility info not loaded.");
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleDeleteImage = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening viewer
+
+    if (previewImage) {
+      setPreviewImage(null);
+      toast.info("Removed preview image");
+      return;
+    }
+
+    if (serverImage) {
+      if (confirm("Are you sure you want to remove this profile picture?")) {
+        deleteMutation.mutate(serverImage);
+      }
+    }
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewImage(objectUrl);
+
+      const toastId = toast.loading("Uploading image...");
+      uploadMutation.mutate([file], {
+        onSuccess: () => {
+          toast.success("Image uploaded successfully", { id: toastId });
+        },
+        onError: (error: any) => {
+          console.error(error);
+          toast.error("Failed to upload image", { id: toastId });
+          setPreviewImage(null);
+        },
+      });
+    }
+    event.target.value = "";
+  };
+
+  // --- UI Helpers ---
+  const getUserInitials = (user: User | null) => {
+    if (!user) return "U";
+    const first = user.first_name?.[0] || "";
+    const last = user.last_name?.[0] || "";
+    return (first + last).toUpperCase() || user.email[0].toUpperCase();
+  };
+
+  const getUserFullName = (user: User | null) => {
+    if (!user) return "Unknown User";
+    if (user.first_name || user.last_name) {
+      return `${user.first_name || ""} ${user.last_name || ""}`.trim();
+    }
+    return user.email.split("@")[0];
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "super_admin":
+        return "bg-purple-100 text-purple-700 border-purple-200";
+      case "admin":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const formatRole = (role: string) => {
+    return role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
+  const isLoading = uploadMutation.isPending || deleteMutation.isPending;
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-md overflow-hidden bg-white p-0">
+          {/* Header */}
+          <div className="from-primary/90 to-primary relative bg-gradient-to-br px-6 pt-6 pb-20">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-white">
+                Profile
+              </DialogTitle>
+            </DialogHeader>
+            <div className="absolute top-0 right-0 h-32 w-32 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10" />
+            <div className="absolute bottom-0 left-0 h-20 w-20 -translate-x-1/2 translate-y-1/2 rounded-full bg-white/10" />
+          </div>
+
+          {/* Profile Avatar - BIGGER and CENTERED */}
+          <div className="relative z-10 -mt-16 flex justify-center">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+
+            {/* Avatar Container */}
+            <div
+              onClick={handleViewImage}
+              className={`group relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-xl transition-all duration-300 ${!isLoading && activeImage ? "cursor-zoom-in hover:scale-105" : ""} ${!activeImage && !isLoading ? "cursor-default" : ""}`}
+            >
+              {/* Loading Overlay */}
+              {isLoading && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                  <Loader2 className="h-10 w-10 animate-spin text-white" />
                 </div>
+              )}
 
-                {/* Profile Avatar - Overlapping the header */}
-                <div className="flex justify-center -mt-10 relative z-10">
-                    <div className="h-20 w-20 rounded-full bg-white shadow-lg flex items-center justify-center border-4 border-white">
-                        <div className="h-full w-full rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-2xl font-bold">
-                            {getUserInitials(user)}
-                        </div>
-                    </div>
-                </div>
-
-                {/* User Info Section */}
-                <div className="px-6 pt-3 pb-2 text-center">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        {getUserFullName(user)}
-                    </h3>
-                    <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 mt-2 text-xs font-medium rounded-full border ${getRoleBadgeColor(user?.role || "user")}`}
-                    >
-                        <Shield size={12} />
-                        {formatRole(user?.role || "user")}
-                    </span>
-                </div>
-
-                {/* Divider */}
-                <div className="px-6">
-                    <div className="border-t border-gray-100" />
-                </div>
-
-                {/* User Details */}
-                <div className="px-6 py-4 space-y-3">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-                        Account Information
-                    </h4>
-
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Mail size={16} className="text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500">Email</p>
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                                {user?.email || "No email"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center">
-                            <UserIcon size={16} className="text-green-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-500">Status</p>
-                            <p className="text-sm font-medium text-green-600">
-                                {user?.is_active ? "Active" : "Inactive"}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Divider */}
-                <div className="px-6">
-                    <div className="border-t border-gray-100" />
-                </div>
-
-                {/* Facility Section */}
-                <div className="px-6 py-4 space-y-3">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
-                        Assigned Facility
-                    </h4>
-
-                    {isFacilityLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                            <Loader2 size={24} className="animate-spin text-primary" />
-                        </div>
-                    ) : facility ? (
-                        <div className="space-y-3">
-                            <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
-                                <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                                    <Building2 size={20} className="text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-gray-900 leading-tight">
-                                        {facility.facility_name || "Unknown Facility"}
-                                    </p>
-                                    <p className="text-xs text-primary mt-0.5">
-                                        {facility.facility_category || "Healthcare Facility"}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                                {facility.address && (
-                                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50">
-                                        <MapPin size={14} className="text-gray-400 flex-shrink-0" />
-                                        <p className="text-xs text-gray-600 truncate">
-                                            {facility.town || facility.address}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {facility.contact_info?.phone && (
-                                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50">
-                                        <Phone size={14} className="text-gray-400 flex-shrink-0" />
-                                        <p className="text-xs text-gray-600 truncate">
-                                            {facility.contact_info.phone}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {facility.contact_info?.email && (
-                                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50">
-                                        <Mail size={14} className="text-gray-400 flex-shrink-0" />
-                                        <p className="text-xs text-gray-600 truncate">
-                                            {facility.contact_info.email}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {facility.average_rating !== undefined && (
-                                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50">
-                                        <Star size={14} className="text-yellow-500 flex-shrink-0" />
-                                        <p className="text-xs text-gray-600">
-                                            {facility.average_rating.toFixed(1)} rating
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-6 text-gray-500">
-                            <Building2 size={32} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No facility assigned</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer with Logout */}
-                <div className="px-6 pb-6 pt-2">
+              {/* Hover Actions Overlay */}
+              {!isLoading && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/30 opacity-0 backdrop-blur-[2px] transition-all duration-300 group-hover:opacity-100">
+                  <div className="flex gap-3">
+                    {/* Upload Button */}
                     <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium text-sm"
+                      onClick={handleAvatarClick}
+                      className="rounded-full bg-white/20 p-2.5 text-white transition-colors hover:scale-110 hover:bg-white/40"
+                      title="Change picture"
                     >
-                        <LogOut size={18} />
-                        Sign Out
+                      <Camera size={20} />
                     </button>
+
+                    {/* Delete Button */}
+                    {activeImage && (
+                      <button
+                        onClick={handleDeleteImage}
+                        className="rounded-full bg-red-500/80 p-2.5 text-white transition-colors hover:scale-110 hover:bg-red-600"
+                        title="Remove picture"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Hint Text */}
+                  {activeImage && (
+                    <span className="flex items-center gap-1 text-[10px] font-medium text-white/90">
+                      <Maximize2 size={10} /> View
+                    </span>
+                  )}
                 </div>
-            </DialogContent>
-        </Dialog>
-    );
+              )}
+
+              {/* Display Image or Initials */}
+              {activeImage ? (
+                <img
+                  src={activeImage}
+                  alt="Profile"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className="from-primary to-primary/80 flex h-full w-full items-center justify-center bg-gradient-to-br text-4xl font-bold text-white">
+                  {getUserInitials(user)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* User Info Section */}
+          <div className="px-6 pt-3 pb-2 text-center">
+            <h3 className="text-xl font-bold text-gray-900">
+              {getUserFullName(user)}
+            </h3>
+            <span
+              className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(
+                user?.role || "user",
+              )}`}
+            >
+              <Shield size={12} />
+              {formatRole(user?.role || "user")}
+            </span>
+          </div>
+
+          <div className="px-6">
+            <div className="border-t border-gray-100" />
+          </div>
+
+          {/* User Details */}
+          <div className="space-y-3 px-6 py-4">
+            <h4 className="mb-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+              Account Information
+            </h4>
+
+            <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100">
+              <div className="bg-primary/10 flex h-9 w-9 items-center justify-center rounded-full">
+                <Mail size={16} className="text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-gray-500">Email</p>
+                <p className="truncate text-sm font-medium text-gray-900">
+                  {user?.email || "No email"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
+                <UserIcon size={16} className="text-green-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-gray-500">Status</p>
+                <p className="text-sm font-medium text-green-600">
+                  {user?.is_active ? "Active" : "Inactive"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-6">
+            <div className="border-t border-gray-100" />
+          </div>
+
+          {/* Facility Section */}
+          <div className="space-y-3 px-6 py-4">
+            <h4 className="mb-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+              Assigned Facility
+            </h4>
+
+            {isFacilityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 size={24} className="text-primary animate-spin" />
+              </div>
+            ) : facility ? (
+              <div className="space-y-3">
+                <div className="from-primary/5 to-primary/10 border-primary/20 flex items-start gap-3 rounded-lg border bg-gradient-to-r p-3">
+                  <div className="bg-primary/20 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
+                    <Building2 size={20} className="text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm leading-tight font-semibold text-gray-900">
+                      {facility.facility_name || "Unknown Facility"}
+                    </p>
+                    <p className="text-primary mt-0.5 text-xs">
+                      {facility.facility_category || "Healthcare Facility"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {facility.address && (
+                    <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2.5">
+                      <MapPin
+                        size={14}
+                        className="flex-shrink-0 text-gray-400"
+                      />
+                      <p className="truncate text-xs text-gray-600">
+                        {facility.town || facility.address}
+                      </p>
+                    </div>
+                  )}
+                  {facility.contact_info?.phone && (
+                    <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2.5">
+                      <Phone
+                        size={14}
+                        className="flex-shrink-0 text-gray-400"
+                      />
+                      <p className="truncate text-xs text-gray-600">
+                        {facility.contact_info.phone}
+                      </p>
+                    </div>
+                  )}
+                  {facility.contact_info?.email && (
+                    <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2.5">
+                      <Mail size={14} className="flex-shrink-0 text-gray-400" />
+                      <p className="truncate text-xs text-gray-600">
+                        {facility.contact_info.email}
+                      </p>
+                    </div>
+                  )}
+                  {facility.average_rating !== undefined && (
+                    <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2.5">
+                      <p className="text-xs text-gray-600">
+                        ★ {facility.average_rating.toFixed(1)} rating
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="py-6 text-center text-gray-500">
+                <Building2 size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No facility assigned</p>
+              </div>
+            )}
+          </div>
+
+          <div className="px-6 pt-2 pb-6">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+            >
+              <LogOut size={18} />
+              Sign Out
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Viewer Component */}
+      <ImageViewer
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        imageUrl={activeImage}
+      />
+    </>
+  );
 }

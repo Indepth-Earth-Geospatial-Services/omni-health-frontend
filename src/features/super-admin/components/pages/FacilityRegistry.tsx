@@ -20,7 +20,10 @@ import AddFacilityModal from "../modals/AddFacilityModal";
 import FacilityDetailsModal from "../modals/FacilityDetailsModal";
 import { useFacilities } from "../../hooks/useSuperAdminUsers";
 import { formatDate, formatRelativeDate } from "@/lib/format-date";
-import { superAdminService, type Facility } from "../../services/super-admin.service";
+import {
+  superAdminService,
+  type Facility,
+} from "../../services/super-admin.service";
 import { toast } from "sonner";
 
 export default function FacilityRegistry() {
@@ -112,10 +115,12 @@ export default function FacilityRegistry() {
   }, [sortedFacilities, isSorting, currentPage]);
 
   // Calculate pagination values
-  const totalRecords = isSorting ? sortedFacilities.length : (pagination?.total_records || 0);
+  const totalRecords = isSorting
+    ? sortedFacilities.length
+    : pagination?.total_records || 0;
   const totalPages = isSorting
     ? Math.ceil(sortedFacilities.length / itemsPerPage)
-    : (pagination?.total_pages || 1);
+    : pagination?.total_pages || 1;
 
   const handleSearch = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, searchQuery: value }));
@@ -150,7 +155,9 @@ export default function FacilityRegistry() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("Facilities exported successfully", { id: "export-facilities" });
+      toast.success("Facilities exported successfully", {
+        id: "export-facilities",
+      });
     } catch (error) {
       console.error("Export failed:", error);
       toast.error("Failed to export facilities", { id: "export-facilities" });
@@ -181,7 +188,7 @@ export default function FacilityRegistry() {
   const handleDelete = (facilityId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     // TODO: Implement delete functionality
-    console.log("Delete facility:", facilityId);
+    // console.log("Delete facility:", facilityId);
   };
 
   return (

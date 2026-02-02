@@ -5,6 +5,7 @@ import { Users, Building2, Bed, TrendingUp } from "lucide-react";
 import BedUtilizationChart from "../charts/BedUtilizationChart";
 import { useAnalyticsOverview } from "@/features/super-admin/hooks/useAnalyticsOverview";
 import { useFacilitiesInventory } from "@/features/super-admin/hooks/useFacilitiesInventory";
+import { useSuperAdminUsers } from "@/features/super-admin/hooks/useSuperAdminUsers";
 import FacilityDistribution3DPie from "../charts/FacilityDistribution3DPie";
 import Tabs from "../ui/Tabs";
 import FacilityInventoryChart from "../charts/FacilityInventoryChart";
@@ -47,6 +48,12 @@ export default function AnalyticsPage() {
   // Fetch facilities inventory data for bed counts
   const { data: facilitiesData, isLoading: isLoadingFacilities } =
     useFacilitiesInventory();
+
+  // Fetch users data for accurate user count (consistent with other pages)
+  const { data: usersData, isLoading: isLoadingUsers } = useSuperAdminUsers({
+    page: 1,
+    limit: 1,
+  });
 
   // tabs to switch between different analytics views (if needed in future)
   const tabsConfig = [

@@ -53,7 +53,7 @@ export default function Map() {
   // Handle marker click
   const handleMarkerClick = (facility: Facility) => {
     setSelectedFacility(facility);
-    console.log("Facility clicked:", facility);
+    // console.log("Facility clicked:", facility);
   };
 
   // Extract facilities from API response

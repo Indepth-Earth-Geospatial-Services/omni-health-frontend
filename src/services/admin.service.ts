@@ -29,6 +29,18 @@ export interface GetStaffResponse {
   pagination: StaffPagination;
 }
 
+// Search Parameters Interface
+export interface StaffSearchParams {
+  facilityId: string;
+  name?: string;
+  rank_cadre?: string;
+  grade_level?: string;
+  gender?: string;
+  is_active?: boolean;
+  page?: number;
+  limit?: number;
+}
+
 export type CreateStaffData = Record<string, any>;
 
 // Inventory Types
@@ -89,6 +101,7 @@ class AdminService {
 
   constructor() {
     this.getStaff = this.getStaff.bind(this);
+    this.searchStaff = this.searchStaff.bind(this); // Bind the new method
     this.createStaff = this.createStaff.bind(this);
     this.updateStaff = this.updateStaff.bind(this);
     this.deleteStaff = this.deleteStaff.bind(this);
@@ -96,6 +109,12 @@ class AdminService {
     this.addEquipment = this.addEquipment.bind(this);
     this.addInfrastructure = this.addInfrastructure.bind(this);
     this.exportStaff = this.exportStaff.bind(this);
+    this.uploadFacilityImages = this.uploadFacilityImages.bind(this);
+    this.deleteFacilityImage = this.deleteFacilityImage.bind(this);
+    this.deleteEquipment = this.deleteEquipment.bind(this);
+    this.deleteInfrastructure = this.deleteInfrastructure.bind(this);
+    this.updateEquipment = this.updateEquipment.bind(this);
+    this.updateInfrastructure = this.updateInfrastructure.bind(this);
   }
 
   /**
@@ -122,6 +141,37 @@ class AdminService {
   }
 
   /**
+   * Search staff members within a facility
+   * GET /admin/staff/{facility_id}/search
+   */
+  async searchStaff({
+    facilityId,
+    name,
+    rank_cadre,
+    grade_level,
+    gender,
+    is_active,
+    page = 1,
+    limit = 10,
+  }: StaffSearchParams): Promise<GetStaffResponse> {
+    const response = await apiClient.get(
+      `${this.ENDPOINTS.STAFF}/${facilityId}/search`,
+      {
+        params: {
+          name: name || undefined, // Send undefined if empty to avoid sending empty strings
+          rank_cadre: rank_cadre || undefined,
+          grade_level: grade_level || undefined,
+          gender: gender === "all" ? undefined : gender, // Handle "all" case
+          is_active: is_active,
+          page,
+          limit,
+        },
+      },
+    );
+    return response.data;
+  }
+
+  /**
    * Create a new staff member
    * POST /admin/facility/{facility_id}/staff
    */
@@ -142,7 +192,6 @@ class AdminService {
   /**
    * Update an existing staff member
    * PATCH /admin/staff/{staff_id}
-   * Note: Using PATCH instead of PUT as the backend might expect partial updates
    */
   async updateStaff({
     facilityId,
@@ -153,7 +202,6 @@ class AdminService {
     staffId: string;
     data: Partial<CreateStaffData>;
   }): Promise<StaffMember> {
-    // Try PATCH method first (common for partial updates)
     const response = await apiClient.patch(
       `${this.ENDPOINTS.STAFF}/${staffId}`,
       data,
@@ -261,7 +309,6 @@ class AdminService {
   /**
    * Update Equipment in Facility Inventory
    * POST /admin/facility/{facility_id}/inventory/equipment
-   * Note: The same POST endpoint handles both add and update operations
    */
   async updateEquipment({
     facilityId,
@@ -280,7 +327,6 @@ class AdminService {
   /**
    * Update Infrastructure in Facility Inventory
    * POST /admin/facility/{facility_id}/inventory/infrastructure
-   * Note: The same POST endpoint handles both add and update operations
    */
   async updateInfrastructure({
     facilityId,
@@ -299,7 +345,6 @@ class AdminService {
   /**
    * Export Staff List
    * GET /admin/export/staff/{facility_id}?format={format}
-   * Returns a Blob for file download
    */
   async exportStaff(
     facilityId: string,
@@ -313,6 +358,55 @@ class AdminService {
       },
     );
     return response.data;
+  }
+
+  // Add to AdminService class in admin.service.ts
+
+  /**
+   * Upload Facility Images
+   * POST /admin/facility/{facility_id}/images
+   */
+  async uploadFacilityImages({
+    facilityId,
+    files,
+  }: {
+    facilityId: string;
+    files: File[];
+  }): Promise<string> {
+    // Returns "string" based on your schema example
+    const formData = new FormData();
+
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.FACILITY}/${facilityId}/images`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  }
+
+  /**
+   * Delete Facility Image
+   * DELETE /admin/facility/{facility_id}/images
+   */
+  async deleteFacilityImage({
+    facilityId,
+    imageUrl,
+  }: {
+    facilityId: string;
+    imageUrl: string;
+  }): Promise<void> {
+    // We send the image_url in the body as JSON
+    await apiClient.delete(`${this.ENDPOINTS.FACILITY}/${facilityId}/images`, {
+      data: { image_url: imageUrl },
+    });
   }
 }
 
