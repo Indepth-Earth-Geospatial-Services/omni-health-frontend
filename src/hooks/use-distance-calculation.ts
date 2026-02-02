@@ -55,10 +55,10 @@ export function useDistanceCalculation({
   // We use the RAW userLocation here so the UI feels responsive while walking/driving.
   const haversineDistance = useMemo(() => {
     if (
-      !userLocation.latitude ||
-      !userLocation.longitude ||
-      !facilityLocation.latitude ||
-      !facilityLocation.longitude
+      !userLocation?.latitude ||
+      !userLocation?.longitude ||
+      !facilityLocation?.latitude ||
+      !facilityLocation?.longitude
     )
       return null;
 
@@ -76,17 +76,17 @@ export function useDistanceCalculation({
     queryFn: async () => {
       if (
         !stabilizedLocation ||
-        !facilityLocation.latitude ||
-        !facilityLocation.longitude
+        !facilityLocation?.latitude ||
+        !facilityLocation?.longitude
       )
         return null;
 
       // Type Safety check for Matrix API
       if (
-        typeof stabilizedLocation.latitude !== "number" ||
-        typeof stabilizedLocation.longitude !== "number" ||
-        typeof facilityLocation.latitude !== "number" ||
-        typeof facilityLocation.longitude !== "number"
+        typeof stabilizedLocation?.latitude !== "number" ||
+        typeof stabilizedLocation?.longitude !== "number" ||
+        typeof facilityLocation?.latitude !== "number" ||
+        typeof facilityLocation?.longitude !== "number"
       ) {
         return null;
       }
