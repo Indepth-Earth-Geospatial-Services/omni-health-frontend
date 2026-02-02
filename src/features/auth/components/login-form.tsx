@@ -72,10 +72,10 @@ export default function LoginForm() {
       const response = await authService.login(data.email, data.password);
 
       // DEBUG: Log API response
-      console.log("=== LOGIN DEBUG ===");
-      console.log("API Response:", response);
-      console.log("Role from API:", response.role);
-      console.log("Facility IDs:", response.facility_ids);
+      // console.log("=== LOGIN DEBUG ===");
+      // console.log("API Response:", response);
+      // console.log("Role from API:", response.role);
+      // console.log("Facility IDs:", response.facility_ids);
 
       // 2. Parse full_name into first_name and last_name
       const nameParts = response.full_name?.split(" ") || [];
@@ -96,7 +96,7 @@ export default function LoginForm() {
         created_at: new Date().toISOString(),
       };
 
-      console.log("User object:", user);
+      // console.log("User object:", user);
 
       // 5. Store auth data with user info
       login(response.access_token, response.facility_ids || [], user);
@@ -105,8 +105,10 @@ export default function LoginForm() {
 
       // 6. Redirect based on role
       const redirectPath = getRedirectPath(response.facility_ids, user.role);
-      console.log("Redirect path:", redirectPath);
-      console.log("=== END LOGIN DEBUG ===");
+
+      // debug
+      // console.log("Redirect path:", redirectPath);
+      // console.log("=== END LOGIN DEBUG ===");
 
       router.push(redirectPath);
     } catch (error: any) {

@@ -48,12 +48,12 @@ export function RouteGuard({ children }: RouteGuardProps) {
       (pathname === "/login" || pathname === "/register")
     ) {
       if (user?.role === "super_admin") {
-        router.push("/super-admin/map");
+        router.push("/super-admin/dashboard");
         return;
       }
 
       if (user?.role === "admin" && facilityIds && facilityIds.length > 0) {
-        router.push("/admin");
+        router.push("/admin/staff");
         return;
       }
 

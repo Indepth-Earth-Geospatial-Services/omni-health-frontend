@@ -1,17 +1,15 @@
 "use client";
-
-import { useSearchFilterStore } from "@/store/search-filter-store";
-import { SearchBar } from "../atoms/search-bar";
-import { FilterButton } from "../atoms/filter-button";
-import { ActiveFilters } from "../atoms/active-filters";
-import { FilterSheet } from "../molecules/filter-sheet";
-import { SearchResults } from "../molecules/search-results";
-import { useCallback, useEffect } from "react";
 import { useDrawerStore } from "@/features/user/store/drawer-store";
 import { useFacilityStore } from "@/features/user/store/facility-store";
-import { iso } from "zod";
-import { SelectedFilters } from "@/types/search-filter";
+import { useSearchFilterStore } from "@/store/search-filter-store";
 import { Facility } from "@/types";
+import { SelectedFilters } from "@/types/search-filter";
+import { useCallback, useEffect } from "react";
+import { ActiveFilters } from "../atoms/active-filters";
+import { FilterButton } from "../atoms/filter-button";
+import { SearchBar } from "../atoms/search-bar";
+import { FilterSheet } from "../molecules/filter-sheet";
+import { SearchResults } from "../molecules/search-results";
 
 interface SearchAndFilterProps {
   onApplyFilters?: (filters: SelectedFilters) => void;
@@ -28,7 +26,6 @@ export function SearchAndFilter({
   includeSearchResults = false,
   className,
 }: SearchAndFilterProps) {
-  // Get state and actions from Zustand store
   const {
     searchQuery,
     isSearchExpanded,
@@ -51,15 +48,16 @@ export function SearchAndFilter({
   );
 
   // Handle search focus
-  const handleSearchFocus = () => {
+  const handleSearchFocus = useCallback(() => {
+    if (!includeSearchResults) return;
     setIsSearchExpanded(true);
-  };
+  }, [setIsSearchExpanded, includeSearchResults]);
 
   // Handle apply filters
-  const handleApplyFilters = () => {
+  const handleApplyFilters = useCallback(() => {
     onApplyFilters?.(selectedFilters);
     setIsFilterOpen(false);
-  };
+  }, [onApplyFilters, selectedFilters, setIsFilterOpen]);
 
   // Handle remove filter
   const handleRemoveFilter = (category: string, value: string) => {
@@ -88,7 +86,6 @@ export function SearchAndFilter({
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            // onFocus={handleSearchFocus}
             // HACK
             onClick={handleSearchFocus}
           />

@@ -182,17 +182,46 @@ class AuthService {
   }
 
   /**
-   * Reset password with token
+   * Verify password reset OTP
+   * POST /verify-password-reset-otp
+   */
+  async verifyPasswordResetOtp(
+    email: string,
+    otp: string,
+  ): Promise<{ message: string; email: string }> {
+    try {
+      const response = await axios.post<{ message: string; email: string }>(
+        `${this.baseUrl}/verify-password-reset-otp`,
+        { email, otp },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Reset password with OTP
+   * POST /reset-password
    */
   async resetPassword(
-    token: string,
+    email: string,
+    otp: string,
     newPassword: string,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; success: boolean }> {
     try {
-      const response = await axios.post<{ message: string }>(
+      const response = await axios.post<{ message: string; success: boolean }>(
         `${this.baseUrl}/reset-password`,
         {
-          token,
+          email,
+          otp,
           new_password: newPassword,
         },
         {

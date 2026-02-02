@@ -15,10 +15,11 @@ import { useCompareFacilities } from "@/features/compare-facilities/hooks/useCom
 import { FacilitySelectionDrawer } from "@/features/compare-facilities/components/FacilitySelectionDrawer";
 import { Facility } from "@/types/api-response";
 import { ComparisonResults } from "@/features/compare-facilities/components/ComparisonResults";
-import { useUserLocation } from "@/features/user/hooks/useUserLocation";
+
 import { useUserStore } from "@/features/user/store/user-store";
 import { useFacilityDirections } from "../hooks/useFacilityDirections";
 import EmptyState from "@/features/compare-facilities/components/emptyState"; // Import EmptyState
+import { useUserLocation } from "@/features/user/hooks/use-user-location";
 
 function CompareFacilitiesPage() {
   const {
@@ -31,7 +32,7 @@ function CompareFacilitiesPage() {
   } = useCompareFacilities();
 
   // Location and Directions Hooks
-  useUserLocation(); // Initialize location fetching
+  const { requestLocation } = useUserLocation(); // Initialize location fetching
   const { userLocation, locationError } = useUserStore();
   const [facilityA, facilityB] = facilities;
   const {
@@ -99,7 +100,7 @@ function CompareFacilitiesPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-1 top-1 h-6 w-6"
+                    className="absolute top-1 right-1 h-6 w-6"
                     onClick={() => removeFacility(index)}
                   >
                     <X className="h-4 w-4" />
@@ -145,7 +146,7 @@ function CompareFacilitiesPage() {
         )}
         {!isReadyToCompare &&
           selectedFacilitiesCount > 0 && ( // Only show compare button if at least one is selected
-            <div className="absolute bottom-5 left-5 right-5">
+            <div className="absolute right-5 bottom-5 left-5">
               <Button disabled={!isReadyToCompare} className="w-full">
                 Compare
               </Button>
@@ -153,7 +154,7 @@ function CompareFacilitiesPage() {
           )}
       </main>
       {selectedFacilitiesCount > 0 && ( // Show reset button if any facility is selected
-        <div className="fixed bottom-0 left-0 right-0 z-20 bg-white p-5 border-t border-gray-200 shadow-lg">
+        <div className="fixed right-0 bottom-0 left-0 z-20 border-t border-gray-200 bg-white p-5 shadow-lg">
           <Button onClick={handleReset} variant="outline" className="w-full">
             Clear All Compared Facilities
           </Button>

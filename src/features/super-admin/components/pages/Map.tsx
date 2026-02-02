@@ -1,21 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Switch } from "@/features/admin/components/ui/switch";
 import SuperAdminMap from "../ui/SuperAdminMap";
 import { Facility } from "@/types/api-response";
-import { useFacilities } from "../hooks/useFacilities";
+import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
 
 export default function Map() {
+  const searchParams = useSearchParams();
+  const facilityIdFromUrl = searchParams.get("facility_id");
+
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null,
   );
 
   // Fetch all facilities with a large limit to show on map
+  // Note: API maximum limit is 100
   const { data, isLoading, isError } = useFacilities({
     page: 1,
-    limit: 1000, // Get all facilities for the map
+    limit: 1000,
   });
+
+  // Auto-select facility from URL query param
+  useEffect(() => {
+    if (facilityIdFromUrl && data?.facilities) {
+      const facility = data.facilities.find(
+        (f) => f.facility_id === facilityIdFromUrl,
+      );
+      if (facility) {
+        setSelectedFacility(facility as unknown as Facility);
+      }
+    }
+  }, [facilityIdFromUrl, data?.facilities]);
 
   // Layer visibility state
   const [visibleLayers, setVisibleLayers] = useState({
@@ -36,11 +53,16 @@ export default function Map() {
   // Handle marker click
   const handleMarkerClick = (facility: Facility) => {
     setSelectedFacility(facility);
-    console.log("Facility clicked:", facility);
+    // console.log("Facility clicked:", facility);
   };
 
   // Extract facilities from API response
   const facilities = data?.facilities || [];
+  const pagination = data?.pagination;
+
+  // Calculate statistics for debugging
+  const facilitiesWithCoords = facilities.filter((f) => f.lat && f.lon);
+  const facilitiesWithoutCoords = facilities.filter((f) => !f.lat || !f.lon);
 
   // Loading state
   if (isLoading) {
@@ -91,7 +113,7 @@ export default function Map() {
         {/* Map container - fixed height using viewport units */}
         <div className="h-[70vh] flex-1 overflow-hidden rounded-2xl border border-slate-200">
           <SuperAdminMap
-            facilities={facilities}
+            facilities={facilities as unknown as Facility[]}
             width="100%"
             height="100%"
             visibleLayers={visibleLayers}
@@ -144,6 +166,41 @@ export default function Map() {
               </div>
             </div>
           </div>
+          {/* Facility Statistics */}
+          <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">
+              Map Statistics
+            </h3>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Total Loaded:</span>
+                <span className="font-medium text-slate-700">
+                  {facilities.length}
+                </span>
+              </div>
+              {pagination && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Total in Database:</span>
+                  <span className="font-medium text-slate-700">
+                    {pagination.total_records}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-slate-500">With Coordinates:</span>
+                <span className="font-medium text-green-600">
+                  {facilitiesWithCoords.length}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Missing Coordinates:</span>
+                <span className="font-medium text-amber-600">
+                  {facilitiesWithoutCoords.length}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Selected Facility Info (if any) */}
           {selectedFacility && (
             <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">

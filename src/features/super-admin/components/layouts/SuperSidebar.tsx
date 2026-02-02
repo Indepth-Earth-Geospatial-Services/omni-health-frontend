@@ -17,9 +17,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import { useFacility } from "@/hooks/useFacilities";
-import ProfileModal from "../../../admin/components/layout/ProfileModal";
+import ProfileModal from "../../../admin/components/modals/ProfileModal";
 
 const adminMenuItems = [
+  {
+    label: "Dashboard",
+    icon: Hospital,
+    href: "/super-admin/dashboard",
+  },
   { label: "Map", icon: UserCog, href: "/super-admin/map" },
   {
     label: "Facility Registry",
@@ -28,11 +33,16 @@ const adminMenuItems = [
   },
   { label: "Staff", icon: Hospital, href: "/super-admin/staff" },
   { label: "Users", icon: BarChart3, href: "/super-admin/allUsers" },
-  // {
-  //   label: "Equipments & Infrastructure",
-  //   icon: Hospital,
-  //   href: "/super-admin/all-equipments",
-  // },
+  {
+    label: "Equipments & Infrastructure",
+    icon: Hospital,
+    href: "/super-admin/all-equipments",
+  },
+  {
+    label: "Analytics",
+    icon: Hospital,
+    href: "/super-admin/analytics",
+  },
   //   { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
