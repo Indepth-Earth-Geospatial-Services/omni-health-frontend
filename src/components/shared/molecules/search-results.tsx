@@ -128,6 +128,7 @@ export function SearchResults({
   // Update filter data when filter sheet closes
   useEffect(() => {
     if (!isFilterOpen) {
+      // eslint-disable-next-line
       setFilterData(selectedFilters);
     }
   }, [isFilterOpen, selectedFilters]);

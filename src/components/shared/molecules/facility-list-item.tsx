@@ -1,12 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { ChevronRight, Clock, ImageOff } from "lucide-react";
-import { Facility } from "../../../types/api-response";
-import Image from "next/image";
-import facilityImagePlaceholder from "@assets/img/facilities/facility-placeholder.jpeg";
+import { Spinner } from "@/components/ui/spinner";
 import { useUserStore } from "@/features/user/store/user-store";
 import { useDistanceCalculation } from "@/hooks/use-distance-calculation";
-import { Spinner } from "@/components/ui/spinner";
+import { cn, getFacilityDefaults } from "@/lib/utils";
+import { ChevronRight, Clock } from "lucide-react";
+import { Facility } from "../../../types/api-response";
+import { GalleryImage } from "../atoms/gallery-image";
+import { memo } from "react";
 
 interface FacilityListItemProps {
   facility: Facility | null;
@@ -24,13 +24,16 @@ function FacilityListItem(props: FacilityListItemProps) {
   } = props;
   const userLocation = useUserStore((state) => state.userLocation);
 
-  const facilityName = facility?.facility_name;
-  const facilityAddress = facility?.address;
-  const facilityCategory = facility?.facility_category;
-  const roadDistance = facility?.road_distance_meters / 1000;
-  const facilityId = facility?.facility_id || `facility-${facility?.hfr_id}`;
-  const facilityLat = facility?.lat;
-  const facilityLon = facility?.lon;
+  const facilityData = getFacilityDefaults(facility);
+
+  const facilityName = facilityData?.facility_name;
+  const facilityAddress = facilityData?.address;
+  const facilityCategory = facilityData?.facility_category;
+  const roadDistance = facilityData?.road_distance_meters / 1000;
+  const facilityId = facilityData?.facility_id;
+  const facilityLat = facilityData?.lat;
+  const facilityLon = facilityData?.lon;
+  const imageUrl = facilityData?.image_urls?.[0] || null;
 
   const { formattedDistance, isLoading: isLoadingDistance } =
     useDistanceCalculation({
@@ -86,7 +89,7 @@ function FacilityListItem(props: FacilityListItemProps) {
 
   return (
     <div
-      className="w-full text-left"
+      className="w-full cursor-pointer text-left"
       onClick={() => (onViewDetails ? onViewDetails(facility!) : null)}
     >
       {nearUser && (
@@ -105,10 +108,7 @@ function FacilityListItem(props: FacilityListItemProps) {
       >
         {/* Image */}
         <div className="relative size-29.5 shrink-0 overflow-hidden rounded-xl">
-          {/* <div className="flex h-full items-center justify-center bg-gray-100">
-            <ImageOff className="text-gray-400" />
-          </div> */}
-          <Image src={facilityImagePlaceholder} alt="facility image" fill />
+          <GalleryImage url={imageUrl} />
         </div>
 
         {/* Details */}
@@ -140,7 +140,7 @@ function FacilityListItem(props: FacilityListItemProps) {
               </span>
               {onViewDetails && (
                 <button
-                  onClick={() => onViewDetails(facility!)}
+                  // onClick={() => onViewDetails(facility!)}
                   className="text-primary cursor-pointer"
                 >
                   View Details <ChevronRight size={12} />
@@ -154,4 +154,4 @@ function FacilityListItem(props: FacilityListItemProps) {
   );
 }
 
-export default FacilityListItem;
+export default memo(FacilityListItem);
