@@ -12,6 +12,7 @@ import {
 import { FILTERCATEGORIES } from "@/constants";
 import { cn } from "@/lib/utils";
 import { SelectedFilters } from "@/types/search-filter";
+import { memo } from "react";
 
 interface FilterSheetProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ interface FilterSheetProps {
   trigger?: React.ReactNode;
 }
 
-export function FilterSheet({
+function FilterSheetComponent({
   isOpen,
   onOpenChange,
   selectedFilters,
@@ -105,3 +106,5 @@ export function FilterSheet({
     </Sheet>
   );
 }
+export const FilterSheet = memo(FilterSheetComponent);
+FilterSheet.displayName = "FilterSheet";

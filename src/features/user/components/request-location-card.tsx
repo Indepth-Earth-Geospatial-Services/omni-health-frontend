@@ -9,18 +9,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MapPin, AlertCircle } from "lucide-react";
-import { useUserLocation } from "../hooks/use-user-location";
+import { AlertCircle, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useUserStore } from "../store/user-store";
 
-function LocationHandlerFeedback() {
-  const { permissionState, requestLocation } = useUserLocation();
+function LocationHandlerFeedback({
+  requestLocation,
+  permissionState,
+  isLoading,
+}: {
+  requestLocation: () => void;
+  permissionState: string;
+  isLoading: boolean;
+}) {
   const [open, setOpen] = useState(false);
-  const isLoading = useUserStore((state) => state.isLoadingPosition);
 
   useEffect(() => {
     if (permissionState === "prompt" || permissionState === "denied") {
+      // eslint-disable-next-line
       setOpen(true);
     } else if (permissionState === "granted") {
       setOpen(false);

@@ -9,6 +9,20 @@ interface InfoCardProps {
   loading?: boolean;
   className?: string;
 }
+const colorClasses = {
+  blue: "bg-blue-50 text-blue-800 border-blue-200",
+  green: "bg-green-50 text-green-800 border-green-200",
+  purple: "bg-purple-50 text-purple-800 border-purple-200",
+  orange: "bg-orange-50 text-orange-800 border-orange-200",
+  red: "bg-red-50 text-red-800 border-red-200",
+  gray: "bg-gray-50 text-gray-800 border-gray-200",
+};
+
+const sizeClasses = {
+  sm: "p-2",
+  md: "p-3",
+  lg: "p-4",
+};
 
 export const InfoCard: React.FC<InfoCardProps> = ({
   title,
@@ -19,21 +33,6 @@ export const InfoCard: React.FC<InfoCardProps> = ({
   loading = false,
   className = "",
 }) => {
-  const colorClasses = {
-    blue: "bg-blue-50 text-blue-800 border-blue-200",
-    green: "bg-green-50 text-green-800 border-green-200",
-    purple: "bg-purple-50 text-purple-800 border-purple-200",
-    orange: "bg-orange-50 text-orange-800 border-orange-200",
-    red: "bg-red-50 text-red-800 border-red-200",
-    gray: "bg-gray-50 text-gray-800 border-gray-200",
-  };
-
-  const sizeClasses = {
-    sm: "p-2",
-    md: "p-3",
-    lg: "p-4",
-  };
-
   if (loading) {
     return (
       <div

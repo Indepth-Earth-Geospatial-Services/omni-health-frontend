@@ -123,6 +123,7 @@ class MapboxService {
       destinations = destinations.slice(0, 25);
     }
 
+    if (!userLocation.latitude || !userLocation.longitude) return [];
     // Build coordinates string: user location first, then all destinations
     const coordinates = [
       `${userLocation.longitude},${userLocation.latitude}`,

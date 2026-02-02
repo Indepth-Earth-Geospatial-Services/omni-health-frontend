@@ -13,10 +13,15 @@ import { useDrawerActions } from "../hooks/use-drawer-actions";
 import { useFacilityData } from "../hooks/use-facility-data";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
+import { useUserLocation } from "../hooks/use-user-location";
 
 function UserPage() {
   // 1. Global State
-  const { userLocation, isLoadingPosition } = useUserStore();
+  const userLocation = useUserStore((state) => state.userLocation);
+  const isLoadingPosition = useUserStore((state) => state.isLoadingPosition);
+  const permissionState = useUserStore((state) => state.permissionState);
+
+  const { requestLocation } = useUserLocation();
   const { isSearchExpanded, clearAllFilters } = useSearchFilterStore();
   const activeDrawer = useDrawerStore((s) => s.activeDrawer);
   const selectedFacility = useFacilityStore((s) => s.selectedFacility);
@@ -46,7 +51,11 @@ function UserPage() {
       )}
 
       {/* --- Permission Card --- */}
-      <RequestLocationCard />
+      <RequestLocationCard
+        isLoading={isLoadingPosition}
+        permissionState={permissionState}
+        requestLocation={requestLocation}
+      />
 
       {/* --- Map Layer --- */}
       <section className="fixed inset-0 z-0 h-full w-full sm:left-1/2 sm:max-w-120 sm:-translate-x-1/2">
