@@ -58,9 +58,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   ...initialState,
 
   login: (token: string, facilityIds: string[], user?: User) => {
-    // Persist to localStorage
+    // Persist to sessionStorage (clears when browser/tab closes)
     if (typeof window !== "undefined") {
-      localStorage.setItem(
+      sessionStorage.setItem(
         AUTH_STORAGE_KEY,
         JSON.stringify({ token, facilityIds, user }),
       );
@@ -84,9 +84,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   logout: () => {
-    // Clear localStorage
+    // Clear sessionStorage
     if (typeof window !== "undefined") {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
 
       // Clear auth cookies
       deleteCookie(AUTH_COOKIE_NAME);
@@ -107,9 +107,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   setUser: (user: User) => {
     const { token, facilityIds } = get();
 
-    // Update localStorage with user
+    // Update sessionStorage with user
     if (typeof window !== "undefined" && token) {
-      localStorage.setItem(
+      sessionStorage.setItem(
         AUTH_STORAGE_KEY,
         JSON.stringify({ token, facilityIds, user }),
       );
@@ -132,14 +132,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
 
       if (stored) {
         const { token, facilityIds, user } = JSON.parse(stored);
 
         // Check if token is expired
         if (token && isTokenExpired(token)) {
-          localStorage.removeItem(AUTH_STORAGE_KEY);
+          sessionStorage.removeItem(AUTH_STORAGE_KEY);
           // Clear cookies as well
           deleteCookie(AUTH_COOKIE_NAME);
           deleteCookie(AUTH_DATA_COOKIE_NAME);
