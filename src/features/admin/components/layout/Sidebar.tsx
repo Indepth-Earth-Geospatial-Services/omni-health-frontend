@@ -9,6 +9,7 @@ import {
   Loader2,
   Map,
   ChevronRight,
+  MailOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
@@ -19,7 +20,7 @@ import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../modals/ProfileModal";
 
 const adminMenuItems = [
-  // { label: "Overview", icon: MailOpen, href: "/admin" },
+  { label: "Overview", icon: MailOpen, href: "/admin" },
   // { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
   // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
   { label: "Staff", icon: UserCog, href: "/admin/staff" },

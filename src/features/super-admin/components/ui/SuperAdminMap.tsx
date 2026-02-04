@@ -58,7 +58,7 @@ const getFacilityColor = (category?: string): string => {
   // Check partial matches - ORDER MATTERS!
   // Check "post" before "hospital" because "hospital post" should be a health post, not a hospital
   if (lowerCategory.includes("post")) return FACILITY_COLORS["health post"];
-  if (lowerCategory.includes("hospital")) return FACILITY_COLORS.hospital;
+  // if (lowerCategory.includes("hospital")) return FACILITY_COLORS.hospital;
   if (lowerCategory.includes("model") || lowerCategory.includes("primary"))
     return FACILITY_COLORS["model healthcare"];
   if (lowerCategory.includes("clinic") || lowerCategory.includes("cottage"))
@@ -75,8 +75,8 @@ const getFacilityTypeLabel = (category?: string): string => {
 
   // ORDER MATTERS! Check "post" before "hospital" because "hospital post" should be Health Post
   if (lowerCategory.includes("post")) return "Health Post";
-  if (lowerCategory.includes("hospital") && !lowerCategory.includes("cottage"))
-    return "Hospital";
+  // if (lowerCategory.includes("hospital") && !lowerCategory.includes("cottage"))
+  //   return "Hospital";
   if (lowerCategory.includes("model") || lowerCategory.includes("primary"))
     return "Model Healthcare";
   if (lowerCategory.includes("clinic") || lowerCategory.includes("cottage"))
@@ -96,8 +96,8 @@ const isFacilityVisible = (
 
   // ORDER MATTERS! Check "post" before "hospital" because "hospital post" should use healthPosts layer
   if (lowerCategory.includes("post")) return visibleLayers.healthPosts;
-  if (lowerCategory.includes("hospital") && !lowerCategory.includes("cottage"))
-    return visibleLayers.hospitals;
+  // if (lowerCategory.includes("hospital") && !lowerCategory.includes("cottage"))
+  //   return visibleLayers.hospitals;
   if (lowerCategory.includes("model") || lowerCategory.includes("primary"))
     return visibleLayers.modelHealthcare;
   if (lowerCategory.includes("clinic") || lowerCategory.includes("cottage"))
@@ -109,7 +109,7 @@ const isFacilityVisible = (
 export default function SuperAdminMap({
   facilities = [],
   width = "80%",
-  height = "60vh",
+  height = "100vh",
   initialViewState = {
     longitude: 7.0498,
     latitude: 4.8156,

@@ -321,9 +321,6 @@ export default function UserAndRoleList({
                           </div>
                         </div>
                       </td>
-                      {/* <td className="p-4 text-sm text-slate-600">
-                        {user.email}
-                      </td> */}
                       <td className="p-4 text-center">
                         <span
                           className={`rounded-full border px-4 py-1 text-xs font-medium ${getRoleBadgeColor(user.role)}`}

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useStaffSchema } from "@/features/admin/hooks/use-admin-staff";
+import { useStaffSchema } from "@/features/admin/hooks/useAdminStaff";
 
 interface AddStaffModalProps {
   isOpen: boolean;
@@ -555,7 +555,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
 
             {/* Submit Button */}
             <div className="flex justify-end gap-3 pt-4">
-              <Button
+              {/* <Button
                 type="button"
                 variant="outline"
                 size="xl"
@@ -564,7 +564,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
                 className="text-lg"
               >
                 Cancel
-              </Button>
+              </Button> */}
               <Button
                 type="button"
                 variant="default"

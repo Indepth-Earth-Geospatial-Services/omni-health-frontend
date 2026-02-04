@@ -321,12 +321,12 @@ export default function FacilityRegistry() {
                         >
                           <PenIcon size={18} />
                         </button>
-                        <button
+                        {/* <button
                           onClick={(e) => handleDelete(facility.facility_id, e)}
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
                         >
                           <Trash2 size={18} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

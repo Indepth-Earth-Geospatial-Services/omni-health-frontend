@@ -3,6 +3,21 @@
 import { create } from "zustand";
 
 const AUTH_STORAGE_KEY = "omni_health_auth";
+const AUTH_COOKIE_NAME = "omni_health_token";
+const AUTH_DATA_COOKIE_NAME = "omni_health_auth_data";
+
+// Cookie helper functions for middleware access
+function setCookie(name: string, value: string, days: number = 7): void {
+  if (typeof document === "undefined") return;
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+}
+
+function deleteCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+}
 
 export interface User {
   user_id: number;
@@ -49,6 +64,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         AUTH_STORAGE_KEY,
         JSON.stringify({ token, facilityIds, user }),
       );
+
+      // Set cookies for middleware access (server-side route protection)
+      setCookie(AUTH_COOKIE_NAME, token, 7);
+      setCookie(
+        AUTH_DATA_COOKIE_NAME,
+        JSON.stringify({ role: user?.role, facilityIds }),
+        7
+      );
     }
 
     set({
@@ -64,6 +87,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     // Clear localStorage
     if (typeof window !== "undefined") {
       localStorage.removeItem(AUTH_STORAGE_KEY);
+
+      // Clear auth cookies
+      deleteCookie(AUTH_COOKIE_NAME);
+      deleteCookie(AUTH_DATA_COOKIE_NAME);
     }
 
     set({
@@ -86,6 +113,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         AUTH_STORAGE_KEY,
         JSON.stringify({ token, facilityIds, user }),
       );
+
+      // Update auth data cookie with new role
+      setCookie(
+        AUTH_DATA_COOKIE_NAME,
+        JSON.stringify({ role: user.role, facilityIds }),
+        7
+      );
     }
 
     set({ user });
@@ -106,8 +140,21 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         // Check if token is expired
         if (token && isTokenExpired(token)) {
           localStorage.removeItem(AUTH_STORAGE_KEY);
+          // Clear cookies as well
+          deleteCookie(AUTH_COOKIE_NAME);
+          deleteCookie(AUTH_DATA_COOKIE_NAME);
           set({ ...initialState, isHydrated: true });
           return;
+        }
+
+        // Sync cookies for middleware access (in case they were cleared)
+        if (token) {
+          setCookie(AUTH_COOKIE_NAME, token, 7);
+          setCookie(
+            AUTH_DATA_COOKIE_NAME,
+            JSON.stringify({ role: user?.role, facilityIds }),
+            7
+          );
         }
 
         set({
@@ -119,6 +166,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         });
       } else {
         // No stored data - explicitly reset to unauthenticated state
+        // Also clear any stale cookies
+        deleteCookie(AUTH_COOKIE_NAME);
+        deleteCookie(AUTH_DATA_COOKIE_NAME);
         set({
           ...initialState,
           isHydrated: true,
@@ -126,6 +176,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       }
     } catch {
       // Error parsing - reset to unauthenticated state
+      deleteCookie(AUTH_COOKIE_NAME);
+      deleteCookie(AUTH_DATA_COOKIE_NAME);
       set({
         ...initialState,
         isHydrated: true,

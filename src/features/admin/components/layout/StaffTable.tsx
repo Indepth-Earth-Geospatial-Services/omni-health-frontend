@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowUpDown, MinusSquare, PenIcon, Trash2 } from "lucide-react";
-import { type StaffMember } from "@/features/admin/hooks/use-admin-staff";
+import { type StaffMember } from "@/features/admin/hooks/useAdminStaff";
 
 // --- Utils ---
 const toSentenceCase = (str: string | undefined | null): string => {
@@ -171,7 +171,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
                         </p>
                         {hasEmail && (
                           <p className="mt-0.5 text-[12.64px] font-normal text-[#475467]">
-                            {item.email}
+                            {item.email || "-"}
                           </p>
                         )}
                       </div>
@@ -214,8 +214,9 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   )}
                   {hasQualifications && (
                     <td className="max-w-48 truncate p-4 text-sm text-slate-600">
-                      {item.qualifications
-                        ? Object.keys(item.qualifications).join(", ")
+                      {item.qualifications &&
+                      Object.keys(item.qualifications).length > 0
+                        ? Object.values(item.qualifications).join(", ")
                         : "-"}
                     </td>
                   )}
