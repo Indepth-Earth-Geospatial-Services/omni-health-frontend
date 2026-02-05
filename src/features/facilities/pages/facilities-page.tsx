@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { Button } from "../../../components/ui/button";
 import { useSearchFilterStore } from "@/store/search-filter-store";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebounce } from "@/hooks/useDebounce";
 import { SelectedFilters } from "@/types/search-filter";
 import { Facility } from "@/types";
 import { useFacilityStore } from "@/features/user/store/facility-store";

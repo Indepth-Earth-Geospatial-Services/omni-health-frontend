@@ -360,7 +360,7 @@ function FacilityDetailsBase({
     hfr_id = "",
   } = facilityData;
 
-  const { email = "", phone = "" } = contact_info;
+  const { email = "", phone = "" } = contact_info || {};
 
   // Derived data
   const formattedRating = formatRating(average_rating);

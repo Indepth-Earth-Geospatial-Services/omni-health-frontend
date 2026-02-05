@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
-import { useFacility } from "@/hooks/useFacilities";
+import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../../../admin/components/modals/ProfileModal";
 
 const adminMenuItems = [
@@ -63,6 +63,9 @@ export default function SuperSidebar() {
   const { data: facilityData, isLoading: isFacilityLoading } =
     useFacility(facilityId);
   const facility = facilityData?.facility;
+
+  // Get Facility Image (if available)
+  const facilityImage = facility?.image_urls?.[0];
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white shadow-lg">
@@ -158,7 +161,18 @@ export default function SuperSidebar() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
                 <Loader2 size={16} className="animate-spin text-gray-400" />
               </div>
+            ) : facilityImage ? (
+              /* --- NEW: Display Image if available --- */
+              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-200">
+                <Image
+                  src={facilityImage}
+                  alt={facility?.facility_name || "Facility"}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
+              /* Fallback to Initials */
               <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold">
                 {facility?.facility_name
                   ?.split(" ")

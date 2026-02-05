@@ -10,13 +10,13 @@ import Tabs from "@/features/super-admin/components/ui/Tabs";
 import UserAndRoleList from "../layouts/UserAndRoleList";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { superAdminService } from "../../services/super-admin.service";
-import UserPermissionTab from "../layouts/User.PermissionTab";
+// import UserPermissionTab from "../layouts/User.PermissionTab";
 import { toast } from "sonner";
 
 export default function AllUserPage() {
   const searchParams = useSearchParams();
   const actionParam = searchParams.get("action");
-  const [activeTab, setActiveTab] = useState("user-directory");
+  // const [activeTab, setActiveTab] = useState("user-directory");
   const [isExporting, setIsExporting] = useState(false);
 
   // Show toast message based on action query parameter
@@ -24,9 +24,12 @@ export default function AllUserPage() {
     if (actionParam) {
       const actionMessages: Record<string, string> = {
         add: "Click 'Add New User' button to create a new account",
-        changeRole: "Select a user from the list and click the edit icon, then 'Change Role'",
-        suspend: "Select a user from the list and click the edit icon, then 'Suspend Account'",
-        deactivate: "Select a user from the list and click the edit icon, then 'Deactivate'",
+        changeRole:
+          "Select a user from the list and click the edit icon, then 'Change Role'",
+        suspend:
+          "Select a user from the list and click the edit icon, then 'Suspend Account'",
+        deactivate:
+          "Select a user from the list and click the edit icon, then 'Deactivate'",
       };
 
       const message = actionMessages[actionParam];
@@ -48,10 +51,10 @@ export default function AllUserPage() {
   // Fetch all users for KPI calculations (using a large limit to get all users)
   const { data: allUsersData } = useSuperAdminUsers({ page: 1, limit: 100 });
 
-  const tabs = [
-    { label: "User Directory", value: "user-directory" },
-    { label: "Roles & Permissions", value: "roles-permissions" },
-  ];
+  // const tabs = [
+  //   { label: "User Directory", value: "user-directory" },
+  // { label: "Roles & Permissions", value: "roles-permissions" },
+  // ];
 
   // Calculate KPI metrics
   const totalUsers = allUsersData?.pagination?.total_records ?? 0;
@@ -128,7 +131,10 @@ export default function AllUserPage() {
             value={inactiveUsers}
             subtitle=""
             icon={<Calendar size={24} />}
-            trend={{ value: inactiveUsers > 0 ? "Needs attention" : "All active", isPositive: inactiveUsers === 0 }}
+            trend={{
+              value: inactiveUsers > 0 ? "Needs attention" : "All active",
+              isPositive: inactiveUsers === 0,
+            }}
           />
           <KPIStatsCards
             title="Super Admins"
@@ -140,35 +146,35 @@ export default function AllUserPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+        </div> */}
 
         {/* Conditionally render content based on active tab */}
-        {activeTab === "user-directory" && (
-          <>
-            <StaffTableHeader
-              title="Users List"
-              searchPlaceholder="Search users..."
-              onSearch={handleSearch}
-              buttonLabel="Add New User"
-              onButtonClick={() => console.log("Add new user")}
-              showGenderFilter={false}
-              showStatusFilter={true}
-              onStatusFilter={handleStatusFilter}
-              showExport={true}
-              onExport={handleExport}
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-            />
-            <UserAndRoleList
-              searchQuery={filters.searchQuery}
-              statusFilter={filters.selectedStatus}
-            />
-          </>
-        )}
+        {/* {activeTab === "user-directory" && ( */}
+        <>
+          <StaffTableHeader
+            title="Users List"
+            searchPlaceholder="Search users..."
+            onSearch={handleSearch}
+            // buttonLabel="Add New User"
+            onButtonClick={() => console.log("Add new user")}
+            showGenderFilter={false}
+            showStatusFilter={true}
+            onStatusFilter={handleStatusFilter}
+            showExport={true}
+            onExport={handleExport}
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+          />
+          <UserAndRoleList
+            searchQuery={filters.searchQuery}
+            statusFilter={filters.selectedStatus}
+          />
+        </>
+        {/* )} */}
 
-        {activeTab === "roles-permissions" && <UserPermissionTab />}
+        {/* {activeTab === "roles-permissions" && <UserPermissionTab />} */}
       </main>
     </div>
   );
