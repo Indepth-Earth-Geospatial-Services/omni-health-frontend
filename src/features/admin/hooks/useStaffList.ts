@@ -93,21 +93,19 @@ export const useStaffList = (facilityId: string) => {
 
   /**
    * Dynamic Column Visibility
-   * Checks the current data to decide which columns to show.
-   * Example: If no staff member has a "gender" field, hide the Gender column.
+   * Shows columns based on schema field existence (not data presence).
+   * Checks if the field exists in the schema (key is present), regardless of null values.
    */
   const columnVisibility = {
-    hasGender: staffs.some((s) => s.gender),
-    hasRank: staffs.some((s) => s.rank_cadre),
-    hasGradeLevel: staffs.some((s) => s.grade_level),
-    hasPhone: staffs.some((s) => s.phone_number),
-    hasEmail: staffs.some((s) => s.email),
-    hasDateFirstAppt: staffs.some((s) => s.date_first_appointment),
-    hasDateOfBirth: staffs.some((s) => s.date_of_birth),
-    hasQualifications: staffs.some(
-      (s) => s.qualifications && Object.keys(s.qualifications).length > 0,
-    ),
-    hasStatus: staffs.some((s) => s.is_active !== undefined),
+    hasGender: staffs.some((s) => "gender" in s),
+    hasRank: staffs.some((s) => "rank_cadre" in s),
+    hasGradeLevel: staffs.some((s) => "grade_level" in s),
+    hasPhone: staffs.some((s) => "phone_number" in s),
+    hasEmail: staffs.some((s) => "email" in s),
+    hasDateFirstAppt: staffs.some((s) => "date_first_appointment" in s),
+    hasDateOfBirth: staffs.some((s) => "date_of_birth" in s),
+    hasQualifications: staffs.some((s) => "qualifications" in s),
+    hasStatus: staffs.some((s) => "is_active" in s),
   };
 
   // ============================================================================

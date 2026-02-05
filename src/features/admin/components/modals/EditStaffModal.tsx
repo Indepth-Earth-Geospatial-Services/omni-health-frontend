@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, Save } from "lucide-react";
-import { useStaffSchema } from "@/features/admin/hooks/use-admin-staff";
+import { useStaffSchema } from "@/features/admin/hooks/useAdminStaff";
 import type { StaffMember } from "@/services/admin.service";
 
 interface EditStaffModalProps {

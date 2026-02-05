@@ -38,6 +38,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
     setEditModal,
     deleteModal,
     setDeleteModal,
+    handleSearch,
     handleNextPage,
     handlePreviousPage,
     handleAddStaff,
@@ -55,7 +56,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
         <TableHeaders
           title="Staff Management"
           searchPlaceholder="Search staff..."
-          onSearch={() => {}}
+          onSearch={handleSearch}
           buttonLabel="Add New Staff"
           onButtonClick={() => setIsModalOpen(true)}
         />
@@ -76,7 +77,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
         <TableHeaders
           title="Staff Management"
           searchPlaceholder="Search staff..."
-          onSearch={() => {}}
+          onSearch={handleSearch}
           buttonLabel="Add New Staff"
           onButtonClick={() => setIsModalOpen(true)}
         />
@@ -100,7 +101,7 @@ const StaffList = ({ facilityId }: StaffListProps) => {
       <TableHeaders
         title="Staff Management"
         searchPlaceholder="Search staff..."
-        onSearch={(value) => console.log(value)}
+        onSearch={handleSearch}
         buttonLabel="Add New Staff"
         onButtonClick={() => setIsModalOpen(true)}
       />

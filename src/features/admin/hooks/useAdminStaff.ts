@@ -16,8 +16,10 @@ import {
   type AddEquipmentResponse,
   type AddInfrastructureResponse,
   type StaffSearchParams,
+  type UpdateFacilityProfileRequest,
 } from "@/services/admin.service";
 
+import { FACILITY_KEYS } from "@/constants";
 import { toast } from "sonner";
 
 // Query keys for admin staff
@@ -40,7 +42,7 @@ export const useAdminStaff = (
     queryKey: adminStaffKeys.list(facilityId, params),
     queryFn: () => adminService.searchStaff({ facilityId, ...params }),
     placeholderData: keepPreviousData,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     enabled: !!facilityId,
     retry: 2,
@@ -133,7 +135,7 @@ export const useStaffSchema = (facilityId: string) => {
         is_active: { type: "boolean", nullable: true },
       };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
     refetchOnWindowFocus: false,
     enabled: !!facilityId,
   });
@@ -152,7 +154,7 @@ export const useFacilityInventory = (facilityId: string) => {
     queryKey: AdminInventoryKeys.facility(facilityId),
     queryFn: () => adminService.getFacilityInventory(facilityId),
     enabled: !!facilityId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: 2,
   });
@@ -299,6 +301,39 @@ export const useDeleteFacilityImage = (facilityId: string) => {
     onError: (error) => {
       console.error("Failed to delete image:", error);
       toast.error("Failed to delete image");
+    },
+  });
+};
+
+/**
+ * Hook to Update Facility Profile
+ */
+
+export const useUpdateFacilityProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      facilityId,
+      data,
+    }: {
+      facilityId: string;
+      data: UpdateFacilityProfileRequest;
+    }) => adminService.updateFacilityProfile({ facilityId, data }),
+    onSuccess: (_, variables) => {
+      // Invalidate the specific facility query to refetch fresh data
+      // Use FACILITY_KEYS to match the query key used in useFacility hook
+      queryClient.invalidateQueries({
+        queryKey: FACILITY_KEYS.facility(variables.facilityId),
+      });
+      // Also invalidate all facilities list
+      queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.allFacilities() });
+
+      toast.success("Facility profile updated successfully");
+    },
+    onError: (error: any) => {
+      console.error("Failed to update profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     },
   });
 };

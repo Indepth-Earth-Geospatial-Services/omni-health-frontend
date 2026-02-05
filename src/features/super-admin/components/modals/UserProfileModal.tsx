@@ -37,6 +37,11 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
     return isToday ? `today, ${timeStr}` : date.toLocaleDateString();
   };
 
+  // const handleEditFacility = () => {
+  //   onClose();
+  //   onEditFacility?.();
+  // };
+
   return (
     <>
       {/* Backdrop */}
@@ -74,6 +79,43 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Action Buttons */}
+        {/* <div className="flex flex-wrap items-center gap-2 px-6 py-3">
+          <Button
+            onClick={handleEditFacility}
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs"
+          >
+            <Edit size={14} />
+            Edit Facility
+          </Button>
+          <Button
+            onClick={handleContact}
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs"
+            disabled={!facility.contact_info?.phone}
+          >
+            <MessageSquare size={14} />
+            Contact
+          </Button> */}
+        {/* <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+            <FileText size={14} />
+            Request Report
+          </Button> */}
+        {/* <Button
+            onClick={handleOpenMap}
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs"
+            disabled={!facility.facility_id}
+          >
+            <MapPinIcon size={14} />
+            View on Map
+          </Button>
+        </div> */}
 
         {/* Tabs */}
         <div className="mx-4 rounded-lg border border-slate-200 bg-[#F6F8FA] px-2 py-2">

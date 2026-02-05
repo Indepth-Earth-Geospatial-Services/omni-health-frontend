@@ -9,21 +9,28 @@ import {
   Clock,
   Users,
   MapPin,
+  Stethoscope, // Added for Services
+  Star, // Added for Ratings
+  Mail, // Added for Email
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useAuthStore } from "@/store/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
-import { useAdminStaff } from "@/features/admin/hooks/use-admin-staff";
+import EditFacilityProfileModal from "../modals/EditFacilityProfileModal";
 
 const LoadingSkeleton = ({ className }: { className?: string }) => (
   <div className={`animate-pulse rounded bg-slate-200 ${className}`} />
 );
 
-export default function Facility() {
+export default function FacilityProfile() {
+  // NEW State for Edit Modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // Collapsible section states
   const [isFacilityOverviewOpen, setIsFacilityOverviewOpen] = useState(true);
   const [isOperatingHoursOpen, setIsOperatingHoursOpen] = useState(true);
   const [isStaffInventory, setIsStaffInventory] = useState(true);
+  const [isServicesOpen, setIsServicesOpen] = useState(true); // New State for Services
   const [isSpecialistsOpen, setIsSpecialistsOpen] = useState(true);
   const [isActivityOpen, setIsActivityOpen] = useState(true);
 
@@ -32,14 +39,6 @@ export default function Facility() {
   const facilityId = facilityIds?.[0] || "";
   const { data: facilityData, isLoading, isError } = useFacility(facilityId);
   const facility = facilityData?.facility;
-  // console.log("Facility Data:", facilityData);
-
-  // Staff data for Specialist Availability
-  const {
-    data: staffData,
-    isLoading: isStaffLoading,
-    isError: isStaffError,
-  } = useAdminStaff(facilityId, 1, 50);
 
   // Time formatting helpers
   const formatTime = (time: string): string => {
@@ -82,6 +81,18 @@ export default function Facility() {
     return formatTimeRange(saturday);
   };
 
+  // Date formatting helper
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Map helpers
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -93,11 +104,30 @@ export default function Facility() {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-6 flex justify-end">
-        <Button type="button" variant="default" size="xl" className="text-lg">
-          <Calendar size={18} />
-          Edit Profile
-        </Button>
+      <div className="w-full">
+        {/* Header */}
+        <div className="mb-6 flex justify-end">
+          <Button
+            type="button"
+            variant="default"
+            size="xl"
+            className="text-lg"
+            onClick={() => setIsEditModalOpen(true)} // Open the modal here
+          >
+            <Calendar size={18} />
+            Edit Profile
+          </Button>
+        </div>
+
+        {/* ... Rest of your component (Grid Layout, Facility Overview, etc) ... */}
+
+        {/* Add the Modal at the bottom */}
+        <EditFacilityProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          facilityId={facilityId}
+          currentData={facility}
+        />
       </div>
 
       {/* Main Grid Layout */}
@@ -151,15 +181,7 @@ export default function Facility() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="font-geist mb-1.5 block text-[19px] font-normal text-black">
-                      Officer in-Charge
-                    </label>
-                    <div className="font-geist w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-normal text-[#868C98]">
-                      {facility?.contact_info?.phone || "Not available"}
-                    </div>
-                  </div>
-
+                  {/* Address */}
                   <div>
                     <label className="font-giest mb-1.5 block text-[19px] font-normal text-black">
                       Address
@@ -169,6 +191,17 @@ export default function Facility() {
                     </div>
                   </div>
 
+                  {/* Category */}
+                  <div>
+                    <label className="font-giest mb-1.5 block text-[19px] font-normal text-black">
+                      Category
+                    </label>
+                    <div className="font-giest w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-normal text-[#868C98]">
+                      {facility?.facility_category || "Not available"}
+                    </div>
+                  </div>
+
+                  {/* Description */}
                   <div>
                     <label className="font-geist mb-1.5 block text-[19px] font-normal text-black">
                       Facility Description
@@ -176,9 +209,72 @@ export default function Facility() {
                     <div className="font-geist min-h-[100px] w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] leading-tight font-normal tracking-[0%] text-[#868C98]">
                       A comprehensive healthcare facility providing primary and
                       specialized medical services to the{" "}
-                      {facility?.facility_lga || "local"} community. Our team of
-                      dedicated healthcare professionals is committed to
-                      delivering quality care with compassion and excellence.
+                      {facility?.town || facility?.facility_lga || "local"}{" "}
+                      community. Our team of dedicated healthcare professionals
+                      is committed to delivering quality care with compassion
+                      and excellence.
+                    </div>
+                  </div>
+
+                  {/* Contact & Performance Section */}
+                  <div className="mt-6 border-t border-slate-100 pt-4">
+                    <h4 className="mb-4 text-[17px] font-medium text-slate-800">
+                      Contact & Performance
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {/* Phone */}
+                      <div>
+                        <label className="mb-1 block text-sm text-slate-500">
+                          Officer in-Charge / Phone
+                        </label>
+                        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#868C98]">
+                          {facility?.contact_info?.phone || "Not available"}
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className="mb-1 block text-sm text-slate-500">
+                          Contact Email
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#868C98]">
+                          <Mail size={16} className="text-slate-400" />
+                          <span className="truncate">
+                            {facility?.contact_info?.email || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Rating */}
+                      <div>
+                        <label className="mb-1 block text-sm text-slate-500">
+                          Average Rating
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#868C98]">
+                          <Star
+                            size={16}
+                            className="fill-yellow-400 text-yellow-400"
+                          />
+                          <span className="font-medium text-slate-700">
+                            {facility?.average_rating || 0}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            ({facility?.total_reviews || 0} reviews)
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Last Updated */}
+                      <div>
+                        <label className="mb-1 block text-sm text-slate-500">
+                          Last Updated
+                        </label>
+                        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#868C98]">
+                          <span className="text-sm">
+                            {formatDate(facility?.last_updated || "")}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -187,7 +283,7 @@ export default function Facility() {
           )}
         </div>
 
-        {/* ==================== RIGHT COLUMN (Operating Hours + Staff) ==================== */}
+        {/* ==================== RIGHT COLUMN (Operating Hours + Staff + Services) ==================== */}
         <div className="flex flex-col gap-6">
           {/* Operating Hours */}
           <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
@@ -216,7 +312,7 @@ export default function Facility() {
             </button>
 
             {isOperatingHoursOpen && (
-              <div className="px-6 pt-4 pb-3">
+              <div className="px-6 pt-4 pb-6">
                 {isLoading ? (
                   <div className="grid grid-cols-2 gap-3">
                     <LoadingSkeleton className="h-14 w-full rounded-xl" />
@@ -251,7 +347,7 @@ export default function Facility() {
           </div>
 
           {/* ==================== STAFF INVENTORY ==================== */}
-          <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+          <div className="max-h-[360px] overflow-auto rounded-2xl border-2 border-slate-200 bg-white">
             <button
               onClick={() => setIsStaffInventory(!isStaffInventory)}
               className="flex w-full items-center justify-between px-6 py-3 transition-colors hover:bg-slate-50"
@@ -293,10 +389,76 @@ export default function Facility() {
               </div>
             )}
           </div>
+
+          {/* ==================== SERVICES LIST (NEW) ==================== */}
+          <div className="max-h-[342px] overflow-auto rounded-2xl border-2 border-slate-200 bg-white">
+            <button
+              onClick={() => setIsServicesOpen(!isServicesOpen)}
+              className="flex w-full items-center justify-between px-6 py-3 transition-colors hover:bg-slate-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                  <Stethoscope size={20} className="text-slate-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-geist text-[18px] font-medium text-black">
+                    Service List
+                  </h3>
+                  <p className="font-geist text-sm font-normal text-[#868C98]">
+                    Medical services offered
+                  </p>
+                </div>
+              </div>
+              {isServicesOpen ? (
+                <ChevronUp size={20} className="text-slate-400" />
+              ) : (
+                <ChevronDown size={20} className="text-slate-400" />
+              )}
+            </button>
+
+            {isServicesOpen && (
+              <div className="px-6 py-6">
+                {isLoading ? (
+                  <div className="flex flex-wrap gap-2 py-4">
+                    <LoadingSkeleton className="h-8 w-24 rounded-full" />
+                    <LoadingSkeleton className="h-8 w-32 rounded-full" />
+                    <LoadingSkeleton className="h-8 w-20 rounded-full" />
+                  </div>
+                ) : facility?.services_list &&
+                  facility.services_list.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {facility.services_list.map(
+                      (service: string, idx: number) => {
+                        // Clean up quotes from the string (e.g. "“dermatology”" -> Dermatology)
+                        const cleanService = service
+                          .replace(/[“”"']/g, "") // Remove all types of quotes
+                          .trim()
+                          .toLowerCase()
+                          .replace(/\b\w/g, (c) => c.toUpperCase()); // Title Case
+
+                        return (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700"
+                          >
+                            {cleanService}
+                          </span>
+                        );
+                      },
+                    )}
+                  </div>
+                ) : (
+                  <p className="py-4 text-center text-sm text-slate-400">
+                    No services listed
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ==================== SPECIALIST AVAILABILITY ==================== */}
-        <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+        <div className="max-h-[560px] overflow-auto rounded-2xl border-2 border-slate-200 bg-white">
           <button
             onClick={() => setIsSpecialistsOpen(!isSpecialistsOpen)}
             className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
@@ -323,7 +485,7 @@ export default function Facility() {
 
           {isSpecialistsOpen && (
             <div className="space-y-3 p-6">
-              {isStaffLoading ? (
+              {isLoading ? (
                 <>
                   {[1, 2, 3, 4].map((i) => (
                     <div
@@ -334,42 +496,47 @@ export default function Facility() {
                       <div className="flex-1 space-y-2">
                         <LoadingSkeleton className="h-4 w-32" />
                         <LoadingSkeleton className="h-3 w-40" />
-                        <LoadingSkeleton className="h-3 w-24" />
                       </div>
                     </div>
                   ))}
                 </>
-              ) : isStaffError ? (
+              ) : isError ? (
                 <p className="py-4 text-center text-sm text-red-500">
                   Failed to load specialists. Please try again later.
                 </p>
-              ) : staffData?.staff && staffData.staff.length > 0 ? (
-                staffData.staff.map((staff) => (
-                  <div
-                    key={staff.staff_id}
-                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#375DFB] text-sm font-medium text-white">
-                      {staff.full_name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .substring(0, 2)
-                        .toUpperCase() || "??"}
+              ) : facility?.specialists && facility.specialists.length > 0 ? (
+                facility.specialists.map((specialist: string, idx: number) => {
+                  // Format the string: "medical_records_technician" -> "Medical Records Technician"
+                  const formattedName = specialist
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase());
+
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#375DFB] text-sm font-medium text-white">
+                        {formattedName.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex flex-1 justify-between">
+                        <div>
+                          <h4 className="font-geist text-[15px] font-medium text-black">
+                            {formattedName}
+                          </h4>
+                          <p className="font-geist text-[13px] text-[#868C98]">
+                            Facility Specialist
+                          </p>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                            Available
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-geist text-[15px] font-medium text-black">
-                        {staff.full_name || "Unknown"}
-                      </h4>
-                      <p className="font-geist text-[13px] text-[#868C98]">
-                        {staff.email || "No email available"}
-                      </p>
-                      <p className="font-geist mt-0.5 text-[13px] text-[#375DFB]">
-                        {staff.rank_cadre || "General Consulting"}
-                      </p>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="font-geist py-4 text-center text-sm text-[#868C98]">
                   No specialists listed for this facility
@@ -380,7 +547,7 @@ export default function Facility() {
         </div>
 
         {/* ==================== ACTIVITY OVERVIEW ==================== */}
-        <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+        <div className="max-h-[560px] overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
           <button
             onClick={() => setIsActivityOpen(!isActivityOpen)}
             className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
@@ -428,7 +595,9 @@ export default function Facility() {
                       Local Government Area
                     </p>
                     <p className="font-geist mb-2 text-[19px] font-normal text-black">
-                      {facility?.facility_lga || "Not available"}
+                      {facility?.town ||
+                        facility?.facility_lga ||
+                        "Not available"}
                     </p>
                   </div>
 
