@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useFacilityStore } from "../store/facility-store";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export function useFacilityData() {
   const nearestFacility = useFacilityStore((s) => s.nearestFacility);

@@ -11,9 +11,9 @@ import DownloadNominalRollModal from "../modals/DownloadNominalRollModal";
 import ConfirmationModal from "@/components/shared/modals/ConfirmationModal";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
 import type { StaffMember } from "@/services/admin.service";
-import { useStaffQuery } from "../../hooks/seStaffQuery"; // Adjust path
-import { StaffRow } from "../layouts/StaffRow"; // Adjust path
-import { StaffPagination } from "../layouts/Staff.Pagination"; // Adjust path
+import { useStaffQuery } from "../../hooks/seStaffQuery";
+import { StaffRow } from "../layouts/StaffRow";
+import { StaffPagination } from "../layouts/Staff.Pagination";
 
 const StaffTables = () => {
   const queryClient = useQueryClient();
