@@ -10,7 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { ActiveFilters } from "../atoms/active-filters";
 import { SelectedFilters } from "@/types/search-filter";
 import { useShallow } from "zustand/react/shallow";
@@ -128,6 +128,7 @@ export function SearchResults({
   // Update filter data when filter sheet closes
   useEffect(() => {
     if (!isFilterOpen) {
+      // eslint-disable-next-line
       setFilterData(selectedFilters);
     }
   }, [isFilterOpen, selectedFilters]);

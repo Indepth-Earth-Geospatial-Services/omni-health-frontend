@@ -1,24 +1,28 @@
 "use client";
-import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
 import FacilityListItem from "@/components/shared/molecules/facility-list-item";
+import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
+import { useFacilityStore } from "@/features/user/store/facility-store";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { useFacilitySearch } from "@/hooks/use-facility-search";
-import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
+import { useSearchFilterStore } from "@/store/search-filter-store";
+import { Facility } from "@/types";
+import { SelectedFilters } from "@/types/search-filter";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { Button } from "../../../components/ui/button";
-import { useSearchFilterStore } from "@/store/search-filter-store";
-import { useDebounce } from "@/hooks/useDebounce";
-import { SelectedFilters } from "@/types/search-filter";
-import { Facility } from "@/types";
-import { useFacilityStore } from "@/features/user/store/facility-store";
+import EmptyState from "../components/empty-state";
+import Error from "../components/error";
 function FacilitiesPage() {
   const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
   const [filters, setFilters] = useState<SelectedFilters>({});
+
   const searchInput = useSearchFilterStore((state) => state.searchQuery);
+
   const setSelectedFacility = useFacilityStore(
     (state) => state.setSelectedFacility,
   );
@@ -27,7 +31,6 @@ function FacilitiesPage() {
     (state) => state.clearAllFilters,
   );
 
-  // Debounce the search input (500ms delay)
   const debouncedSearchInput = useDebounce(searchInput, 500);
 
   // Combine filters with search input only when search is at least 3 characters
@@ -66,8 +69,11 @@ function FacilitiesPage() {
   // Calculate total facilities
   const totalFacilities = data?.pages[0]?.totalCount;
 
-  // Flatten all facilities from pages
-  const allFacilities = data?.pages.flatMap((page) => page.facilities) || [];
+  // Flatten all facilities from pages and cache
+  const allFacilities = useMemo(
+    () => data?.pages.flatMap((page) => page.facilities) || [],
+    [data],
+  );
 
   // Function to load more facilities
   const loadMore = useCallback(() => {
@@ -84,6 +90,7 @@ function FacilitiesPage() {
     [router, setSelectedFacility],
   );
 
+  // eslint-disable-next-line
   const handleFilter = useCallback((filterValues: any) => {
     setFilters(filterValues);
   }, []);
@@ -119,11 +126,7 @@ function FacilitiesPage() {
           </div>
         </div>
 
-        <SearchAndFilter
-          key="facilities variant"
-          includeFilter={true}
-          onApplyFilters={handleFilter}
-        />
+        <SearchAndFilter includeFilter={true} onApplyFilters={handleFilter} />
       </div>
 
       {/* Loading State */}
@@ -136,47 +139,14 @@ function FacilitiesPage() {
 
       {/* Error State */}
       {error && (
-        <div className="mt-8 rounded-lg border border-red-200 bg-red-50 p-6">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-6 w-6 text-red-500" />
-            <h3 className="font-medium text-red-700">
-              Unable to load facilities
-            </h3>
-          </div>
-          <p className="mt-2 text-sm text-red-600">
-            {error instanceof Error
-              ? error.message
-              : "An unexpected error occurred"}
-          </p>
-          <Button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            variant="outline"
-            className="mt-4"
-          >
-            {isRefetching ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Try Again
-          </Button>
-        </div>
+        <Error error={error} isRefetching={isRefetching} refetch={refetch} />
       )}
 
       {/* Success State */}
       {!isLoading && !error && (
         <div className="mt-4">
           {allFacilities.length === 0 ? (
-            <div className="py-12 text-center">
-              <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-4 text-lg font-medium text-gray-900">
-                No facilities found
-              </h3>
-              <p className="mt-2 text-gray-600">
-                Try adjusting your filters or check back later.
-              </p>
-            </div>
+            <EmptyState />
           ) : (
             <>
               <div className="space-y-3">
@@ -216,18 +186,11 @@ function FacilitiesPage() {
               {/* No more facilities */}
               {!hasNextPage && allFacilities.length > 0 && (
                 <p className="mt-6 text-center text-sm text-gray-500">
-                  You've reached the end of the list
+                  You&apos;ve reached the end of the list
                 </p>
               )}
             </>
           )}
-        </div>
-      )}
-
-      {/* Loading next page indicator */}
-      {isFetchingNextPage && (
-        <div className="mt-4 flex justify-center">
-          <Loader2 className="text-primary h-6 w-6 animate-spin" />
         </div>
       )}
     </main>

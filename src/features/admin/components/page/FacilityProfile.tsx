@@ -61,6 +61,7 @@ export default function FacilityProfile() {
     return formatTimeRange(saturday);
   };
 
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -200,7 +201,7 @@ interface FacilityData {
   lon?: number;
   average_rating?: number;
   total_reviews?: number;
-  last_updated?: string;
+  last_updated?: string | Date;
   working_hours?: {
     monday?: string;
     saturday?: string;
@@ -298,7 +299,7 @@ function FacilityOverviewContent({
           </div>
           <FieldDisplay
             label="Last Updated"
-            value={formatDate(facility?.last_updated || "")}
+            value={formatDate(String(facility?.last_updated || ""))}
             small
           />
         </div>
