@@ -17,7 +17,7 @@ import InventoryItemModal, {
 import {
   useAddEquipment,
   useAddInfrastructure,
-} from "@/features/admin/hooks/use-admin-staff";
+} from "@/features/admin/hooks/useAdminStaff";
 import { toast } from "sonner";
 
 export default function EquipmentPage() {

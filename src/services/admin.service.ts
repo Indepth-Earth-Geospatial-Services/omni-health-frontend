@@ -90,6 +90,23 @@ export interface AddInfrastructureResponse {
   updated_inventory: InfrastructureInventory;
 }
 
+// --- Add these new interfaces ---
+export interface UpdateFacilityProfileRequest {
+  hfr_id?: string;
+  facility_name?: string;
+  facility_category?: string;
+  lga_id?: number; // API expects lga_id (number) for LGA lookup
+  town?: string; // Town name - maps to facility_lga display
+  address?: string;
+  contact_info?: {
+    phone?: string;
+    email?: string;
+    [key: string]: any;
+  };
+  lat?: number;
+  lon?: number;
+}
+
 export type ExportFormat = "excel" | "csv" | "pdf";
 
 class AdminService {
@@ -97,6 +114,7 @@ class AdminService {
     STAFF: "/admin/staff",
     FACILITY: "/admin/facility",
     EXPORT_STAFF: "/admin/export/staff",
+    PROFILE: "/admin/facility/profile",
   };
 
   constructor() {
@@ -115,6 +133,7 @@ class AdminService {
     this.deleteInfrastructure = this.deleteInfrastructure.bind(this);
     this.updateEquipment = this.updateEquipment.bind(this);
     this.updateInfrastructure = this.updateInfrastructure.bind(this);
+    // this.updateFacilityProfile = this.updateFacilityProfile.bind(this)
   }
 
   /**
@@ -407,6 +426,24 @@ class AdminService {
     await apiClient.delete(`${this.ENDPOINTS.FACILITY}/${facilityId}/images`, {
       data: { image_url: imageUrl },
     });
+  }
+
+  /**
+   * Update Facility Profile
+   * PATCH /admin/facility/profile/{facility_id}
+   */
+  async updateFacilityProfile({
+    facilityId,
+    data,
+  }: {
+    facilityId: string;
+    data: UpdateFacilityProfileRequest;
+  }): Promise<any> {
+    const response = await apiClient.patch(
+      `${this.ENDPOINTS.FACILITY}/profile/${facilityId}`,
+      data,
+    );
+    return response.data;
   }
 }
 

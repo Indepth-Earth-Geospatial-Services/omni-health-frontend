@@ -26,7 +26,7 @@ import {
   useDeleteInfrastructure,
   useUpdateEquipment,
   useUpdateInfrastructure,
-} from "@/features/admin/hooks/use-admin-staff";
+} from "@/features/admin/hooks/useAdminStaff";
 import toast from "react-hot-toast";
 
 interface EquipmentsPageProps {
