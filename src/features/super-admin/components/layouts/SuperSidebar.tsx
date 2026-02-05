@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
-import { useFacility } from "@/hooks/useFacilities";
+import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../../../admin/components/modals/ProfileModal";
 
 const adminMenuItems = [

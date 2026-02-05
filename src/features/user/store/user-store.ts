@@ -9,7 +9,7 @@ export const useUserStore = create<UserStore>()(
       locationError: null,
       isLoadingPosition: false,
       lastUpdated: null,
-      permissionState: "prompt",
+      permissionState: "granted",
 
       setPermissionState(state) {
         set({ permissionState: state });

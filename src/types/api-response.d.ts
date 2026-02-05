@@ -28,7 +28,7 @@ export interface Facility {
   hfr_id?: string;
   image_urls?: string[];
   inventory?: Inventory;
-  last_updated?: string;
+  last_updated?: Date | string;
   lat?: number;
   lon?: number;
   road_distance_meters?: number;
