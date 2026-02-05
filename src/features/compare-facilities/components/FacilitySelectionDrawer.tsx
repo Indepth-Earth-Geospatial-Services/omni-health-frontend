@@ -8,7 +8,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { Facility } from "@/types/api-response";
 import { Spinner } from "@/components/ui/spinner";

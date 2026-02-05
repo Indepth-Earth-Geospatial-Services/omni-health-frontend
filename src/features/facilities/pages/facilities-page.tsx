@@ -2,7 +2,7 @@
 import FacilityListItem from "@/components/shared/molecules/facility-list-item";
 import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
 import { useFacilityStore } from "@/features/user/store/facility-store";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { useFacilitySearch } from "@/hooks/use-facility-search";
 import { useSearchFilterStore } from "@/store/search-filter-store";
