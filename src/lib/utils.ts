@@ -1,4 +1,4 @@
-import { Facility } from "@/types";
+import { Facility, WorkingHours } from "@/types";
 import axios from "axios";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -98,7 +98,7 @@ export const isEmptyValue = (value: any): boolean => {
 };
 
 export const getWorkingHoursForDisplay = (
-  workingHours: Record<string, string> = {},
+  workingHours: WorkingHours = {},
 ): string => {
   const days = [
     "monday",
@@ -191,19 +191,22 @@ export const getFacilityDefaults = (facility?: Partial<Facility>): Facility => {
     // Complex Objects
     inventory: {
       equipment: {
-        refrigerators: facility?.inventory?.equipment?.refrigerators ?? 0,
-        sphygmomanometers:
-          facility?.inventory?.equipment?.sphygmomanometers ?? 0,
-        stethoscopes: facility?.inventory?.equipment?.stethoscopes ?? 0,
+        sphygmomanometer: facility?.inventory?.equipment?.sphygmomanometer ?? 0,
+        stethoscope_littman:
+          facility?.inventory?.equipment?.stethoscope_littman ?? 0,
+        baby_cots: facility?.inventory?.equipment?.baby_cots ?? 0,
+
+        delivery_bed: facility?.inventory?.equipment?.delivery_bed ?? 0,
+
+        inpatient_beds_with_mattress:
+          facility?.inventory?.equipment?.inpatient_beds_with_mattress ?? 0,
+
+        work_surface_for_resuscitation_of_newborn_paediatric_resuscitation_bed_with_radiant_warmer:
+          facility?.inventory?.equipment
+            ?.work_surface_for_resuscitation_of_newborn_paediatric_resuscitation_bed_with_radiant_warmer ??
+          0,
       },
-      infrastructure: {
-        baby_cots: facility?.inventory?.infrastructure?.baby_cots ?? 0,
-        delivery_beds: facility?.inventory?.infrastructure?.delivery_beds ?? 0,
-        inpatient_beds:
-          facility?.inventory?.infrastructure?.inpatient_beds ?? 0,
-        resuscitation_beds:
-          facility?.inventory?.infrastructure?.resuscitation_beds ?? 0,
-      },
+      infrastructure: {},
     },
 
     contact_info: {
@@ -214,7 +217,10 @@ export const getFacilityDefaults = (facility?: Partial<Facility>): Facility => {
     working_hours: {
       monday: facility?.working_hours?.monday ?? "Closed",
       tuesday: facility?.working_hours?.tuesday ?? "Closed",
-      wednesday: facility?.working_hours?.wednesday ?? "Closed",
+      wednesday:
+        facility?.working_hours?.wednesday ??
+        facility?.working_hours?.wedsnesday ??
+        "Closed",
       thursday: facility?.working_hours?.thursday ?? "Closed",
       friday: facility?.working_hours?.friday ?? "Closed",
       saturday: facility?.working_hours?.saturday ?? "Closed",
@@ -224,10 +230,14 @@ export const getFacilityDefaults = (facility?: Partial<Facility>): Facility => {
 
     // Metadata & Location
     last_updated: facility?.last_updated
-      ? new Date(facility.last_updated)
-      : new Date(),
+      ? typeof facility.last_updated === "string"
+        ? facility.last_updated
+        : new Date().toISOString()
+      : new Date().toISOString(),
+
     lat: facility?.lat ?? 0,
     lon: facility?.lon ?? 0,
+
     road_distance_meters: facility?.road_distance_meters ?? 0,
     travel_time_minutes: facility?.travel_time_minutes ?? 0,
     route_geometry: {
