@@ -28,8 +28,8 @@ function UserPage() {
 
   // 2. Derived Data & Actions
   const { nearYouFacilities, otherFacilities } = useFacilityData();
+  console.log(otherFacilities);
   const drawerActions = useDrawerActions();
-
   // 3. Cleanup Effect
   useEffect(() => {
     return () => clearAllFilters();

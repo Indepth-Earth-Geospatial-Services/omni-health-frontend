@@ -9,7 +9,7 @@ export interface UserState {
   lastUpdated: number | null;
   locationError: string | null;
   isLoadingPosition: boolen;
-  permissionState: "prompt" | "granted" | "denied" | "unsupported";
+  permissionState: "prompt" | "granted" | "denied" | "unsupported" | null;
 }
 
 export interface UserActions {
