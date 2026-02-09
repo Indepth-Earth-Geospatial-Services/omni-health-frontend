@@ -1,4 +1,5 @@
 import { Inventory } from "@/types";
+import { memo } from "react";
 import { AdditionalInfoSection } from "./additional-info-section";
 import { ContactSection } from "./contact-section";
 import { ImageGallery } from "./image-gallery";
@@ -7,7 +8,6 @@ import { ServicesSection } from "./service-section";
 import { SpecialistsSection } from "./specialists-section";
 import { StatsCards } from "./stats-cards";
 import { WorkingHoursSection } from "./working-hours-section";
-import { memo, Suspense } from "react";
 interface OverviewContentProps {
   image_urls: string[];
   avgDailyPatients: number | string;

@@ -88,11 +88,15 @@ function FacilityDetailsBase({
 
   // Derived data
   const formattedRating = formatRating(average_rating);
+
   const totalBeds =
-    (inventory?.infrastructure.inpatient_beds || 0) +
-    (inventory?.infrastructure.baby_cots || 0) +
-    (inventory?.infrastructure.delivery_beds || 0) +
-    (inventory?.infrastructure.resuscitation_beds || 0);
+    (inventory?.equipment?.inpatient_beds_with_mattress || 0) +
+    (inventory?.equipment?.baby_cots || 0) +
+    (inventory?.equipment?.delivery_bed || 0) +
+    (inventory?.equipment
+      ?.work_surface_for_resuscitation_of_newborn_paediatric_resuscitation_bed_with_radiant_warmer ||
+      0);
+
   const formattedLastUpdated = formatDate(last_updated);
   const workingHoursText = getWorkingHoursForDisplay(working_hours);
 

@@ -9,17 +9,22 @@ interface InventorySectionProps {
 export const InventorySection: React.FC<InventorySectionProps> = ({
   inventory,
 }) => {
-  const {
-    stethoscopes = 0,
-    sphygmomanometers = 0,
-    refrigerators = 0,
-  } = inventory.equipment;
-  const {
-    inpatient_beds = 0,
-    baby_cots = 0,
-    delivery_beds = 0,
-    resuscitation_beds = 0,
-  } = inventory.infrastructure;
+  const eq = inventory?.equipment || {};
+
+  const stethoscopes = eq.stethoscope_littman || 0;
+  const sphygmomanometers = eq.sphygmomanometer || 0;
+
+  const refrigerators =
+    (eq.refrigerator_100_120l_capacity || 0) +
+    (eq.refrigerator_medium_60l || 0) +
+    (eq.solar_direct_drive_sdd_refrigerator || 0);
+
+  const inpatient_beds = eq.inpatient_beds_with_mattress || 0;
+  const baby_cots = eq.baby_cots || 0;
+  const delivery_beds = eq.delivery_bed || 0;
+  const resuscitation_beds =
+    eq.work_surface_for_resuscitation_of_newborn_paediatric_resuscitation_bed_with_radiant_warmer ||
+    0;
 
   const inventoryItems = [
     {
@@ -32,7 +37,11 @@ export const InventorySection: React.FC<InventorySectionProps> = ({
       value: delivery_beds,
       icon: <Bed className="h-4 w-4" />,
     },
-    { name: "Baby Cots", value: baby_cots, icon: <Baby className="h-4 w-4" /> },
+    {
+      name: "Baby Cots",
+      value: baby_cots,
+      icon: <Baby className="h-4 w-4" />,
+    },
     {
       name: "Resuscitation Beds",
       value: resuscitation_beds,
