@@ -43,7 +43,7 @@ const adminMenuItems = [
     icon: Hospital,
     href: "/super-admin/analytics",
   },
-  //   { label: "Settings", icon: Settings, href: "/admin/settings" },
+  { label: "Settings", icon: Settings, href: "/super-admin/settings" },
 ];
 
 const userMenuItems = [

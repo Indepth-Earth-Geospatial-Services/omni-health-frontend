@@ -12,7 +12,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { useAuthStore } from "@/store/auth-store";
+import { useCurrentFacilityId } from "@/store/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import { useCollapsibleSections } from "@/hooks/use-collapsible-sections";
 import { CollapsibleSection, LoadingSkeleton } from "../ui/CollapsibleSection";
@@ -40,8 +40,7 @@ export default function FacilityProfile() {
   const sections = useCollapsibleSections(SECTIONS);
 
   // Facility data
-  const { facilityIds } = useAuthStore();
-  const facilityId = facilityIds?.[0] || "";
+  const facilityId = useCurrentFacilityId();
   const { data: facilityData, isLoading, isError } = useFacility(facilityId);
   const facility = facilityData?.facility;
 

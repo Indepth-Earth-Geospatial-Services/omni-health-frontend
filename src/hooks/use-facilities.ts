@@ -1,5 +1,6 @@
 import {
   useInfiniteQuery,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -125,6 +126,18 @@ export const useNearestFacility = (
     enabled: !!coordinates,
     retry: 1,
     ...options,
+  });
+};
+
+export const useMultipleFacilities = (ids: string[]) => {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: FACILITY_KEYS.facility(id),
+      queryFn: () => facilityService.getFacility(id),
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      enabled: !!id,
+    })),
   });
 };
 

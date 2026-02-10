@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore, useCurrentFacilityId } from "@/store/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../modals/ProfileModal";
 
@@ -34,11 +34,11 @@ const SuperAdminMenuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { facilityIds, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Get the first facility ID (admin may manage multiple facilities)
-  const facilityId = facilityIds?.[0] || "";
+  // Get the currently selected facility ID
+  const facilityId = useCurrentFacilityId();
 
   // Check if user is super admin
   const isSuperAdmin = user?.role === "super_admin";
