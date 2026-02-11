@@ -167,7 +167,7 @@ export default function Overview() {
                 </button>
               </div>
 
-              <div className="max-h-100 space-y-4 overflow-y-auto">
+              <div className="max-h-90 space-y-4 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-pulse text-slate-400">

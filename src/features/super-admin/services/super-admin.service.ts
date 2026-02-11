@@ -78,6 +78,26 @@ export interface CreateStaffResponse {
   is_active: boolean;
 }
 
+export interface UpdateStaffRequest {
+  full_name?: string;
+  gender?: string;
+  rank_cadre?: string;
+  grade_level?: string;
+  phone_number?: string;
+  email?: string;
+  date_first_appointment?: string;
+  date_of_birth?: string;
+  qualifications?: Record<string, any>;
+  is_active?: boolean;
+  // Optional fields — safe for future backend support
+  confirmation_of_appointment?: string;
+  date_of_present_appointment?: string;
+  lga_of_origin?: string;
+  years_in_present_station?: number | string;
+  qualification_date?: string;
+  remark?: string;
+}
+
 export interface SearchStaffParams {
   facility_id: string;
   name?: string;
@@ -242,6 +262,7 @@ class SuperAdminService {
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
     DELETE_STAFF: "/admin/staff", // DELETE /admin/staff/{staff_id}
+    UPDATE_STAFF: "/admin/staff", // PATCH /admin/staff/{staff_id}
     EXPORT_STAFF: "/admin/export/staff", // Export staff to CSV or Excel
     EXPORT_USERS: "/admin/export/users", // Export users to CSV or Excel
     FACILITIES_SEARCH: "/facilities/search",
@@ -260,6 +281,7 @@ class SuperAdminService {
     this.createStaff = this.createStaff.bind(this);
     this.searchStaff = this.searchStaff.bind(this);
     this.deleteStaff = this.deleteStaff.bind(this);
+    this.updateStaff = this.updateStaff.bind(this);
     this.exportStaff = this.exportStaff.bind(this);
     this.exportUsers = this.exportUsers.bind(this);
     this.exportFacilities = this.exportFacilities.bind(this);
@@ -438,6 +460,49 @@ class SuperAdminService {
    */
   async deleteStaff(staffId: string): Promise<void> {
     await apiClient.delete(`${this.ENDPOINTS.DELETE_STAFF}/${staffId}`);
+  }
+
+  /**
+   * Update a staff member by staff_id
+   * PATCH /api/v1/admin/staff/{staff_id}
+   * Only sends fields the API schema accepts
+   */
+  async updateStaff(
+    staffId: string,
+    data: UpdateStaffRequest,
+  ): Promise<StaffMember> {
+    // Only send fields the API currently accepts
+    const {
+      full_name,
+      gender,
+      rank_cadre,
+      grade_level,
+      phone_number,
+      email,
+      date_first_appointment,
+      date_of_birth,
+      qualifications,
+      is_active,
+    } = data;
+
+    const payload: Record<string, unknown> = {};
+    if (full_name !== undefined) payload.full_name = full_name;
+    if (gender !== undefined) payload.gender = gender;
+    if (rank_cadre !== undefined) payload.rank_cadre = rank_cadre;
+    if (grade_level !== undefined) payload.grade_level = grade_level;
+    if (phone_number !== undefined) payload.phone_number = phone_number;
+    if (email !== undefined) payload.email = email;
+    if (date_first_appointment !== undefined)
+      payload.date_first_appointment = date_first_appointment;
+    if (date_of_birth !== undefined) payload.date_of_birth = date_of_birth;
+    if (qualifications !== undefined) payload.qualifications = qualifications;
+    if (is_active !== undefined) payload.is_active = is_active;
+
+    const response = await apiClient.patch(
+      `${this.ENDPOINTS.UPDATE_STAFF}/${staffId}`,
+      payload,
+    );
+    return response.data;
   }
 
   /**

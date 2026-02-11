@@ -42,12 +42,28 @@ export default function LoginForm() {
   const setCurrentFacilityId = useAuthStore(
     (state) => state.setCurrentFacilityId,
   );
+  const pendingFacilitySelection = useAuthStore(
+    (state) => state.pendingFacilitySelection,
+  );
+  const storeFacilityIds = useAuthStore((state) => state.facilityIds);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [shouldShake, setShouldShake] = useState(false);
   const [showFacilityModal, setShowFacilityModal] = useState(false);
   const [pendingFacilityIds, setPendingFacilityIds] = useState<string[]>([]);
+
+  // ✅ Restore facility selection modal on refresh
+  useEffect(() => {
+    if (
+      pendingFacilitySelection &&
+      storeFacilityIds &&
+      storeFacilityIds.length >= 2
+    ) {
+      setPendingFacilityIds(storeFacilityIds);
+      setShowFacilityModal(true);
+    }
+  }, [pendingFacilitySelection, storeFacilityIds]);
 
   // ✅ Show welcome message for verified users
   useEffect(() => {
@@ -193,170 +209,170 @@ export default function LoginForm() {
 
   return (
     <>
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full"
-    >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <motion.div
-          variants={shakeVariants}
-          animate={shouldShake ? "shake" : "idle"}
-        >
-          <FieldGroup className="gap-4">
-            {/* Email Field */}
-            <Controller
-              name="email"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel
-                    className="text-sm font-medium text-gray-700"
-                    htmlFor={field.name}
-                  >
-                    Email Address
-                  </FieldLabel>
-                  <div className="relative">
-                    <Mail
-                      className={`absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 ${
-                        loginError ? "text-red-400" : "text-gray-400"
-                      }`}
-                    />
-                    <Input
-                      {...field}
-                      onChange={handleInputChange(field.onChange)}
-                      id={field.name}
-                      type="email"
-                      aria-invalid={fieldState.invalid || !!loginError}
-                      placeholder="you@example.com"
-                      className={`h-12 rounded-lg border bg-gray-100 pl-12 text-sm transition-all focus:ring-2 focus:outline-none ${errorInputClass}`}
-                      disabled={isLoading}
-                    />
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-
-            {/* Password Field */}
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field>
-                  <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full"
+      >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <motion.div
+            variants={shakeVariants}
+            animate={shouldShake ? "shake" : "idle"}
+          >
+            <FieldGroup className="gap-4">
+              {/* Email Field */}
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
                     <FieldLabel
                       className="text-sm font-medium text-gray-700"
                       htmlFor={field.name}
                     >
-                      Password
+                      Email Address
                     </FieldLabel>
-                    <Link
-                      href="/forgot-password"
-                      className="text-primary text-xs font-medium hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Lock
-                      className={`absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 ${
-                        loginError ? "text-red-400" : "text-gray-400"
-                      }`}
-                    />
-                    <Input
-                      {...field}
-                      onChange={handleInputChange(field.onChange)}
-                      id={field.name}
-                      type={showPassword ? "text" : "password"}
-                      aria-invalid={fieldState.invalid || !!loginError}
-                      placeholder="Enter your password"
-                      className={`h-12 rounded-lg border bg-gray-100 pr-12 pl-12 text-sm transition-all focus:ring-2 focus:outline-none ${errorInputClass}`}
-                      disabled={isLoading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
+                    <div className="relative">
+                      <Mail
+                        className={`absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 ${
+                          loginError ? "text-red-400" : "text-gray-400"
+                        }`}
+                      />
+                      <Input
+                        {...field}
+                        onChange={handleInputChange(field.onChange)}
+                        id={field.name}
+                        type="email"
+                        aria-invalid={fieldState.invalid || !!loginError}
+                        placeholder="you@example.com"
+                        className={`h-12 rounded-lg border bg-gray-100 pl-12 text-sm transition-all focus:ring-2 focus:outline-none ${errorInputClass}`}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Password Field */}
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <div className="flex items-center justify-between">
+                      <FieldLabel
+                        className="text-sm font-medium text-gray-700"
+                        htmlFor={field.name}
+                      >
+                        Password
+                      </FieldLabel>
+                      <Link
+                        href="/forgot-password"
+                        className="text-primary text-xs font-medium hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock
+                        className={`absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 ${
+                          loginError ? "text-red-400" : "text-gray-400"
+                        }`}
+                      />
+                      <Input
+                        {...field}
+                        onChange={handleInputChange(field.onChange)}
+                        id={field.name}
+                        type={showPassword ? "text" : "password"}
+                        aria-invalid={fieldState.invalid || !!loginError}
+                        placeholder="Enter your password"
+                        className={`h-12 rounded-lg border bg-gray-100 pr-12 pl-12 text-sm transition-all focus:ring-2 focus:outline-none ${errorInputClass}`}
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Login Error Message */}
+              {loginError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-sm text-red-500"
+                >
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{loginError}</span>
+                </motion.div>
               )}
-            />
+            </FieldGroup>
+          </motion.div>
 
-            {/* Login Error Message */}
-            {loginError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 text-sm text-red-500"
-              >
-                <AlertCircle className="h-4 w-4" />
-                <span>{loginError}</span>
-              </motion.div>
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="bg-primary hover:bg-primary/90 h-12 w-full rounded-full text-base font-semibold transition-all hover:scale-[1.02]"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
             )}
-          </FieldGroup>
-        </motion.div>
+          </Button>
+        </form>
 
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="bg-primary hover:bg-primary/90 h-12 w-full rounded-full text-base font-semibold transition-all hover:scale-[1.02]"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            "Sign In"
-          )}
-        </Button>
-      </form>
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-sm text-gray-400">or continue with</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
 
-      {/* Divider */}
-      <div className="my-6 flex items-center gap-4">
-        <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-sm text-gray-400">or continue with</span>
-        <div className="h-px flex-1 bg-gray-200" />
-      </div>
+        {/* Social Login */}
+        {/* <SocialLogin /> */}
 
-      {/* Social Login */}
-      {/* <SocialLogin /> */}
+        {/* Register Link */}
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="text-primary font-semibold hover:underline"
+          >
+            Create account
+          </Link>
+        </p>
+      </motion.div>
 
-      {/* Register Link */}
-      <p className="mt-6 text-center text-sm text-gray-600">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="text-primary font-semibold hover:underline"
-        >
-          Create account
-        </Link>
-      </p>
-    </motion.div>
-
-    {showFacilityModal && (
-      <FacilitySelectionModal
-        isOpen={showFacilityModal}
-        facilityIds={pendingFacilityIds}
-        onSelect={handleFacilitySelect}
-      />
-    )}
+      {showFacilityModal && (
+        <FacilitySelectionModal
+          isOpen={showFacilityModal}
+          facilityIds={pendingFacilityIds}
+          onSelect={handleFacilitySelect}
+        />
+      )}
     </>
   );
 }

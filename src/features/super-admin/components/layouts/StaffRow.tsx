@@ -47,7 +47,13 @@ const getInitials = (name: string) => {
   );
 };
 
-export const StaffRow = ({ item, index, serialNumber, onDelete, onEdit }: StaffRowProps) => {
+export const StaffRow = ({
+  item,
+  index,
+  serialNumber,
+  onDelete,
+  onEdit,
+}: StaffRowProps) => {
   const gradient = gradients[index % gradients.length];
   const formattedName = toSentenceCase(item.full_name);
   const initials = getInitials(item.full_name);
@@ -58,7 +64,9 @@ export const StaffRow = ({ item, index, serialNumber, onDelete, onEdit }: StaffR
       return "-";
     }
     const quals = Object.values(item.qualifications).filter(Boolean).join(", ");
-    return item.qualification_date ? `${quals} (${item.qualification_date})` : quals;
+    return item.qualification_date
+      ? `${quals} (${item.qualification_date})`
+      : quals;
   };
 
   return (
@@ -85,7 +93,12 @@ export const StaffRow = ({ item, index, serialNumber, onDelete, onEdit }: StaffR
               {formattedName}
             </p>
             <p className="mt-0.5 text-[12.64px] font-normal text-[#475467]">
-              {item.email || "-"}
+              {item.email &&
+              typeof item.email === "string" &&
+              item.email !== "NaN" &&
+              item.email.trim() !== ""
+                ? item.email
+                : "No email provided"}
             </p>
           </div>
         </div>
@@ -95,9 +108,11 @@ export const StaffRow = ({ item, index, serialNumber, onDelete, onEdit }: StaffR
       <td className="p-4 text-sm text-slate-600">
         <span
           className={`rounded-md px-2 py-1 text-xs font-medium ${
-            item.gender?.toLowerCase() === "male" || item.gender?.toLowerCase() === "m"
+            item.gender?.toLowerCase() === "male" ||
+            item.gender?.toLowerCase() === "m"
               ? "bg-blue-100 text-blue-700"
-              : item.gender?.toLowerCase() === "female" || item.gender?.toLowerCase() === "f"
+              : item.gender?.toLowerCase() === "female" ||
+                  item.gender?.toLowerCase() === "f"
                 ? "bg-pink-100 text-pink-700"
                 : "bg-slate-100 text-slate-700"
           }`}
@@ -112,7 +127,15 @@ export const StaffRow = ({ item, index, serialNumber, onDelete, onEdit }: StaffR
       </td>
 
       {/* G/L (Grade Level) */}
-      <td className="p-4 text-sm text-slate-600">{item.grade_level || "-"}</td>
+      <td className="p-4 text-sm text-slate-600">
+        {/* {item.grade_level || "-"} */}
+        {item.grade_level &&
+        typeof item.grade_level === "string" &&
+        item.grade_level !== "NaN" &&
+        item.grade_level.trim() !== ""
+          ? item.grade_level
+          : "-"}
+      </td>
 
       {/* Qualification with Date */}
       <td className="max-w-48 truncate p-4 text-sm text-slate-600">
