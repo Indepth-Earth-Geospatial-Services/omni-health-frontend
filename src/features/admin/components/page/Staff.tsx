@@ -124,6 +124,8 @@ const StaffList = ({ facilityId }: StaffListProps) => {
           }
           isUpdating={isUpdating}
           isDeleting={isDeleting}
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
         />
 
         {/* Pagination Footer */}
