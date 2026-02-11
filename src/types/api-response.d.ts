@@ -103,6 +103,7 @@ export interface WorkingHours {
   saturday?: string;
   sunday?: string;
   emergency?: string;
+  [key: string]: string | undefined;
 }
 
 export interface Facility {

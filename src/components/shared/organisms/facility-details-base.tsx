@@ -83,8 +83,8 @@ function FacilityDetailsBase({
   const last_updated = facilityData.last_updated;
   const hfr_id = facilityData.hfr_id;
 
-  const email = contact_info?.email;
-  const phone = contact_info?.phone;
+  const email = contact_info?.email || "";
+  const phone = contact_info?.phone || "";
 
   // Derived data
   const formattedRating = formatRating(average_rating);

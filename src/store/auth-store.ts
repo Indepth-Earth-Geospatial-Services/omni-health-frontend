@@ -33,14 +33,18 @@ interface AuthState {
   token: string | null;
   user: User | null;
   facilityIds: string[] | null;
+  currentFacilityId: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
+  pendingFacilitySelection: boolean;
 }
 
 interface AuthActions {
   login: (token: string, facilityIds: string[], user?: User) => void;
   logout: () => void;
   setUser: (user: User) => void;
+  setCurrentFacilityId: (id: string) => void;
+  setPendingFacilitySelection: (pending: boolean) => void;
   hydrate: () => void;
 }
 
@@ -50,45 +54,101 @@ const initialState: AuthState = {
   token: null,
   user: null,
   facilityIds: null,
+  currentFacilityId: null,
   isAuthenticated: false,
   isHydrated: false,
+  pendingFacilitySelection: false,
 };
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   ...initialState,
 
   login: (token: string, facilityIds: string[], user?: User) => {
-    // Persist to sessionStorage (clears when browser/tab closes)
+    // If Admin has multiple facilities, we flag it as pending so the modal shows
+    const isMultiFacilityAdmin =
+      user?.role === "admin" && facilityIds && facilityIds.length > 1;
+
+    // Default to the first facility only if they aren't forced to choose via modal
+    const currentFacilityId = isMultiFacilityAdmin
+      ? null
+      : facilityIds?.[0] || null;
+
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
         AUTH_STORAGE_KEY,
-        JSON.stringify({ token, facilityIds, user }),
+        JSON.stringify({
+          token,
+          facilityIds,
+          user,
+          currentFacilityId,
+          pendingFacilitySelection: isMultiFacilityAdmin,
+        }),
       );
 
-      // Set cookies for middleware access (server-side route protection)
       setCookie(AUTH_COOKIE_NAME, token, 7);
       setCookie(
         AUTH_DATA_COOKIE_NAME,
         JSON.stringify({ role: user?.role, facilityIds }),
-        7
+        7,
       );
     }
 
     set({
       token,
       facilityIds,
+      currentFacilityId,
       user: user || null,
       isAuthenticated: true,
       isHydrated: true,
+      pendingFacilitySelection: isMultiFacilityAdmin,
+    });
+  },
+
+  setPendingFacilitySelection: (pending: boolean) => {
+    const { token, facilityIds, user, currentFacilityId } = get();
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          token,
+          facilityIds,
+          user,
+          currentFacilityId,
+          pendingFacilitySelection: pending,
+        }),
+      );
+    }
+    set({ pendingFacilitySelection: pending });
+  },
+
+  setCurrentFacilityId: (id: string) => {
+    const { facilityIds, token, user } = get();
+
+    if (!facilityIds?.includes(id)) return;
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          token,
+          facilityIds,
+          user,
+          currentFacilityId: id,
+          pendingFacilitySelection: false, // Crucial: clear pending state here
+        }),
+      );
+    }
+
+    set({
+      currentFacilityId: id,
+      pendingFacilitySelection: false,
     });
   },
 
   logout: () => {
-    // Clear sessionStorage
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(AUTH_STORAGE_KEY);
-
-      // Clear auth cookies
       deleteCookie(AUTH_COOKIE_NAME);
       deleteCookie(AUTH_DATA_COOKIE_NAME);
     }
@@ -98,27 +158,31 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isHydrated: true,
     });
 
-    // Dispatch logout event for API client to handle
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("auth:logout"));
     }
   },
 
   setUser: (user: User) => {
-    const { token, facilityIds } = get();
+    const { token, facilityIds, currentFacilityId, pendingFacilitySelection } =
+      get();
 
-    // Update sessionStorage with user
     if (typeof window !== "undefined" && token) {
       sessionStorage.setItem(
         AUTH_STORAGE_KEY,
-        JSON.stringify({ token, facilityIds, user }),
+        JSON.stringify({
+          token,
+          facilityIds,
+          user,
+          currentFacilityId,
+          pendingFacilitySelection,
+        }),
       );
 
-      // Update auth data cookie with new role
       setCookie(
         AUTH_DATA_COOKIE_NAME,
         JSON.stringify({ role: user.role, facilityIds }),
-        7
+        7,
       );
     }
 
@@ -135,53 +199,26 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const stored = sessionStorage.getItem(AUTH_STORAGE_KEY);
 
       if (stored) {
-        const { token, facilityIds, user } = JSON.parse(stored);
+        const data = JSON.parse(stored);
 
-        // Check if token is expired
-        if (token && isTokenExpired(token)) {
+        if (data.token && isTokenExpired(data.token)) {
           sessionStorage.removeItem(AUTH_STORAGE_KEY);
-          // Clear cookies as well
           deleteCookie(AUTH_COOKIE_NAME);
           deleteCookie(AUTH_DATA_COOKIE_NAME);
           set({ ...initialState, isHydrated: true });
           return;
         }
 
-        // Sync cookies for middleware access (in case they were cleared)
-        if (token) {
-          setCookie(AUTH_COOKIE_NAME, token, 7);
-          setCookie(
-            AUTH_DATA_COOKIE_NAME,
-            JSON.stringify({ role: user?.role, facilityIds }),
-            7
-          );
-        }
-
         set({
-          token,
-          facilityIds,
-          user,
-          isAuthenticated: !!token,
+          ...data,
+          isAuthenticated: !!data.token,
           isHydrated: true,
         });
       } else {
-        // No stored data - explicitly reset to unauthenticated state
-        // Also clear any stale cookies
-        deleteCookie(AUTH_COOKIE_NAME);
-        deleteCookie(AUTH_DATA_COOKIE_NAME);
-        set({
-          ...initialState,
-          isHydrated: true,
-        });
+        set({ ...initialState, isHydrated: true });
       }
     } catch {
-      // Error parsing - reset to unauthenticated state
-      deleteCookie(AUTH_COOKIE_NAME);
-      deleteCookie(AUTH_DATA_COOKIE_NAME);
-      set({
-        ...initialState,
-        isHydrated: true,
-      });
+      set({ ...initialState, isHydrated: true });
     }
   },
 }));
@@ -192,26 +229,26 @@ function isTokenExpired(token: string): boolean {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const payload = JSON.parse(atob(base64));
-
-    // Check if token expires in the next 5 seconds
     return Date.now() >= payload.exp * 1000 - 5000;
   } catch {
     return true;
   }
 }
 
-// Helper to determine redirect path based on role
+export const useCurrentFacilityId = (): string => {
+  const { currentFacilityId, facilityIds } = useAuthStore();
+  return (
+    currentFacilityId ||
+    (facilityIds && facilityIds.length > 0 ? facilityIds[0] : "")
+  );
+};
+
 export function getRedirectPath(
   facilityIds: string[] | null,
   userRole?: string,
 ): string {
-  if (userRole === "super_admin") {
-    return "/super-admin/staff";
-  }
-
-  if (userRole === "admin" && facilityIds && facilityIds.length > 0) {
+  if (userRole === "super_admin") return "/super-admin/dashboard";
+  if (userRole === "admin" && facilityIds && facilityIds.length > 0)
     return "/admin";
-  }
-
   return "/user";
 }

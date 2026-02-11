@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useCallback } from "react";
 import { ArrowRight, X, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -11,130 +11,18 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useStaffSchema } from "@/features/admin/hooks/useAdminStaff";
+import {
+  useStaffForm,
+  type FieldConfig,
+} from "@/features/admin/hooks/use-staff-form";
 
 interface AddStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (staffData: any) => void;
+  onSubmit?: (staffData: Record<string, unknown>) => void;
   facilityId: string;
   isSubmitting?: boolean;
 }
-
-interface FieldConfig {
-  name: string;
-  label: string;
-  type: "text" | "select" | "date" | "tel" | "number" | "textarea" | "email";
-  placeholder?: string;
-  required?: boolean;
-  options?: string[];
-  fullWidth?: boolean;
-  validation?: {
-    pattern?: RegExp;
-    message?: string;
-    minLength?: number;
-    maxLength?: number;
-  };
-}
-
-interface FieldError {
-  [key: string]: string;
-}
-
-/**
- * Maps schema field names to user-friendly labels
- */
-const fieldLabelMap: Record<string, string> = {
-  full_name: "Full Name",
-  gender: "Gender",
-  rank_cadre: "Rank/Cadre",
-  grade_level: "Grade Level",
-  phone_number: "Phone Number",
-  email: "Email Address",
-  date_first_appointment: "Date of First Appointment",
-  date_of_birth: "Date of Birth",
-  qualifications: "Qualifications",
-  is_active: "Status",
-  remark: "Remark",
-  presentAppt: "Date of Present Appointment",
-  stateOrigin: "State/LGA of Origin",
-  yearsInStation: "Years in Present Station",
-};
-
-/**
- * Maps schema field names to input types
- */
-const fieldTypeMap: Record<string, FieldConfig["type"]> = {
-  full_name: "text",
-  gender: "select",
-  rank_cadre: "text",
-  grade_level: "text",
-  phone_number: "tel",
-  email: "email",
-  date_first_appointment: "date",
-  date_of_birth: "date",
-  qualifications: "text",
-  is_active: "select",
-  remark: "textarea",
-  presentAppt: "date",
-  stateOrigin: "text",
-  yearsInStation: "number",
-};
-
-/**
- * Field options for select fields
- */
-const fieldOptionsMap: Record<string, string[]> = {
-  gender: ["M", "F"],
-  is_active: ["Active", "Inactive"],
-};
-
-/**
- * Validation rules for fields
- */
-const fieldValidationMap: Record<string, FieldConfig["validation"]> = {
-  full_name: {
-    minLength: 2,
-    message: "Full name must be at least 2 characters",
-  },
-  email: {
-    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    message: "Please enter a valid email address",
-  },
-  phone_number: {
-    pattern: /^[\d\s+()-]{7,20}$/,
-    message: "Please enter a valid phone number",
-  },
-};
-
-/**
- * Fields that should be full width
- */
-const fullWidthFields = ["full_name", "remark", "qualifications"];
-
-/**
- * Fields that are required
- */
-const requiredFields = ["full_name"];
-
-/**
- * Field display order
- */
-const fieldOrder = [
-  "full_name",
-  "gender",
-  "rank_cadre",
-  "grade_level",
-  "phone_number",
-  "email",
-  "date_first_appointment",
-  "presentAppt",
-  "date_of_birth",
-  "stateOrigin",
-  "yearsInStation",
-  "qualifications",
-  "is_active",
-  "remark",
-];
 
 const AddStaffModal: React.FC<AddStaffModalProps> = ({
   isOpen,
@@ -149,235 +37,23 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
     isError: isSchemaError,
   } = useStaffSchema(facilityId);
 
-  // Initialize form data based on schema - computed value, not state effect
-  const initialFormData = useMemo(() => {
-    if (!schema) return {};
-    const initialData: Record<string, any> = {};
-    Object.keys(schema).forEach((key) => {
-      initialData[key] = "";
-    });
-    return initialData;
-  }, [schema]);
-
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [errors, setErrors] = useState<FieldError>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Generate form fields dynamically from schema
-  const formFields: FieldConfig[] = useMemo(() => {
-    if (!schema) return [];
-
-    const schemaKeys = Object.keys(schema);
-
-    // Sort fields based on predefined order
-    const sortedKeys = [...schemaKeys].sort((a, b) => {
-      const indexA = fieldOrder.indexOf(a);
-      const indexB = fieldOrder.indexOf(b);
-      if (indexA === -1 && indexB === -1) return 0;
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-      return indexA - indexB;
-    });
-
-    return sortedKeys.map((key) => ({
-      name: key,
-      label:
-        fieldLabelMap[key] ||
-        key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-      type: fieldTypeMap[key] || "text",
-      placeholder: `Enter ${fieldLabelMap[key]?.toLowerCase() || key.replace(/_/g, " ")}`,
-      required: requiredFields.includes(key),
-      options: fieldOptionsMap[key],
-      fullWidth: fullWidthFields.includes(key),
-      validation: fieldValidationMap[key],
-    }));
-  }, [schema]);
-
-  // Initialize form when modal opens - using event handler instead of effect
-  if (isOpen && !isInitialized && Object.keys(initialFormData).length > 0) {
-    setFormData(initialFormData);
-    setErrors({});
-    setTouched({});
-    setIsInitialized(true);
-  }
-
-  // Reset initialized flag when modal closes
-  if (!isOpen && isInitialized) {
-    setIsInitialized(false);
-  }
-
-  // Validate a single field
-  const validateField = useCallback(
-    (name: string, value: any): string => {
-      const field = formFields.find((f) => f.name === name);
-      if (!field) return "";
-
-      // Required validation
-      if (field.required && (!value || value.toString().trim() === "")) {
-        return `${field.label} is required`;
-      }
-
-      // Skip other validations if field is empty and not required
-      if (!value || value.toString().trim() === "") return "";
-
-      // Pattern validation
-      if (field.validation?.pattern && !field.validation.pattern.test(value)) {
-        return (
-          field.validation.message || `Invalid ${field.label.toLowerCase()}`
-        );
-      }
-
-      // Min length validation
-      if (
-        field.validation?.minLength &&
-        value.length < field.validation.minLength
-      ) {
-        return (
-          field.validation.message ||
-          `${field.label} must be at least ${field.validation.minLength} characters`
-        );
-      }
-
-      // Max length validation
-      if (
-        field.validation?.maxLength &&
-        value.length > field.validation.maxLength
-      ) {
-        return `${field.label} must be at most ${field.validation.maxLength} characters`;
-      }
-
-      return "";
-    },
-    [formFields],
-  );
-
-  // Validate all fields
-  const validateForm = useCallback((): boolean => {
-    const newErrors: FieldError = {};
-    let isValid = true;
-
-    formFields.forEach((field) => {
-      const error = validateField(field.name, formData[field.name]);
-      if (error) {
-        newErrors[field.name] = error;
-        isValid = false;
-      }
-    });
-
-    setErrors(newErrors);
-    return isValid;
-  }, [formFields, formData, validateField]);
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-
-      // Clear error when user starts typing
-      setErrors((prev) => {
-        if (prev[name]) {
-          const { [name]: _, ...rest } = prev;
-          return rest;
-        }
-        return prev;
-      });
-    },
-    [],
-  );
-
-  const handleBlur = useCallback(
-    (name: string) => {
-      setTouched((prev) => ({ ...prev, [name]: true }));
-      const error = validateField(name, formData[name]);
-      if (error) {
-        setErrors((prev) => ({ ...prev, [name]: error }));
-      }
-    },
-    [formData, validateField],
-  );
-
-  const handleSelectChange = useCallback((name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setTouched((prev) => ({ ...prev, [name]: true }));
-
-    // Clear error when user selects
-    setErrors((prev) => {
-      if (prev[name]) {
-        const { [name]: _, ...rest } = prev;
-        return rest;
-      }
-      return prev;
-    });
-  }, []);
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-
-      // Mark all fields as touched
-      const allTouched: Record<string, boolean> = {};
-      formFields.forEach((field) => {
-        allTouched[field.name] = true;
-      });
-      setTouched(allTouched);
-
-      // Validate form
-      if (!validateForm()) return;
-
-      // Remove empty fields and transform data
-      const cleanedData = Object.entries(formData).reduce(
-        (acc, [key, value]) => {
-          if (value !== "" && value !== null && value !== undefined) {
-            // Convert qualifications string to object format
-            if (
-              key === "qualifications" &&
-              typeof value === "string" &&
-              value.trim()
-            ) {
-              const qualArray = value
-                .split(",")
-                .map((q) => q.trim())
-                .filter(Boolean);
-              acc[key] = qualArray.reduce(
-                (obj, qual) => {
-                  obj[qual] = {};
-                  return obj;
-                },
-                {} as Record<string, any>,
-              );
-            }
-            // Convert gender display value to API format
-            else if (key === "gender") {
-              acc[key] =
-                value === "Male" ? "M" : value === "Female" ? "F" : value;
-            }
-            // Convert is_active to boolean
-            else if (key === "is_active") {
-              acc[key] = value === "Active";
-            } else {
-              acc[key] = value;
-            }
-          }
-          return acc;
-        },
-        {} as Record<string, any>,
-      );
-
-      onSubmit?.(cleanedData);
-    },
-    [formFields, formData, validateForm, onSubmit],
-  );
-
-  const handleClose = useCallback(() => {
-    if (!isSubmitting) {
-      setFormData({});
-      setErrors({});
-      setTouched({});
-      setIsInitialized(false);
-      onClose();
-    }
-  }, [isSubmitting, onClose]);
+  const {
+    formData,
+    errors,
+    touched,
+    formFields,
+    handleInputChange,
+    handleBlur,
+    handleSelectChange,
+    handleSubmit,
+    handleClose,
+  } = useStaffForm({
+    schema,
+    isOpen,
+    isSubmitting,
+    onSubmit,
+    onClose,
+  });
 
   const renderField = useCallback(
     (field: FieldConfig) => {
@@ -392,7 +68,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
         case "select":
           return (
             <Select
-              value={formData[field.name] || ""}
+              value={(formData[field.name] as string) || ""}
               onValueChange={(value) => handleSelectChange(field.name, value)}
               disabled={isSubmitting}
             >
@@ -416,7 +92,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
             <textarea
               id={field.name}
               name={field.name}
-              value={formData[field.name] || ""}
+              value={(formData[field.name] as string) || ""}
               onChange={handleInputChange}
               onBlur={() => handleBlur(field.name)}
               placeholder={field.placeholder}
@@ -432,7 +108,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
               type={field.type}
               id={field.name}
               name={field.name}
-              value={formData[field.name] || ""}
+              value={(formData[field.name] as string) || ""}
               onChange={handleInputChange}
               onBlur={() => handleBlur(field.name)}
               placeholder={field.placeholder}
@@ -443,15 +119,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
           );
       }
     },
-    [
-      formData,
-      touched,
-      errors,
-      isSubmitting,
-      handleInputChange,
-      handleBlur,
-      handleSelectChange,
-    ],
+    [formData, touched, errors, isSubmitting, handleInputChange, handleBlur, handleSelectChange]
   );
 
   const renderFieldWithError = useCallback(
@@ -479,7 +147,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
         </div>
       );
     },
-    [touched, errors, renderField],
+    [touched, errors, renderField]
   );
 
   if (!isOpen) return null;
@@ -555,16 +223,6 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
 
             {/* Submit Button */}
             <div className="flex justify-end gap-3 pt-4">
-              {/* <Button
-                type="button"
-                variant="outline"
-                size="xl"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className="text-lg"
-              >
-                Cancel
-              </Button> */}
               <Button
                 type="button"
                 variant="default"
