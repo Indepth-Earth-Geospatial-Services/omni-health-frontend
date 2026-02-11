@@ -11,7 +11,7 @@ export default function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/img/landingpage/heroimage.png"
+          src="/img/landingpage/heroimage2.jpeg"
           alt="Healthcare facility background"
           fill
           sizes="100vw"
@@ -28,37 +28,40 @@ export default function HeroSection() {
       <Navbar />
 
       {/* Hero Content - Text and Buttons on the right */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 h-screen flex items-center justify-start">
+      <div className="relative z-10 container mx-auto flex h-screen items-center justify-start px-4 sm:px-6 lg:px-8">
         <div className="w-full lg:max-w-4xl">
           {/* Headline */}
           <div>
             <div>
-              <h1 className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 md:mb-6 drop-shadow-2xl">
-                Find the Right Medical Facility <br className="hidden sm:block" /> Based on Location, Capacity, <br className="hidden sm:block" /> and Performance
+              <h1 className="mb-4 text-3xl leading-tight font-bold text-white drop-shadow-2xl sm:text-4xl md:mb-6 md:text-5xl lg:text-6xl">
+                Find the Right Medical Facility{" "}
+                <br className="hidden sm:block" /> Based on Location, Capacity,{" "}
+                <br className="hidden sm:block" /> and Performance
               </h1>
             </div>
 
             {/* Subheadline */}
             <div>
-              <p className="text-white/90 text-base sm:text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 drop-shadow-lg">
-                Centralized, GIS-powered transparency for patients <br className="hidden sm:block" /> and healthcare providers
+              <p className="mb-6 text-base text-white/90 drop-shadow-lg sm:text-lg md:mb-8 md:text-xl lg:text-2xl">
+                Centralized, GIS-powered transparency for patients{" "}
+                <br className="hidden sm:block" /> and healthcare providers
               </p>
             </div>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4">
             <Button
               asChild
               size="lg"
-              className="bg-primary text-white hover:bg-primary/90 font-semibold px-6 sm:px-8 md:px-10 py-5 md:py-6 transition-all hover:scale-105 rounded-full text-sm sm:text-base md:text-lg w-52 md:w-76"
+              className="bg-primary hover:bg-primary/90 w-52 rounded-full px-6 py-5 text-sm font-semibold text-white transition-all hover:scale-105 sm:px-8 sm:text-base md:w-76 md:px-10 md:py-6 md:text-lg"
             >
               <Link href="/login">Explore Facilities Near You</Link>
             </Button>
             <Button
               asChild
               size="lg"
-              className="bg-transparent border-white border-2 text-white hover:bg-white hover:text-primary font-semibold px-6 sm:px-8 md:px-10 py-5 md:py-6 transition-all hover:scale-105 rounded-full text-sm sm:text-base md:text-lg w-52 md:w-76"
+              className="hover:text-primary w-52 rounded-full border-2 border-white bg-transparent px-6 py-5 text-sm font-semibold text-white transition-all hover:scale-105 hover:bg-white sm:px-8 sm:text-base md:w-76 md:px-10 md:py-6 md:text-lg"
             >
               <Link href="/login">Compare Facility</Link>
             </Button>
