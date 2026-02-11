@@ -21,6 +21,7 @@ import { loginSchema, LoginFormData } from "../schemas/login.schema";
 import { authService } from "@/services/auth.service";
 import { useAuthStore, getRedirectPath } from "@/store/auth-store";
 import { toast } from "sonner";
+import FacilitySelectionModal from "./FacilitySelectionModal";
 // import SocialLogin from "./social-login";
 
 // Shake animation variants
@@ -38,10 +39,15 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
+  const setCurrentFacilityId = useAuthStore(
+    (state) => state.setCurrentFacilityId,
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [shouldShake, setShouldShake] = useState(false);
+  const [showFacilityModal, setShowFacilityModal] = useState(false);
+  const [pendingFacilityIds, setPendingFacilityIds] = useState<string[]>([]);
 
   // ✅ Show welcome message for verified users
   useEffect(() => {
@@ -99,17 +105,21 @@ export default function LoginForm() {
       // console.log("User object:", user);
 
       // 5. Store auth data with user info
-      login(response.access_token, response.facility_ids || [], user);
+      const facilityIds = response.facility_ids || [];
+      login(response.access_token, facilityIds, user);
+
+      // 6. Admin with multiple facilities: show facility selection modal
+      if (user.role === "admin" && facilityIds.length >= 2) {
+        setPendingFacilityIds(facilityIds);
+        setShowFacilityModal(true);
+        setIsLoading(false);
+        return;
+      }
 
       toast.success("Login successful!");
 
-      // 6. Redirect based on role
-      const redirectPath = getRedirectPath(response.facility_ids, user.role);
-
-      // debug
-      // console.log("Redirect path:", redirectPath);
-      // console.log("=== END LOGIN DEBUG ===");
-
+      // 7. Redirect based on role
+      const redirectPath = getRedirectPath(facilityIds, user.role);
       router.push(redirectPath);
     } catch (error: any) {
       // ✅ Better error handling with specific messages
@@ -157,6 +167,13 @@ export default function LoginForm() {
     }
   }
 
+  const handleFacilitySelect = (facilityId: string) => {
+    setCurrentFacilityId(facilityId);
+    setShowFacilityModal(false);
+    toast.success("Login successful!");
+    router.push("/admin");
+  };
+
   // Clear login error when user starts typing
   const handleInputChange = (
     originalOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
@@ -175,6 +192,7 @@ export default function LoginForm() {
     : "border-slate-200 focus:ring-primary focus:border-primary";
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -331,5 +349,14 @@ export default function LoginForm() {
         </Link>
       </p>
     </motion.div>
+
+    {showFacilityModal && (
+      <FacilitySelectionModal
+        isOpen={showFacilityModal}
+        facilityIds={pendingFacilityIds}
+        onSelect={handleFacilitySelect}
+      />
+    )}
+    </>
   );
 }

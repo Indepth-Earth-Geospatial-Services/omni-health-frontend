@@ -12,8 +12,9 @@ const toSentenceCase = (str: string | undefined | null): string => {
 interface StaffRowProps {
   item: StaffMember;
   index: number;
+  serialNumber: number;
   onDelete: (staff: StaffMember) => void;
-  onEdit?: (staff: StaffMember) => void; // Added for future use
+  onEdit?: (staff: StaffMember) => void;
 }
 
 const gradients = [
@@ -46,10 +47,19 @@ const getInitials = (name: string) => {
   );
 };
 
-export const StaffRow = ({ item, index, onDelete, onEdit }: StaffRowProps) => {
+export const StaffRow = ({ item, index, serialNumber, onDelete, onEdit }: StaffRowProps) => {
   const gradient = gradients[index % gradients.length];
   const formattedName = toSentenceCase(item.full_name);
   const initials = getInitials(item.full_name);
+
+  // Format qualifications with date - show values not keys
+  const formatQualifications = () => {
+    if (!item.qualifications || Object.keys(item.qualifications).length === 0) {
+      return "-";
+    }
+    const quals = Object.values(item.qualifications).filter(Boolean).join(", ");
+    return item.qualification_date ? `${quals} (${item.qualification_date})` : quals;
+  };
 
   return (
     <motion.tr
@@ -59,16 +69,14 @@ export const StaffRow = ({ item, index, onDelete, onEdit }: StaffRowProps) => {
       whileHover={{ backgroundColor: "#f8fafc" }}
       className="group border-b border-slate-100 transition-colors last:border-0"
     >
-      <td className="p-4">
-        <input
-          type="checkbox"
-          className="text-primary focus:ring-primary h-4 w-4 rounded border-slate-300"
-        />
-      </td>
+      {/* S/NO */}
+      <td className="p-4 text-sm text-slate-600">{serialNumber}</td>
+
+      {/* Names of Officers */}
       <td className="p-4">
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br ${gradient} text-xs font-bold text-white shadow-sm`}
+            className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${gradient} text-xs font-bold text-white shadow-sm`}
           >
             {initials}
           </div>
@@ -82,12 +90,14 @@ export const StaffRow = ({ item, index, onDelete, onEdit }: StaffRowProps) => {
           </div>
         </div>
       </td>
+
+      {/* Sex */}
       <td className="p-4 text-sm text-slate-600">
         <span
           className={`rounded-md px-2 py-1 text-xs font-medium ${
-            item.gender?.toLowerCase() === "male"
+            item.gender?.toLowerCase() === "male" || item.gender?.toLowerCase() === "m"
               ? "bg-blue-100 text-blue-700"
-              : item.gender?.toLowerCase() === "female"
+              : item.gender?.toLowerCase() === "female" || item.gender?.toLowerCase() === "f"
                 ? "bg-pink-100 text-pink-700"
                 : "bg-slate-100 text-slate-700"
           }`}
@@ -95,33 +105,59 @@ export const StaffRow = ({ item, index, onDelete, onEdit }: StaffRowProps) => {
           {toSentenceCase(item.gender) || "-"}
         </span>
       </td>
+
+      {/* Rank */}
       <td className="p-4 text-sm text-slate-600">
         {toSentenceCase(item.rank_cadre) || "-"}
       </td>
+
+      {/* G/L (Grade Level) */}
       <td className="p-4 text-sm text-slate-600">{item.grade_level || "-"}</td>
-      <td className="p-4 text-sm text-slate-600">{item.phone_number || "-"}</td>
+
+      {/* Qualification with Date */}
+      <td className="max-w-48 truncate p-4 text-sm text-slate-600">
+        {formatQualifications()}
+      </td>
+
+      {/* Date of 1st Appt */}
       <td className="p-4 text-sm text-slate-600">
         {item.date_first_appointment || "-"}
       </td>
+
+      {/* Confirmation of Appt */}
+      <td className="p-4 text-sm text-slate-600">
+        {item.confirmation_of_appointment || "-"}
+      </td>
+
+      {/* Date of Present Appt */}
+      <td className="p-4 text-sm text-slate-600">
+        {item.date_of_present_appointment || "-"}
+      </td>
+
+      {/* Date of Birth */}
       <td className="p-4 text-sm text-slate-600">
         {item.date_of_birth || "-"}
       </td>
-      <td className="max-w-48 truncate p-4 text-sm text-slate-600">
-        {item.qualifications
-          ? Object.keys(item.qualifications).join(", ")
-          : "-"}
-      </td>
+
+      {/* LGA of Origin */}
       <td className="p-4 text-sm text-slate-600">
-        <span
-          className={`rounded-md px-2 py-1 text-xs font-medium ${
-            item.is_active
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {item.is_active ? "Active" : "Inactive"}
-        </span>
+        {item.lga_of_origin || "-"}
       </td>
+
+      {/* Years in Present Station */}
+      <td className="p-4 text-sm text-slate-600">
+        {item.years_in_present_station || "-"}
+      </td>
+
+      {/* Phone Number */}
+      <td className="p-4 text-sm text-slate-600">{item.phone_number || "-"}</td>
+
+      {/* Remark */}
+      <td className="max-w-32 truncate p-4 text-sm text-slate-600">
+        {item.remark || "-"}
+      </td>
+
+      {/* Actions */}
       <td className="sticky right-0 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] group-hover:bg-slate-50">
         <div className="flex items-center justify-center gap-2">
           <button

@@ -15,18 +15,15 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore, useCurrentFacilityId } from "@/store/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../modals/ProfileModal";
 
 const adminMenuItems = [
   { label: "Overview", icon: MailOpen, href: "/admin" },
-  // { label: "Patients & Capacities", icon: Users, href: "/admin/patients" },
-  // { label: "Appointments", icon: Calendar, href: "/admin/appointment" },
   { label: "Staff", icon: UserCog, href: "/admin/staff" },
   { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
   { label: "Equipments & Facility", icon: Hospital, href: "/admin/equipments" },
-  // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 
@@ -37,11 +34,11 @@ const SuperAdminMenuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { facilityIds, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Get the first facility ID (admin may manage multiple facilities)
-  const facilityId = facilityIds?.[0] || "";
+  // Get the currently selected facility ID
+  const facilityId = useCurrentFacilityId();
 
   // Check if user is super admin
   const isSuperAdmin = user?.role === "super_admin";
@@ -50,6 +47,9 @@ export default function Sidebar() {
   const { data: facilityData, isLoading: isFacilityLoading } =
     useFacility(facilityId);
   const facility = facilityData?.facility;
+
+  // Get Facility Image (if available)
+  const facilityImage = facility?.image_urls?.[0];
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white shadow-lg">
@@ -190,7 +190,18 @@ export default function Sidebar() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
                 <Loader2 size={16} className="animate-spin text-gray-400" />
               </div>
+            ) : facilityImage ? (
+              /* --- NEW: Display Image if available --- */
+              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-200">
+                <Image
+                  src={facilityImage}
+                  alt={facility?.facility_name || "Facility"}
+                  fill
+                  className="object-cover"
+                />
+              </div>
             ) : (
+              /* Fallback to Initials */
               <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold">
                 {facility?.facility_name
                   ?.split(" ")

@@ -2,13 +2,10 @@
 
 import Header from "@/features/admin/components/layout/Header";
 import StaffList from "@/features/admin/components/page/Staff";
-import { useAuthStore } from "@/store/auth-store";
+import { useCurrentFacilityId } from "@/store/auth-store";
 
 export default function Staff() {
-  const { facilityIds } = useAuthStore();
-
-  // Get the first facility ID from the user's assigned facilities
-  const facilityId = facilityIds?.[0] ?? "";
+  const facilityId = useCurrentFacilityId();
 
   return (
     <>
