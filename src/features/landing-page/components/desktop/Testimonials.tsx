@@ -9,7 +9,7 @@ const TESTIMONIALS_DATA = [
     id: 1,
     name: "Samantha Elizabeth",
     location: "Port Harcourt",
-    image: "/img/testimonials/image.jpg",
+    image: "/img/testimonials/image1.jpg",
     testimonial:
       "I had an excellent experience at Rumueme HP during a recent emergency. The team was incredibly supportive and attentive, and I received prompt treatment. I truly felt cared for and reassured throughout the entire process.",
     rating: 5,
