@@ -26,6 +26,7 @@ export const FILTERCATEGORIES: FilterCategory[] = [
   {
     title: "Facility Type",
     storeKey: "facilityType",
+    selectionType: "single",
     options: [
       {
         id: "general-hospital",
@@ -59,18 +60,11 @@ export const FILTERCATEGORIES: FilterCategory[] = [
       },
     ],
   },
-  {
-    title: "Performance Tier",
-    storeKey: "performanceTier",
-    options: [
-      { id: "high-performance", label: "High Performance", value: "high" },
-      { id: "moderate", label: "Moderate", value: "moderate" },
-      { id: "average", label: "Average", value: "average" },
-    ],
-  },
+
   {
     title: "Service Availability",
     storeKey: "serviceAvailability",
+    selectionType: "multiple",
     options: [
       {
         id: "routine-immunization",
@@ -131,6 +125,7 @@ export const FILTERCATEGORIES: FilterCategory[] = [
   {
     title: "Local Government",
     storeKey: "lga",
+    selectionType: "single",
     options: [
       { id: "abua-odual", label: "Abua/Odual", value: "Abua-Odual" },
       { id: "ahoada-east", label: "Ahoada East", value: "Ahoada-East" },

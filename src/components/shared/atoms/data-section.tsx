@@ -5,6 +5,7 @@ interface DataSectionProps {
   icon: ReactNode;
   children: ReactNode;
   emptyMessage?: string;
+  // eslint-disable-next-line
   data: any[] | Record<string, any>;
   className?: string;
 }

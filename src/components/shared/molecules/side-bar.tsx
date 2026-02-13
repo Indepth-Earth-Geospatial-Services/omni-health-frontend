@@ -6,7 +6,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { cn, getUserInitials } from "@/lib/utils";
 import profileImage from "@assets/img/facilities/shammah.jpg";
 import {
   GitCompareArrows,
@@ -23,6 +23,7 @@ import logo from "@assets/img/image.png";
 import { useAuthStore } from "@/store/auth-store"; // ✅ Import auth store
 import { useRouter } from "next/navigation"; // ✅ Import router
 import { toast } from "sonner";
+import { UserAvatar } from "../atoms/UserAvatar";
 
 const navLinks = [
   {
@@ -80,7 +81,6 @@ function SideBar({ className }: { className?: string }) {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-
   // ✅ Determine which dashboard links to show based on user role
   const getDashboardLinks = () => {
     if (user?.role === "super_admin") {
@@ -144,14 +144,12 @@ function SideBar({ className }: { className?: string }) {
             </Link>
 
             {/* PROFILE DETAILS */}
-            <div className="mt-8 flex items-center gap-2.5 py-3">
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-full">
-                <Image
-                  src={profileImage}
-                  alt="profile image"
-                  fill
-                  className="object-cover"
-                />
+            <Link
+              href={"/profile"}
+              className="mt-8 flex items-center gap-2.5 py-3"
+            >
+              <div className="size-20">
+                <UserAvatar user={user} />
               </div>
               <div>
                 {/* ✅ Display actual user data from auth store */}
@@ -164,16 +162,19 @@ function SideBar({ className }: { className?: string }) {
                   {user?.email || "user@example.com"}
                 </p>
               </div>
-            </div>
+            </Link>
 
             {/* NAVIGATION  */}
             <ul className="flex flex-col gap-3">
               {navLinks.map((nav) => (
                 <li
                   key={nav.href}
-                  className="flex h-12 items-center text-[15px]"
+                  className="flex h-12 w-full items-center text-[15px]"
                 >
-                  <Link className="flex items-center gap-3" href={nav.href}>
+                  <Link
+                    className="flex size-full items-center gap-3"
+                    href={nav.href}
+                  >
                     {nav.icons} {nav.name}
                   </Link>
                 </li>
