@@ -27,6 +27,8 @@ export interface User {
   role: "user" | "admin" | "super_admin";
   is_active: boolean;
   created_at: string;
+  phone?: string | number;
+  image?: string;
 }
 
 interface AuthState {
@@ -70,7 +72,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       setCookie(
         AUTH_DATA_COOKIE_NAME,
         JSON.stringify({ role: user?.role, facilityIds }),
-        7
+        7,
       );
     }
 
@@ -118,7 +120,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       setCookie(
         AUTH_DATA_COOKIE_NAME,
         JSON.stringify({ role: user.role, facilityIds }),
-        7
+        7,
       );
     }
 
@@ -153,7 +155,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           setCookie(
             AUTH_DATA_COOKIE_NAME,
             JSON.stringify({ role: user?.role, facilityIds }),
-            7
+            7,
           );
         }
 
