@@ -4,7 +4,7 @@ import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import QuickStatsHeader from "@/features/admin/components/layout/QuickStatsHeader";
 import AdmissionsRateChart from "../charts/AdmissionsRateChartProps";
 import { Users, ChevronRight, Bed, Package, UserCog } from "lucide-react";
-import { useAuthStore } from "@/store/auth-store";
+import { useCurrentFacilityId } from "@/store/auth-store";
 import {
   useAdminStaff,
   useFacilityInventory,
@@ -34,8 +34,7 @@ const countBedsFromInventory = (
 };
 
 export default function Overview() {
-  const { facilityIds } = useAuthStore();
-  const facilityId = facilityIds?.[0] || "";
+  const facilityId = useCurrentFacilityId();
 
   // Fetch facility data (includes specialists)
   const { data: facilityData, isLoading: isFacilityLoading } =
@@ -168,7 +167,7 @@ export default function Overview() {
                 </button>
               </div>
 
-              <div className="max-h-100 space-y-4 overflow-y-auto">
+              <div className="max-h-90 space-y-4 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-pulse text-slate-400">

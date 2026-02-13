@@ -144,7 +144,7 @@ export default function Map() {
         </div>
 
         {/* Layers Panel */}
-        <div className="overflow-y-auto border-slate-200 bg-white">
+        <div className="w-full max-w-25 overflow-y-auto bg-white md:max-w-37.5 lg:max-w-sm">
           <div className="rounded-lg border border-gray-200 px-6 py-4">
             <h2 className="mb-6 text-base font-semibold text-slate-900">
               Layers

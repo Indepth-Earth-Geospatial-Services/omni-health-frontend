@@ -86,8 +86,8 @@ const EditStaffModal = ({
     {
       name: "email",
       label: "Email Address",
-      type: "email",
-      placeholder: "Enter email",
+      type: "text",
+      placeholder: "Enter email (optional)",
       required: false,
     },
     {
