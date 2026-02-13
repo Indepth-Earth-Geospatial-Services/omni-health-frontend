@@ -36,6 +36,8 @@ interface StaffTableProps {
   onDelete: (id: string, name: string) => void;
   isUpdating: boolean;
   isDeleting: boolean;
+  currentPage: number;
+  itemsPerPage: number;
 }
 
 const StaffTable: React.FC<StaffTableProps> = ({
@@ -45,6 +47,8 @@ const StaffTable: React.FC<StaffTableProps> = ({
   onDelete,
   isUpdating,
   isDeleting,
+  currentPage,
+  itemsPerPage,
 }) => {
   const {
     hasGender,
@@ -64,12 +68,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
         {/* --- Header --- */}
         <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
           <tr className="text-sm font-medium text-slate-500">
-            <th className="w-12 p-4">
-              <MinusSquare
-                size={18}
-                className="text-primary bg-primary/10 rounded"
-              />
-            </th>
+            <th className="w-12 p-4 text-[11.38px] text-[#475467]">S/N</th>
             <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
               <div className="flex items-center gap-2 text-[11.38px] text-[#475467]">
                 Staff Name <ArrowUpDown size={14} />
@@ -152,11 +151,8 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   whileHover={{ backgroundColor: "#f8fafc" }}
                   className="group border-b border-slate-100 transition-colors last:border-0"
                 >
-                  <td className="p-4">
-                    <input
-                      type="checkbox"
-                      className="text-primary focus:ring-primary h-4 w-4 rounded border-slate-300"
-                    />
+                  <td className="p-4 text-sm font-medium text-slate-500">
+                    {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -171,7 +167,12 @@ const StaffTable: React.FC<StaffTableProps> = ({
                         </p>
                         {hasEmail && (
                           <p className="mt-0.5 text-[12.64px] font-normal text-[#475467]">
-                            {item.email || "-"}
+                            {item.email &&
+                            typeof item.email === "string" &&
+                            item.email !== "NaN" &&
+                            item.email.trim() !== ""
+                              ? item.email
+                              : "No email provided"}
                           </p>
                         )}
                       </div>
@@ -194,7 +195,13 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   )}
                   {hasGradeLevel && (
                     <td className="p-4 text-sm text-slate-600">
-                      {item.grade_level || "-"}
+                      {/* {item.grade_level || "-"} */}
+                      {item.grade_level &&
+                      typeof item.grade_level === "string" &&
+                      item.grade_level !== "NaN" &&
+                      item.grade_level.trim() !== ""
+                        ? item.grade_level
+                        : "-"}
                     </td>
                   )}
                   {hasPhone && (

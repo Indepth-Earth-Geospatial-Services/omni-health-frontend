@@ -7,7 +7,6 @@ export const useSearchFilterStore = create<SearchFilterStore>((set) => ({
 
   selectedFilters: {
     facilityType: [],
-    performanceTier: [],
     serviceAvailability: [],
     lga: [],
   },
@@ -41,7 +40,6 @@ export const useSearchFilterStore = create<SearchFilterStore>((set) => ({
 
       selectedFilters: {
         facilityType: [],
-        performanceTier: [],
         serviceAvailability: [],
         lga: [],
       },

@@ -60,7 +60,6 @@ export default function FacilityProfile() {
     return formatTimeRange(saturday);
   };
 
-
   return (
     <div className="w-full">
       {/* Header */}
@@ -490,7 +489,7 @@ function SpecialistsContent({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="max-h-90 space-y-3 overflow-y-auto">
       {specialists.map((specialist, idx) => {
         const formattedName = formatSpecialistName(specialist);
         return (
@@ -498,7 +497,7 @@ function SpecialistsContent({
             key={idx}
             className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#375DFB] text-sm font-medium text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#868C98] text-sm font-medium text-white">
               {formattedName.substring(0, 2).toUpperCase()}
             </div>
             <div className="flex flex-1 justify-between">

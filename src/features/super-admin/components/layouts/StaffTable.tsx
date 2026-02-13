@@ -9,6 +9,7 @@ import TableHeaders, { FilterState } from "./StaffTableHeader";
 import AddStaffModal from "../modals/AddStaffModal";
 import DownloadNominalRollModal from "../modals/DownloadNominalRollModal";
 import ConfirmationModal from "@/components/shared/modals/ConfirmationModal";
+import EditStaffModal from "@/features/admin/components/modals/EditStaffModal";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
 import type { StaffMember } from "@/services/admin.service";
 import { useStaffQuery } from "../../hooks/seStaffQuery";
@@ -23,6 +24,8 @@ const StaffTables = () => {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [staffToEdit, setStaffToEdit] = useState<StaffMember | null>(null);
 
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: "",
@@ -88,10 +91,45 @@ const StaffTables = () => {
     },
   });
 
+  const updateStaffMutation = useMutation({
+    mutationFn: ({ staffId, data }: { staffId: string; data: Record<string, unknown> }) =>
+      superAdminService.updateStaff(staffId, data),
+    onSuccess: () => {
+      toast.success("Staff member updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["all-staff"] });
+      setIsEditModalOpen(false);
+      setStaffToEdit(null);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update staff: ${error.message}`);
+    },
+  });
+
   // --- Handlers ---
   const handleDeleteClick = (staff: StaffMember) => {
     setStaffToDelete(staff);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleEditClick = (staff: StaffMember) => {
+    setStaffToEdit(staff);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = (updatedData: Record<string, unknown>) => {
+    if (staffToEdit) {
+      updateStaffMutation.mutate({
+        staffId: staffToEdit.staff_id,
+        data: updatedData,
+      });
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    if (!updateStaffMutation.isPending) {
+      setIsEditModalOpen(false);
+      setStaffToEdit(null);
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -238,7 +276,7 @@ const StaffTables = () => {
                     index={idx}
                     serialNumber={(page - 1) * limit + idx + 1}
                     onDelete={handleDeleteClick}
-                    onEdit={() => {}} // Placeholder
+                    onEdit={handleEditClick}
                   />
                 ))
               )}
@@ -279,6 +317,15 @@ const StaffTables = () => {
         variant="danger"
         itemName={staffToDelete?.full_name}
         itemDetails={staffToDelete?.email}
+      />
+      <EditStaffModal
+        key={staffToEdit?.staff_id || "edit-staff-modal"}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSubmit={handleEditSubmit}
+        facilityId={staffToEdit?.facility_id || ""}
+        staffData={staffToEdit}
+        isUpdating={updateStaffMutation.isPending}
       />
     </>
   );

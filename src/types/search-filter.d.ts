@@ -2,6 +2,7 @@ export interface FilterOption {
   id: string;
   label: string;
   value: string;
+  // eslint-disable-next-line
   icon?: any;
 }
 
@@ -9,6 +10,7 @@ export interface FilterCategory {
   title: string;
   options: FilterOption[];
   storeKey: string;
+  selectionType?: "single" | "multiple";
 }
 
 export interface FilterQuery {
@@ -21,7 +23,6 @@ export interface FilterQuery {
 
 export interface SelectedFilters {
   facilityType?: string[];
-  performanceTier?: string[];
   serviceAvailability?: string[];
   lga?: string[];
   name?: string;
