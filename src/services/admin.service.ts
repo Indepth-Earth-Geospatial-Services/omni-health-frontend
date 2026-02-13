@@ -11,8 +11,14 @@ export interface StaffMember {
   phone_number?: string;
   email?: string;
   date_first_appointment?: string;
+  confirmation_of_appointment?: string;
+  date_of_present_appointment?: string;
   date_of_birth?: string;
+  lga_of_origin?: string;
+  years_in_present_station?: number | string;
   qualifications?: Record<string, unknown>;
+  qualification_date?: string;
+  remark?: string;
   is_active?: boolean;
 }
 

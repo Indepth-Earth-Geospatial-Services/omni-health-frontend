@@ -12,19 +12,23 @@ interface RouteGuardProps {
 export function RouteGuard({ children }: RouteGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isHydrated, facilityIds, user, hydrate } =
-    useAuthStore();
+  // Added pendingFacilitySelection to the destructured store
+  const {
+    isAuthenticated,
+    isHydrated,
+    facilityIds,
+    user,
+    pendingFacilitySelection,
+    hydrate,
+  } = useAuthStore();
 
-  // Re-hydrate on pathname change to sync with localStorage
   useEffect(() => {
     hydrate();
   }, [pathname, hydrate]);
 
   useEffect(() => {
-    // Wait for auth state to hydrate from localStorage
     if (!isHydrated) return;
 
-    // Define protected routes
     const protectedRoutes = [
       "/user",
       "/admin",
@@ -32,21 +36,30 @@ export function RouteGuard({ children }: RouteGuardProps) {
       "/profile",
       "/facilities",
     ];
+
     const isProtectedRoute = protectedRoutes.some((route) =>
       pathname.startsWith(route),
     );
 
-    // Redirect to login if not authenticated and on protected route
+    // 1. Handle Unauthenticated Access
     if (!isAuthenticated && isProtectedRoute) {
       router.push("/login");
       return;
     }
 
-    // Redirect authenticated users away from login/register pages
+    // 2. Handle Authenticated Redirects (The logic you needed fixed)
     if (
       isAuthenticated &&
       (pathname === "/login" || pathname === "/register")
     ) {
+      // IF an admin still needs to select a facility, STOP HERE.
+      // This prevents the "flash" or immediate redirect away from the login page/modal.
+      if (pendingFacilitySelection) {
+        return;
+      }
+
+      // If we reach here, it means they are authenticated AND
+      // have either selected a facility or don't need to.
       if (user?.role === "super_admin") {
         router.push("/super-admin/dashboard");
         return;
@@ -60,9 +73,16 @@ export function RouteGuard({ children }: RouteGuardProps) {
       router.push("/user");
       return;
     }
-  }, [isAuthenticated, isHydrated, pathname, router, facilityIds, user]);
+  }, [
+    isAuthenticated,
+    isHydrated,
+    pathname,
+    router,
+    facilityIds,
+    user,
+    pendingFacilitySelection, // Added dependency
+  ]);
 
-  // Show loading spinner while checking auth
   if (!isHydrated) return <HydrationLoader />;
 
   return <>{children}</>;

@@ -1,19 +1,20 @@
 // StaffTables.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpDown, MinusSquare, Loader2 } from "lucide-react";
+import { ArrowUpDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import TableHeaders, { FilterState } from "./StaffTableHeader";
 import AddStaffModal from "../modals/AddStaffModal";
 import DownloadNominalRollModal from "../modals/DownloadNominalRollModal";
 import ConfirmationModal from "@/components/shared/modals/ConfirmationModal";
+import EditStaffModal from "@/features/admin/components/modals/EditStaffModal";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
 import type { StaffMember } from "@/services/admin.service";
-import { useStaffQuery } from "../../hooks/seStaffQuery"; // Adjust path
-import { StaffRow } from "../layouts/StaffRow"; // Adjust path
-import { StaffPagination } from "../layouts/Staff.Pagination"; // Adjust path
+import { useStaffQuery } from "../../hooks/seStaffQuery";
+import { StaffRow } from "../layouts/StaffRow";
+import { StaffPagination } from "../layouts/Staff.Pagination";
 
 const StaffTables = () => {
   const queryClient = useQueryClient();
@@ -23,6 +24,8 @@ const StaffTables = () => {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [staffToEdit, setStaffToEdit] = useState<StaffMember | null>(null);
 
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: "",
@@ -88,10 +91,45 @@ const StaffTables = () => {
     },
   });
 
+  const updateStaffMutation = useMutation({
+    mutationFn: ({ staffId, data }: { staffId: string; data: Record<string, unknown> }) =>
+      superAdminService.updateStaff(staffId, data),
+    onSuccess: () => {
+      toast.success("Staff member updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["all-staff"] });
+      setIsEditModalOpen(false);
+      setStaffToEdit(null);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update staff: ${error.message}`);
+    },
+  });
+
   // --- Handlers ---
   const handleDeleteClick = (staff: StaffMember) => {
     setStaffToDelete(staff);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleEditClick = (staff: StaffMember) => {
+    setStaffToEdit(staff);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = (updatedData: Record<string, unknown>) => {
+    if (staffToEdit) {
+      updateStaffMutation.mutate({
+        staffId: staffToEdit.staff_id,
+        data: updatedData,
+      });
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    if (!updateStaffMutation.isPending) {
+      setIsEditModalOpen(false);
+      setStaffToEdit(null);
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -160,48 +198,57 @@ const StaffTables = () => {
         filters={filters}
         onFiltersChange={handleFiltersChange}
       />
-      <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="w-full rounded-xl border border-slate-200 bg-white">
         <div
-          className="relative overflow-x-auto"
-          style={{ minHeight: "720px" }}
+          className="relative overflow-auto"
+          style={{ maxHeight: "720px" }}
         >
           <table className="w-full border-collapse text-left">
             <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
-                <th className="w-12 p-4">
-                  <MinusSquare
-                    size={18}
-                    className="bg-primary/10 text-primary rounded"
-                  />
+                <th className="w-12 p-4 text-[11.38px] font-medium text-[#475467]">
+                  S/NO
                 </th>
                 <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
                   <div className="font-inter flex items-center gap-2 text-[11.38px] font-medium text-[#475467]">
-                    Staff Name <ArrowUpDown size={14} />
+                    Names of Officers <ArrowUpDown size={14} />
                   </div>
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
-                  Gender
+                  Sex
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
-                  Rank/Cadre
+                  Rank
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
-                  Grade Level
+                  G/L
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
-                  Phone Number
+                  Qualification with Date
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
                   Date of 1st Appt
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                  Confirmation of Appt
+                </th>
+                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                  Date of Present Appt
+                </th>
+                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
                   Date of Birth
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
-                  Qualifications
+                  LGA of Origin
                 </th>
                 <th className="p-4 text-[11.38px] font-medium text-[#475467]">
-                  Status
+                  Years in Present Station
+                </th>
+                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                  Phone Number
+                </th>
+                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                  Remark
                 </th>
                 <th className="sticky right-0 bg-slate-50 p-4 text-center text-[11.38px] font-medium text-[#475467] shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
                   Actions
@@ -213,11 +260,10 @@ const StaffTables = () => {
               {staff.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={15}
                     className="p-8 text-center text-slate-500"
-                    style={{ height: "668px" }}
                   >
-                    <div className="flex h-full flex-col items-center justify-center">
+                    <div className="flex h-64 flex-col items-center justify-center">
                       <p>No staff members found</p>
                     </div>
                   </td>
@@ -228,8 +274,9 @@ const StaffTables = () => {
                     key={item.staff_id}
                     item={item}
                     index={idx}
+                    serialNumber={(page - 1) * limit + idx + 1}
                     onDelete={handleDeleteClick}
-                    onEdit={() => {}} // Placeholder
+                    onEdit={handleEditClick}
                   />
                 ))
               )}
@@ -271,17 +318,33 @@ const StaffTables = () => {
         itemName={staffToDelete?.full_name}
         itemDetails={staffToDelete?.email}
       />
+      <EditStaffModal
+        key={staffToEdit?.staff_id || "edit-staff-modal"}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSubmit={handleEditSubmit}
+        facilityId={staffToEdit?.facility_id || ""}
+        staffData={staffToEdit}
+        isUpdating={updateStaffMutation.isPending}
+      />
     </>
   );
 };
 
 // Helper wrapper to reduce duplication in Loading/Error states
+interface TableWrapperProps {
+  children: React.ReactNode;
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+  setIsAddStaffModalOpen: (open: boolean) => void;
+}
+
 const TableWrapper = ({
   children,
   filters,
   onFiltersChange,
   setIsAddStaffModalOpen,
-}: any) => (
+}: TableWrapperProps) => (
   <>
     <TableHeaders
       title="Staff List"

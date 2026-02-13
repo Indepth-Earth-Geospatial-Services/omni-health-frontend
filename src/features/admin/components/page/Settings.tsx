@@ -8,35 +8,112 @@ import {
   Lock,
   HelpCircle,
   ExternalLink,
+  Hospital,
+  Loader2,
 } from "lucide-react";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
+import { useAuthStore, useCurrentFacilityId } from "@/store/auth-store";
+import { useMultipleFacilities } from "@/hooks/use-facilities";
+import FacilityCard from "../ui/FacilityCard";
+import { toast } from "sonner";
 
 export default function Settings() {
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(true);
+  const [isFacilitiesOpen, setIsFacilitiesOpen] = useState(true);
+  // const [isNotificationsOpen, setIsNotificationsOpen] = useState(true);
   const [isSecurityOpen, setIsSecurityOpen] = useState(true);
   const [isHelpOpen, setIsHelpOpen] = useState(true);
 
+  const { facilityIds, setCurrentFacilityId } = useAuthStore();
+  const currentFacilityId = useCurrentFacilityId();
+  const facilityQueries = useMultipleFacilities(facilityIds ?? []);
+
+  const isLoadingFacilities = facilityQueries.some((q) => q.isLoading);
+  const hasMultipleFacilities = (facilityIds?.length ?? 0) > 1;
+
+  const handleExploreFacility = (facilityId: string) => {
+    setCurrentFacilityId(facilityId);
+    const facility = facilityQueries.find(
+      (q) => q.data?.facility?.facility_id === facilityId,
+    );
+    const name = facility?.data?.facility?.facility_name ?? "facility";
+    toast.success(`Switched to ${name}`);
+  };
+
   // Notification preferences state
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
-  const [dailyReport, setDailyReport] = useState(true);
-  const [appointmentAlerts, setAppointmentAlerts] = useState(true);
-  const [capacityAlerts, setCapacityAlerts] = useState(false);
+  // const [emailNotifications, setEmailNotifications] = useState(true);
+  // const [pushNotifications, setPushNotifications] = useState(false);
+  // const [dailyReport, setDailyReport] = useState(true);
+  // const [appointmentAlerts, setAppointmentAlerts] = useState(true);
+  // const [capacityAlerts, setCapacityAlerts] = useState(false);
 
   // Security settings state
-  const [twoFactorAuth, setTwoFactorAuth] = useState(false);
-  const [activeSessions, setActiveSessions] = useState(true);
+  // const [twoFactorAuth, setTwoFactorAuth] = useState(false);
+  // const [activeSessions, setActiveSessions] = useState(true);
 
   return (
     <>
-      <div className="w-full">
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Notifications Preferences Card */}
+      <div className="w-full space-y-6">
+        {/* Facilities Section */}
+        {hasMultipleFacilities && (
           <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-            {/* Card Header */}
             <button
+              onClick={() => setIsFacilitiesOpen(!isFacilitiesOpen)}
+              className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                  <Hospital size={20} className="text-slate-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Facilities
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Manage your assigned facilities ({facilityIds?.length ?? 0})
+                  </p>
+                </div>
+              </div>
+              {isFacilitiesOpen ? (
+                <ChevronUp size={20} className="text-slate-400" />
+              ) : (
+                <ChevronDown size={20} className="text-slate-400" />
+              )}
+            </button>
+
+            {isFacilitiesOpen && (
+              <div className="px-6 pt-2 pb-6">
+                {isLoadingFacilities ? (
+                  <div className="flex h-32 items-center justify-center">
+                    <Loader2 className="text-primary h-6 w-6 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {facilityQueries.map((query) => {
+                      const facility = query.data?.facility;
+                      if (!facility) return null;
+                      return (
+                        <FacilityCard
+                          key={facility.facility_id}
+                          facility={facility}
+                          isActive={facility.facility_id === currentFacilityId}
+                          onExplore={handleExploreFacility}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+          {/* Notifications Preferences Card */}
+          {/* <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white"> */}
+          {/* Card Header */}
+          {/* <button
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
               className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
             >
@@ -58,13 +135,13 @@ export default function Settings() {
               ) : (
                 <ChevronDown size={20} className="text-slate-400" />
               )}
-            </button>
+            </button> */}
 
-            {/* Card Content */}
-            {isNotificationsOpen && (
-              <div className="space-y-4 px-4 pt-2 pb-4">
-                {/* Email Notifications */}
-                <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+          {/* Card Content */}
+          {/* {isNotificationsOpen && (
+              <div className="space-y-4 px-4 pt-2 pb-4"> */}
+          {/* Email Notifications */}
+          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900">
                       Email Notifications
@@ -77,10 +154,10 @@ export default function Settings() {
                     checked={emailNotifications}
                     onCheckedChange={setEmailNotifications}
                   />
-                </div>
+                </div> */}
 
-                {/* Push Notifications */}
-                <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+          {/* Push Notifications */}
+          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900">
                       Push Notifications
@@ -93,10 +170,10 @@ export default function Settings() {
                     checked={pushNotifications}
                     onCheckedChange={setPushNotifications}
                   />
-                </div>
+                </div> */}
 
-                {/* Daily Report Reminder */}
-                <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+          {/* Daily Report Reminder */}
+          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900">
                       Daily Report Reminder
@@ -109,10 +186,10 @@ export default function Settings() {
                     checked={dailyReport}
                     onCheckedChange={setDailyReport}
                   />
-                </div>
+                </div> */}
 
-                {/* Appointment Alerts */}
-                <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+          {/* Appointment Alerts */}
+          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900">
                       Appointment Alerts
@@ -125,10 +202,10 @@ export default function Settings() {
                     checked={appointmentAlerts}
                     onCheckedChange={setAppointmentAlerts}
                   />
-                </div>
+                </div> */}
 
-                {/* Capacity Alerts */}
-                <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+          {/* Capacity Alerts */}
+          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                   <div>
                     <p className="text-sm font-medium text-slate-900">
                       Capacity Alerts
@@ -144,42 +221,40 @@ export default function Settings() {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Right Column - Security and Help */}
-          <div className="space-y-6">
-            {/* Security Card */}
-            <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-              {/* Card Header */}
-              <button
-                onClick={() => setIsSecurityOpen(!isSecurityOpen)}
-                className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-                    <Lock size={20} className="text-slate-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-base font-bold text-slate-900">
-                      Security
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Protect your account
-                    </p>
-                  </div>
+          {/* <div className="flex max-w-full flex-row items-center justify-between"> */}
+          {/* Security Card */}
+          <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+            {/* Card Header */}
+            <button
+              onClick={() => setIsSecurityOpen(!isSecurityOpen)}
+              className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                  <Lock size={20} className="text-slate-600" />
                 </div>
-                {isSecurityOpen ? (
-                  <ChevronUp size={20} className="text-slate-400" />
-                ) : (
-                  <ChevronDown size={20} className="text-slate-400" />
-                )}
-              </button>
+                <div className="text-left">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Security
+                  </h3>
+                  <p className="text-xs text-slate-500">Protect your account</p>
+                </div>
+              </div>
+              {isSecurityOpen ? (
+                <ChevronUp size={20} className="text-slate-400" />
+              ) : (
+                <ChevronDown size={20} className="text-slate-400" />
+              )}
+            </button>
 
-              {/* Card Content */}
-              {isSecurityOpen && (
-                <div className="space-y-2 px-4 pt-2 pb-6">
-                  {/* Two-Factor Authentication */}
-                  <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+            {/* Card Content */}
+            {isSecurityOpen && (
+              <div className="space-y-2 px-4 pt-2 pb-6">
+                {/* Two-Factor Authentication */}
+                {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                     <div>
                       <p className="text-sm font-medium text-slate-900">
                         Two-Factor Authentication
@@ -192,31 +267,31 @@ export default function Settings() {
                       checked={twoFactorAuth}
                       onCheckedChange={setTwoFactorAuth}
                     />
-                  </div>
+                  </div> */}
 
-                  {/* Change Password */}
-                  <div className="py-3">
-                    <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          Password
-                        </p>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          Last changed 2 months ago
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-primary text-xs text-white"
-                      >
-                        Change
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Active Sessions */}
+                {/* Change Password */}
+                <div className="py-3">
                   <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        Password
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        Last changed 2 months ago
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-primary text-xs text-white"
+                    >
+                      Change
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Active Sessions */}
+                {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
                     <div>
                       <p className="text-sm font-medium text-slate-900">
                         Active Sessions
@@ -229,88 +304,88 @@ export default function Settings() {
                       checked={activeSessions}
                       onCheckedChange={setActiveSessions}
                     />
-                  </div>
+                  </div> */}
+              </div>
+            )}
+          </div>
+
+          {/* Help & Support Card */}
+          <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+            {/* Card Header */}
+            <button
+              onClick={() => setIsHelpOpen(!isHelpOpen)}
+              className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                  <HelpCircle size={20} className="text-slate-600" />
                 </div>
+                <div className="text-left">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Help & Support
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Get assistance when you need it
+                  </p>
+                </div>
+              </div>
+              {isHelpOpen ? (
+                <ChevronUp size={20} className="text-slate-400" />
+              ) : (
+                <ChevronDown size={20} className="text-slate-400" />
               )}
-            </div>
+            </button>
 
-            {/* Help & Support Card */}
-            <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-              {/* Card Header */}
-              <button
-                onClick={() => setIsHelpOpen(!isHelpOpen)}
-                className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-                    <HelpCircle size={20} className="text-slate-600" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-base font-bold text-slate-900">
-                      Help & Support
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Get assistance when you need it
-                    </p>
-                  </div>
+            {/* Card Content */}
+            {isHelpOpen && (
+              <div className="px-6 pt-2 pb-6">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Documentation */}
+                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <ExternalLink size={16} className="text-slate-600" />
+                      <span className="text-sm font-medium text-slate-900">
+                        Documentation
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Customer Support */}
+                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <ExternalLink size={16} className="text-slate-600" />
+                      <span className="text-sm font-medium text-slate-900">
+                        Customer Support
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* FAQ's */}
+                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <ExternalLink size={16} className="text-slate-600" />
+                      <span className="text-sm font-medium text-slate-900">
+                        FAQ&apos;s
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Report amn issue */}
+                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <ExternalLink size={16} className="text-slate-600" />
+                      <span className="text-sm font-medium text-slate-900">
+                        Report amn issue
+                      </span>
+                    </div>
+                  </button>
                 </div>
-                {isHelpOpen ? (
-                  <ChevronUp size={20} className="text-slate-400" />
-                ) : (
-                  <ChevronDown size={20} className="text-slate-400" />
-                )}
-              </button>
-
-              {/* Card Content */}
-              {isHelpOpen && (
-                <div className="px-6 pt-2 pb-6">
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Documentation */}
-                    <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <ExternalLink size={16} className="text-slate-600" />
-                        <span className="text-sm font-medium text-slate-900">
-                          Documentation
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* Customer Support */}
-                    <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <ExternalLink size={16} className="text-slate-600" />
-                        <span className="text-sm font-medium text-slate-900">
-                          Customer Support
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* FAQ's */}
-                    <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <ExternalLink size={16} className="text-slate-600" />
-                        <span className="text-sm font-medium text-slate-900">
-                          FAQ&apos;s
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* Report amn issue */}
-                    <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <ExternalLink size={16} className="text-slate-600" />
-                        <span className="text-sm font-medium text-slate-900">
-                          Report amn issue
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+      {/* </div> */}
     </>
   );
 }

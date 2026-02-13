@@ -20,7 +20,6 @@ import {
   Camera,
   Trash2,
   X,
-  Maximize2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, ChangeEvent } from "react";
@@ -29,8 +28,9 @@ import {
   useUploadFacilityImages,
   useDeleteFacilityImage,
 } from "@/features/admin/hooks/useAdminStaff";
+import DeleteImageModal from "./DeleteImageModal";
 
-// --- NEW: Image Viewer Modal Component ---
+// --- Image Viewer Component (Unchanged) ---
 interface ImageViewerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -50,15 +50,12 @@ function ImageViewer({ isOpen, onClose, imageUrl }: ImageViewerProps) {
           <DialogTitle>Profile Image Viewer</DialogTitle>
         </span>
         <div className="relative flex flex-col items-center justify-center">
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute -top-10 right-0 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/40"
           >
             <X size={24} />
           </button>
-
-          {/* Full Image */}
           <img
             src={imageUrl}
             alt="Full Profile"
@@ -86,24 +83,27 @@ export default function ProfileModal({
 }: ProfileModalProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
-
   const facilityId = facility?.facility_id || "";
 
   // Hooks
   const uploadMutation = useUploadFacilityImages(facilityId);
   const deleteMutation = useDeleteFacilityImage(facilityId);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [isViewerOpen, setIsViewerOpen] = useState(false); // State for Viewer
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+
+  // NEW: State to track if Delete Modal is active
+  const [isDeleteModalActive, setIsDeleteModalActive] = useState(false);
 
   const serverImage = (facility as any)?.image_urls?.[0] || null;
-
   const activeImage = previewImage || serverImage;
 
-  // Handle modal close - reset preview image
+  // LOGIC: Only show the Profile Dialog if the main prop is open AND we aren't deleting
+  // This effectively "hides" the profile modal while the delete modal is open
+  const isProfileVisible = isOpen && !isDeleteModalActive;
+
   const handleClose = () => {
     setPreviewImage(null);
     onClose();
@@ -115,16 +115,12 @@ export default function ProfileModal({
     router.push("/login");
   };
 
-  // --- Actions ---
-
   const handleViewImage = () => {
-    if (activeImage) {
-      setIsViewerOpen(true);
-    }
+    if (activeImage) setIsViewerOpen(true);
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening viewer
+    e.stopPropagation();
     if (!facilityId) {
       toast.error("Facility info not loaded.");
       return;
@@ -132,20 +128,41 @@ export default function ProfileModal({
     fileInputRef.current?.click();
   };
 
+  // --- 1. User Clicks Remove Button ---
   const handleDeleteImage = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening viewer
+    e.stopPropagation();
 
+    // If local preview, just clear it
     if (previewImage) {
       setPreviewImage(null);
       toast.info("Removed preview image");
       return;
     }
 
+    // If server image, Hide Profile Modal -> Show Delete Modal
     if (serverImage) {
-      if (confirm("Are you sure you want to remove this profile picture?")) {
-        deleteMutation.mutate(serverImage);
-      }
+      setIsDeleteModalActive(true);
     }
+  };
+
+  // --- 2. User Confirms Delete ---
+  const confirmDelete = () => {
+    if (serverImage) {
+      deleteMutation.mutate(serverImage, {
+        onSuccess: () => {
+          // On success, close Delete Modal, which re-opens Profile Modal automatically
+          setIsDeleteModalActive(false);
+        },
+        onError: () => {
+          // Keep Delete Modal open if error, or close it
+        },
+      });
+    }
+  };
+
+  // --- 3. User Cancels Delete ---
+  const cancelDelete = () => {
+    setIsDeleteModalActive(false); // This re-opens the Profile Modal
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -153,12 +170,10 @@ export default function ProfileModal({
     if (file) {
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
-
       const toastId = toast.loading("Uploading image...");
       uploadMutation.mutate([file], {
-        onSuccess: () => {
-          toast.success("Image uploaded successfully", { id: toastId });
-        },
+        onSuccess: () =>
+          toast.success("Image uploaded successfully", { id: toastId }),
         onError: (error: any) => {
           console.error(error);
           toast.error("Failed to upload image", { id: toastId });
@@ -169,7 +184,7 @@ export default function ProfileModal({
     event.target.value = "";
   };
 
-  // --- UI Helpers ---
+  // UI Helpers
   const getUserInitials = (user: User | null) => {
     if (!user) return "U";
     const first = user.first_name?.[0] || "";
@@ -179,9 +194,8 @@ export default function ProfileModal({
 
   const getUserFullName = (user: User | null) => {
     if (!user) return "Unknown User";
-    if (user.first_name || user.last_name) {
+    if (user.first_name || user.last_name)
       return `${user.first_name || ""} ${user.last_name || ""}`.trim();
-    }
     return user.email.split("@")[0];
   };
 
@@ -196,17 +210,18 @@ export default function ProfileModal({
     }
   };
 
-  const formatRole = (role: string) => {
-    return role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
+  const formatRole = (role: string) =>
+    role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
   const isLoading = uploadMutation.isPending || deleteMutation.isPending;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-md overflow-hidden bg-white p-0">
-          {/* Header */}
+      {/* PROFILE MODAL
+         Notice: open={isProfileVisible}
+         It closes when isDeleteModalActive becomes true
+      */}
+      <Dialog open={isProfileVisible} onOpenChange={handleClose}>
+        <DialogContent className="max-w-xl overflow-hidden bg-white p-0">
           <div className="from-primary/90 to-primary relative bg-gradient-to-br px-6 pt-6 pb-20">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-white">
@@ -217,8 +232,7 @@ export default function ProfileModal({
             <div className="absolute bottom-0 left-0 h-20 w-20 -translate-x-1/2 translate-y-1/2 rounded-full bg-white/10" />
           </div>
 
-          {/* Profile Avatar - BIGGER and CENTERED */}
-          <div className="relative z-10 -mt-16 flex justify-center">
+          <div className="relative z-10 -mt-16 flex flex-col items-center justify-center">
             <input
               type="file"
               ref={fileInputRef}
@@ -227,58 +241,20 @@ export default function ProfileModal({
               onChange={handleFileChange}
             />
 
-            {/* Avatar Container */}
             <div
               onClick={handleViewImage}
-              className={`group relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-xl transition-all duration-300 ${!isLoading && activeImage ? "cursor-zoom-in hover:scale-105" : ""} ${!activeImage && !isLoading ? "cursor-default" : ""}`}
+              className={`relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-xl transition-all duration-300 ${!isLoading && activeImage ? "cursor-zoom-in hover:scale-105" : ""} ${!activeImage && !isLoading ? "cursor-default" : ""}`}
             >
-              {/* Loading Overlay */}
               {isLoading && (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                   <Loader2 className="h-10 w-10 animate-spin text-white" />
                 </div>
               )}
-
-              {/* Hover Actions Overlay */}
-              {!isLoading && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/30 opacity-0 backdrop-blur-[2px] transition-all duration-300 group-hover:opacity-100">
-                  <div className="flex gap-3">
-                    {/* Upload Button */}
-                    <button
-                      onClick={handleAvatarClick}
-                      className="rounded-full bg-white/20 p-2.5 text-white transition-colors hover:scale-110 hover:bg-white/40"
-                      title="Change picture"
-                    >
-                      <Camera size={20} />
-                    </button>
-
-                    {/* Delete Button */}
-                    {activeImage && (
-                      <button
-                        onClick={handleDeleteImage}
-                        className="rounded-full bg-red-500/80 p-2.5 text-white transition-colors hover:scale-110 hover:bg-red-600"
-                        title="Remove picture"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Hint Text */}
-                  {activeImage && (
-                    <span className="flex items-center gap-1 text-[10px] font-medium text-white/90">
-                      <Maximize2 size={10} /> View
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Display Image or Initials */}
               {activeImage ? (
                 <img
                   src={activeImage}
                   alt="Profile"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <div className="from-primary to-primary/80 flex h-full w-full items-center justify-center bg-gradient-to-br text-4xl font-bold text-white">
@@ -286,17 +262,35 @@ export default function ProfileModal({
                 </div>
               )}
             </div>
+
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                onClick={handleAvatarClick}
+                disabled={isLoading}
+                className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:opacity-50"
+              >
+                <Camera size={14} />
+                {activeImage ? "Change" : "Upload Photo"}
+              </button>
+              {activeImage && (
+                <button
+                  onClick={handleDeleteImage}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* User Info Section */}
           <div className="px-6 pt-3 pb-2 text-center">
             <h3 className="text-xl font-bold text-gray-900">
               {getUserFullName(user)}
             </h3>
             <span
-              className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(
-                user?.role || "user",
-              )}`}
+              className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(user?.role || "user")}`}
             >
               <Shield size={12} />
               {formatRole(user?.role || "user")}
@@ -307,12 +301,10 @@ export default function ProfileModal({
             <div className="border-t border-gray-100" />
           </div>
 
-          {/* User Details */}
           <div className="space-y-3 px-6 py-4">
             <h4 className="mb-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
               Account Information
             </h4>
-
             <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100">
               <div className="bg-primary/10 flex h-9 w-9 items-center justify-center rounded-full">
                 <Mail size={16} className="text-primary" />
@@ -324,7 +316,6 @@ export default function ProfileModal({
                 </p>
               </div>
             </div>
-
             <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
                 <UserIcon size={16} className="text-green-600" />
@@ -342,12 +333,10 @@ export default function ProfileModal({
             <div className="border-t border-gray-100" />
           </div>
 
-          {/* Facility Section */}
           <div className="space-y-3 px-6 py-4">
             <h4 className="mb-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
               Assigned Facility
             </h4>
-
             {isFacilityLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 size={24} className="text-primary animate-spin" />
@@ -367,7 +356,6 @@ export default function ProfileModal({
                     </p>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-2">
                   {facility.address && (
                     <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2.5">
@@ -428,11 +416,22 @@ export default function ProfileModal({
         </DialogContent>
       </Dialog>
 
-      {/* Image Viewer Component */}
       <ImageViewer
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}
         imageUrl={activeImage}
+      />
+
+      {/* DELETE IMAGE MODAL
+         This modal becomes visible when isDeleteModalActive is true.
+         When it opens, Profile Modal automatically hides because of logic above.
+      */}
+      <DeleteImageModal
+        isOpen={isDeleteModalActive}
+        onClose={cancelDelete} // If canceled, this sets active=false, so Profile Modal returns
+        onConfirm={confirmDelete}
+        isDeleting={deleteMutation.isPending}
+        imageUrl={serverImage}
       />
     </>
   );
