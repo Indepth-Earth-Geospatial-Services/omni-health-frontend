@@ -58,12 +58,12 @@ export const StaffRow = ({
   const formattedName = toSentenceCase(item.full_name);
   const initials = getInitials(item.full_name);
 
-  // Format qualifications with date - show values not keys
+  // Format qualifications with date - keys are qualification names per API schema
   const formatQualifications = () => {
     if (!item.qualifications || Object.keys(item.qualifications).length === 0) {
       return "-";
     }
-    const quals = Object.values(item.qualifications).filter(Boolean).join(", ");
+    const quals = Object.keys(item.qualifications).filter(Boolean).join(", ");
     return item.qualification_date
       ? `${quals} (${item.qualification_date})`
       : quals;
