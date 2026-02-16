@@ -88,7 +88,7 @@ export function SearchResults({
     );
   }, [searchData]);
 
-  const totalResultsCount = facilities.length;
+  const totalResultsCount = searchData?.pages[0]?.totalCount || 0;
   const hasResults = totalResultsCount > 0;
 
   // ==================== EVENT HANDLERS ====================
