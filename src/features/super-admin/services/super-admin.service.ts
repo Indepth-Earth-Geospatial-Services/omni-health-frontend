@@ -57,10 +57,11 @@ export interface CreateStaffRequest {
   rank_cadre?: string;
   grade_level?: string;
   phone_number?: string;
-  email: string;
+  email?: string;
   date_first_appointment?: string;
   date_of_birth?: string;
   qualifications?: Record<string, any>;
+  is_active?: boolean;
 }
 
 export interface CreateStaffResponse {

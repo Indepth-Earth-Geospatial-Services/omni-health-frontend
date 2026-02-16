@@ -223,7 +223,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
                     <td className="max-w-48 truncate p-4 text-sm text-slate-600">
                       {item.qualifications &&
                       Object.keys(item.qualifications).length > 0
-                        ? Object.values(item.qualifications).join(", ")
+                        ? Object.keys(item.qualifications).join(", ")
                         : "-"}
                     </td>
                   )}
