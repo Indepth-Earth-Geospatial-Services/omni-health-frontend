@@ -2,9 +2,9 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import Sidebar from "@/features/admin/components/layout/Sidebar";
-import { UnregisterServiceWorker } from "@/components/UnregisterServiceWorker";
+import { UnregisterServiceWorker } from "@/features/auth/UnregisterServiceWorker";
 import QueryProvider from "@/providers/query.provider";
-import { AuthHydration } from "@/components/AuthHydration";
+import { AuthHydration } from "@/./features/auth/AuthHydration";
 
 export const metadata: Metadata = {
   title: "Omni Health Admin",
@@ -24,9 +24,7 @@ export default function RootLayout({
           {/* Sidebar - Fixed width */}
           <Sidebar />
           {/* Main Content Area - This will render your pages */}
-          <div className="flex flex-1 flex-col overflow-hidden">
-            {children}
-          </div>
+          <div className="flex flex-1 flex-col overflow-hidden">{children}</div>
         </div>
       </AuthHydration>
     </QueryProvider>
