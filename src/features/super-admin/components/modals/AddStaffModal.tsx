@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   X,
   ChevronDown,
@@ -11,6 +11,11 @@ import {
   Building2,
   Check,
   Loader2,
+  Award,
+  Calendar,
+  Briefcase,
+  Hash,
+  ToggleLeft,
 } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 import { apiClient } from "@/lib/client";
@@ -19,6 +24,8 @@ import { superAdminService } from "@/features/super-admin/services/super-admin.s
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateStaffRequest } from "@/features/super-admin/services/super-admin.service";
 import { toast } from "sonner";
+import { useSuperAdminStaffSchema } from "@/features/super-admin/hooks/seStaffQuery";
+import type { LucideIcon } from "lucide-react";
 
 interface Facility {
   facility_id: string;
@@ -31,6 +38,92 @@ interface AddStaffModalProps {
   onSuccess?: () => void;
 }
 
+interface FieldConfig {
+  label: string;
+  type: "text" | "tel" | "date" | "select";
+  required?: boolean;
+  fullWidth?: boolean;
+  icon?: LucideIcon;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+}
+
+// Map of known field configurations — only fields present in schema will be rendered
+const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
+  full_name: {
+    label: "Full Name",
+    type: "text",
+    required: true,
+    fullWidth: true,
+    icon: User,
+    placeholder: "Enter full name",
+  },
+  email: {
+    label: "Email Address",
+    type: "text",
+    required: false,
+    fullWidth: true,
+    icon: Mail,
+    placeholder: "Enter email (optional)",
+  },
+  phone_number: {
+    label: "Phone Number",
+    type: "tel",
+    icon: Phone,
+    placeholder: "Enter phone number",
+  },
+  gender: {
+    label: "Gender",
+    type: "select",
+    icon: User,
+    options: [
+      { value: "M", label: "Male" },
+      { value: "F", label: "Female" },
+    ],
+  },
+  rank_cadre: {
+    label: "Rank/Cadre",
+    type: "text",
+    icon: Briefcase,
+    placeholder: "Enter rank/cadre",
+  },
+  grade_level: {
+    label: "Grade Level",
+    type: "text",
+    icon: Hash,
+    placeholder: "Enter grade level",
+  },
+  qualifications: {
+    label: "Qualifications",
+    type: "text",
+    fullWidth: true,
+    icon: Award,
+    placeholder: "e.g. MBBS, BSc Nursing (comma separated)",
+  },
+  date_first_appointment: {
+    label: "Date of 1st Appt",
+    type: "date",
+    icon: Calendar,
+  },
+  date_of_birth: {
+    label: "Date of Birth",
+    type: "date",
+    icon: Calendar,
+  },
+  is_active: {
+    label: "Status",
+    type: "select",
+    icon: ToggleLeft,
+    options: [
+      { value: "true", label: "Active" },
+      { value: "false", label: "Inactive" },
+    ],
+  },
+};
+
+// Fields that should always appear even if not in schema
+const ALWAYS_SHOW_FIELDS = ["full_name"];
+
 const AddStaffModal: React.FC<AddStaffModalProps> = ({
   isOpen,
   onClose,
@@ -38,31 +131,48 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    phone_number: "",
-    gender: "",
-    rank_cadre: "",
-    grade_level: "",
-    date_of_birth: "",
-    date_first_appointment: "",
-    facility_id: "",
-  });
-
+  const [formData, setFormData] = useState<Record<string, string>>({});
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [isFacilityDropdownOpen, setIsFacilityDropdownOpen] = useState(false);
-  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFacilityId, setSelectedFacilityId] = useState("");
 
   const facilityDropdownRef = useRef<HTMLDivElement>(null);
-  const genderDropdownRef = useRef<HTMLDivElement>(null);
+  const selectDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const genderOptions = [
-    { value: "M", label: "Male" },
-    { value: "F", label: "Female" },
-  ];
+  // Fetch schema dynamically based on selected facility
+  const { data: schema, isLoading: schemaLoading } =
+    useSuperAdminStaffSchema(selectedFacilityId || undefined);
+
+  // Determine which fields to render based on schema
+  const fieldsToRender = useMemo(() => {
+    const schemaKeys = schema ? Object.keys(schema) : [];
+    const fieldKeys = schema
+      ? schemaKeys.filter(
+          (key) => FIELD_CONFIG_MAP[key] || ALWAYS_SHOW_FIELDS.includes(key),
+        )
+      : Object.keys(FIELD_CONFIG_MAP);
+
+    // Ensure always-show fields are present
+    ALWAYS_SHOW_FIELDS.forEach((key) => {
+      if (!fieldKeys.includes(key)) fieldKeys.unshift(key);
+    });
+
+    return fieldKeys;
+  }, [schema]);
+
+  // Initialize form data when fields change
+  useEffect(() => {
+    setFormData((prev) => {
+      const next: Record<string, string> = {};
+      fieldsToRender.forEach((key) => {
+        next[key] = prev[key] || "";
+      });
+      return next;
+    });
+  }, [fieldsToRender]);
 
   // Create staff mutation
   const createStaffMutation = useMutation({
@@ -76,33 +186,27 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       );
     },
     onSuccess: (data) => {
-      // Show success toast
       toast.success("Staff member added successfully!", {
         description: `${data.full_name} has been added to the facility.`,
       });
-
-      // Invalidate and refetch staff list
       queryClient.invalidateQueries({ queryKey: ["all-staff"] });
       onSuccess?.();
       handleClose();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to add staff:", error);
-
-      // Show error toast
+      const err = error as { response?: { data?: { message?: string; detail?: Array<{ loc: string[]; msg: string }> } } };
       toast.error("Failed to add staff member", {
         description:
-          error.response?.data?.message ||
+          err.response?.data?.message ||
           "Please check the form and try again.",
       });
-
-      // Handle validation errors from API
-      if (error.response?.data?.detail) {
-        if (Array.isArray(error.response.data.detail)) {
+      if (err.response?.data?.detail) {
+        if (Array.isArray(err.response.data.detail)) {
           const newErrors: Record<string, string> = {};
-          error.response.data.detail.forEach((err: any) => {
-            const field = err.loc[err.loc.length - 1];
-            newErrors[field] = err.msg;
+          err.response.data.detail.forEach((detail) => {
+            const field = detail.loc[detail.loc.length - 1];
+            newErrors[field] = detail.msg;
           });
           setErrors(newErrors);
         }
@@ -126,22 +230,21 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       ) {
         setIsFacilityDropdownOpen(false);
       }
-      if (
-        genderDropdownRef.current &&
-        !genderDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsGenderDropdownOpen(false);
+      if (openDropdown) {
+        const ref = selectDropdownRefs.current[openDropdown];
+        if (ref && !ref.contains(event.target as Node)) {
+          setOpenDropdown(null);
+        }
       }
     }
 
-    if (isFacilityDropdownOpen || isGenderDropdownOpen) {
+    if (isFacilityDropdownOpen || openDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isFacilityDropdownOpen, isGenderDropdownOpen]);
+  }, [isFacilityDropdownOpen, openDropdown]);
 
   const fetchFacilities = async () => {
     setLoadingFacilities(true);
@@ -166,18 +269,21 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
     }
   };
 
+  const handleSelectChange = (fieldKey: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [fieldKey]: value }));
+    setOpenDropdown(null);
+    if (errors[fieldKey]) {
+      setErrors((prev) => ({ ...prev, [fieldKey]: "" }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.full_name.trim()) {
+    if (!formData.full_name?.trim()) {
       newErrors.full_name = "Full name is required";
     }
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-    if (!formData.facility_id) {
+    if (!selectedFacilityId) {
       newErrors.facility_id = "Facility is required";
     }
 
@@ -188,50 +294,184 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    // Prepare staff data (exclude facility_id from the data object)
+    // Build staff data dynamically from form
     const staffData: CreateStaffRequest = {
       full_name: formData.full_name,
-      email: formData.email,
-      ...(formData.phone_number && { phone_number: formData.phone_number }),
-      ...(formData.gender && { gender: formData.gender }),
-      ...(formData.rank_cadre && { rank_cadre: formData.rank_cadre }),
-      ...(formData.grade_level && { grade_level: formData.grade_level }),
-      ...(formData.date_of_birth && { date_of_birth: formData.date_of_birth }),
-      ...(formData.date_first_appointment && {
-        date_first_appointment: formData.date_first_appointment,
-      }),
     };
 
+    fieldsToRender.forEach((key) => {
+      if (key === "full_name") return; // already added
+      const value = formData[key]?.trim();
+      if (!value) return;
+
+      if (key === "qualifications") {
+        // Convert comma-separated string to { "MBBS": {}, "BSc": {} } format
+        const quals: Record<string, Record<string, never>> = {};
+        value.split(",").forEach((q) => {
+          const trimmed = q.trim();
+          if (trimmed) quals[trimmed] = {};
+        });
+        if (Object.keys(quals).length > 0) {
+          staffData.qualifications = quals;
+        }
+      } else if (key === "is_active") {
+        staffData.is_active = value === "true";
+      } else {
+        (staffData as unknown as Record<string, unknown>)[key] = value;
+      }
+    });
+
     createStaffMutation.mutate({
-      facilityId: formData.facility_id,
+      facilityId: selectedFacilityId,
       staffData,
     });
   };
 
   const handleClose = () => {
-    setFormData({
-      full_name: "",
-      email: "",
-      phone_number: "",
-      gender: "",
-      rank_cadre: "",
-      grade_level: "",
-      date_of_birth: "",
-      date_first_appointment: "",
-      facility_id: "",
-    });
+    setFormData({});
+    setSelectedFacilityId("");
     setErrors({});
     setIsFacilityDropdownOpen(false);
-    setIsGenderDropdownOpen(false);
+    setOpenDropdown(null);
     onClose();
   };
 
   if (!isOpen) return null;
 
   const selectedFacility = facilities.find(
-    (f) => f.facility_id === formData.facility_id,
+    (f) => f.facility_id === selectedFacilityId,
   );
-  const selectedGender = genderOptions.find((g) => g.value === formData.gender);
+
+  const renderField = (fieldKey: string) => {
+    const config = FIELD_CONFIG_MAP[fieldKey];
+    if (!config) {
+      // Unknown field from schema — render as a generic text input
+      return (
+        <div key={fieldKey}>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            {fieldKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+          </label>
+          <input
+            type="text"
+            name={fieldKey}
+            value={formData[fieldKey] || ""}
+            onChange={handleInputChange}
+            placeholder={`Enter ${fieldKey.replace(/_/g, " ")}`}
+            className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none"
+          />
+        </div>
+      );
+    }
+
+    const Icon = config.icon;
+    const isRequired = config.required;
+    const isFullWidth = config.fullWidth;
+
+    // Select fields
+    if (config.type === "select" && config.options) {
+      const selectedOption = config.options.find(
+        (o) => o.value === formData[fieldKey],
+      );
+
+      return (
+        <div
+          key={fieldKey}
+          className={isFullWidth ? "col-span-2" : ""}
+          ref={(el) => {
+            selectDropdownRefs.current[fieldKey] = el;
+          }}
+        >
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            {config.label}
+            {isRequired && <span className="text-red-500"> *</span>}
+          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() =>
+                setOpenDropdown(openDropdown === fieldKey ? null : fieldKey)
+              }
+              className={cn(
+                "focus:border-primary focus:ring-primary/20 flex w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-sm text-slate-600 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none",
+                errors[fieldKey] ? "border-red-500" : "border-slate-300",
+              )}
+            >
+              <span
+                className={
+                  selectedOption ? "text-slate-800" : "text-slate-400"
+                }
+              >
+                {selectedOption?.label || `Select ${config.label.toLowerCase()}`}
+              </span>
+              <ChevronDown
+                size={16}
+                className={cn(
+                  "text-slate-400 transition-transform",
+                  openDropdown === fieldKey && "rotate-180",
+                )}
+              />
+            </button>
+
+            {openDropdown === fieldKey && (
+              <div className="absolute top-full z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
+                {config.options.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleSelectChange(fieldKey, option.value)}
+                    className={cn(
+                      "flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50",
+                      formData[fieldKey] === option.value &&
+                        "bg-primary/5 text-primary font-medium",
+                    )}
+                  >
+                    <span>{option.label}</span>
+                    {formData[fieldKey] === option.value && <Check size={16} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {errors[fieldKey] && (
+            <p className="mt-1 text-xs text-red-500">{errors[fieldKey]}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Text, tel, date fields
+    return (
+      <div key={fieldKey} className={isFullWidth ? "col-span-2" : ""}>
+        <label className="mb-2 block text-sm font-medium text-slate-700">
+          {config.label}
+          {isRequired && <span className="text-red-500"> *</span>}
+        </label>
+        <div className="relative">
+          {Icon && (
+            <Icon
+              size={18}
+              className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+            />
+          )}
+          <input
+            type={config.type}
+            name={fieldKey}
+            value={formData[fieldKey] || ""}
+            onChange={handleInputChange}
+            placeholder={config.placeholder}
+            className={cn(
+              "focus:border-primary focus:ring-primary/20 w-full rounded-lg border bg-white py-3 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none",
+              Icon ? "pr-4 pl-10" : "px-4",
+              errors[fieldKey] ? "border-red-500" : "border-slate-300",
+            )}
+          />
+        </div>
+        {errors[fieldKey] && (
+          <p className="mt-1 text-xs text-red-500">{errors[fieldKey]}</p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -259,139 +499,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
         {/* Content */}
         <div className="max-h-[70vh] overflow-y-auto p-6">
           <div className="grid grid-cols-2 gap-4">
-            {/* Full Name */}
-            <div className="col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <User
-                  size={18}
-                  className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="text"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleInputChange}
-                  placeholder="Enter full name"
-                  className={cn(
-                    "focus:border-primary focus:ring-primary/20 w-full rounded-lg border bg-white py-3 pr-4 pl-10 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none",
-                    errors.full_name ? "border-red-500" : "border-slate-300",
-                  )}
-                />
-              </div>
-              {errors.full_name && (
-                <p className="mt-1 text-xs text-red-500">{errors.full_name}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="col-span-2">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Mail
-                  size={18}
-                  className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter email address"
-                  className={cn(
-                    "focus:border-primary focus:ring-primary/20 w-full rounded-lg border bg-white py-3 pr-4 pl-10 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none",
-                    errors.email ? "border-red-500" : "border-slate-300",
-                  )}
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone
-                  size={18}
-                  className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="tel"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleInputChange}
-                  placeholder="Enter phone number"
-                  className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white py-3 pr-4 pl-10 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Gender */}
-            <div ref={genderDropdownRef}>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Gender
-              </label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
-                  className="focus:border-primary focus:ring-primary/20 flex w-full items-center justify-between rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none"
-                >
-                  <span
-                    className={
-                      selectedGender ? "text-slate-800" : "text-slate-400"
-                    }
-                  >
-                    {selectedGender?.label || "Select gender"}
-                  </span>
-                  <ChevronDown
-                    size={16}
-                    className={cn(
-                      "text-slate-400 transition-transform",
-                      isGenderDropdownOpen && "rotate-180",
-                    )}
-                  />
-                </button>
-
-                {isGenderDropdownOpen && (
-                  <div className="absolute top-full z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
-                    {genderOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            gender: option.value,
-                          }));
-                          setIsGenderDropdownOpen(false);
-                        }}
-                        className={cn(
-                          "flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50",
-                          formData.gender === option.value &&
-                            "bg-primary/5 text-primary font-medium",
-                        )}
-                      >
-                        <span>{option.label}</span>
-                        {formData.gender === option.value && (
-                          <Check size={16} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Facility */}
+            {/* Facility Selector — always shown first */}
             <div className="col-span-2" ref={facilityDropdownRef}>
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Facility <span className="text-red-500">*</span>
@@ -446,10 +554,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
                           key={facility.facility_id}
                           type="button"
                           onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              facility_id: facility.facility_id,
-                            }));
+                            setSelectedFacilityId(facility.facility_id);
                             setIsFacilityDropdownOpen(false);
                             if (errors.facility_id) {
                               setErrors((prev) => ({
@@ -460,7 +565,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
                           }}
                           className={cn(
                             "flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50",
-                            formData.facility_id === facility.facility_id &&
+                            selectedFacilityId === facility.facility_id &&
                               "bg-primary/5 text-primary font-medium",
                           )}
                         >
@@ -482,63 +587,16 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
               )}
             </div>
 
-            {/* Rank/Cadre */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Rank/Cadre
-              </label>
-              <input
-                type="text"
-                name="rank_cadre"
-                value={formData.rank_cadre}
-                onChange={handleInputChange}
-                placeholder="Enter rank/cadre"
-                className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none"
-              />
-            </div>
+            {/* Schema loading indicator */}
+            {schemaLoading && selectedFacilityId && (
+              <div className="col-span-2 flex items-center justify-center gap-2 py-4 text-sm text-slate-500">
+                <Loader2 size={16} className="animate-spin" />
+                Loading form fields...
+              </div>
+            )}
 
-            {/* Grade Level */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Grade Level
-              </label>
-              <input
-                type="text"
-                name="grade_level"
-                value={formData.grade_level}
-                onChange={handleInputChange}
-                placeholder="Enter grade level"
-                className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none"
-              />
-            </div>
-
-            {/* Date of Birth */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                name="date_of_birth"
-                value={formData.date_of_birth}
-                onChange={handleInputChange}
-                className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none"
-              />
-            </div>
-
-            {/* Date of First Appointment */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Date of 1st Appt
-              </label>
-              <input
-                type="date"
-                name="date_first_appointment"
-                value={formData.date_first_appointment}
-                onChange={handleInputChange}
-                className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none"
-              />
-            </div>
+            {/* Dynamic fields from schema */}
+            {fieldsToRender.map((fieldKey) => renderField(fieldKey))}
           </div>
         </div>
 

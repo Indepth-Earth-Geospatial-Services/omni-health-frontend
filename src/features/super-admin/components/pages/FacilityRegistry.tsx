@@ -291,25 +291,31 @@ export default function FacilityRegistry() {
                       />
                     </td>
                     <td className="p-4 text-sm font-medium text-slate-900">
-                      {facility.facility_name}
+                      {facility.facility_name || "-"}
                     </td>
                     <td className="p-4 text-sm text-slate-600">
-                      {facility.hfr_id || "N/A"}
+                      {facility.hfr_id || "-"}
                     </td>
                     <td className="max-w-xs truncate p-4 text-sm text-slate-600">
-                      {facility.address}
+                      {/* {facility.address} */}
+                      {facility.address &&
+                      typeof facility.address === "string" &&
+                      facility.address !== "NaN" &&
+                      facility.address.trim() !== ""
+                        ? facility.address
+                        : "-"}
                     </td>
                     <td className="p-4 text-sm text-slate-600">
-                      {facility.facility_lga}
+                      {facility.facility_lga || "-"}
                     </td>
                     <td className="p-4 text-sm text-slate-600">
-                      {facility.facility_category}
+                      {facility.facility_category || "-"}
                     </td>
                     <td className="p-4 text-sm text-slate-600">
                       <div className="flex flex-col gap-0.5">
-                        <span>{formatDate(facility.last_updated)}</span>
+                        <span>{formatDate(facility.last_updated || "-")}</span>
                         <span className="text-xs text-slate-400">
-                          {formatRelativeDate(facility.last_updated)}
+                          {formatRelativeDate(facility.last_updated || "-")}
                         </span>
                       </div>
                     </td>
