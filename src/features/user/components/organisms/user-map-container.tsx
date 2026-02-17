@@ -1,6 +1,7 @@
 import MapComponent from "@/components/shared/molecules/map-component";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { Facility } from "@/types";
+import { memo } from "react";
 
 interface UserMapContainerProps {
   activeDrawer: string;
@@ -10,14 +11,13 @@ interface UserMapContainerProps {
   allFacilities: Facility[];
 }
 
-export function UserMapContainer({
+function UserMapContainerBase({
   activeDrawer,
   userLocation,
   selectedFacility,
   nearYouFacilities,
   allFacilities,
 }: UserMapContainerProps) {
-  // 1. Logic for Direction Mode
   const isDirectionMode = activeDrawer === "directions";
   const shouldFetchRoute =
     isDirectionMode && !!selectedFacility && !!userLocation;
@@ -60,3 +60,5 @@ export function UserMapContainer({
     />
   );
 }
+export const UserMapContainer = memo(UserMapContainerBase);
+UserMapContainer.displayName = "UserMapContainer";
