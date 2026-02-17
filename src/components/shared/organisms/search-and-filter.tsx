@@ -4,7 +4,7 @@ import { useFacilityStore } from "@/features/user/store/facility-store";
 import { useSearchFilterStore } from "@/store/search-filter-store";
 import { Facility } from "@/types";
 import { SelectedFilters } from "@/types/search-filter";
-import { useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { ActiveFilters } from "../atoms/active-filters";
 import { FilterButton } from "../atoms/filter-button";
 import { SearchBar } from "../atoms/search-bar";
@@ -19,24 +19,37 @@ interface SearchAndFilterProps {
   className?: string;
 }
 
-export function SearchAndFilter({
+function SearchAndFilterBase({
   onApplyFilters,
   includeFilter = false,
   includeExpandedSearchFilter = false,
   includeSearchResults = false,
   className,
 }: SearchAndFilterProps) {
-  const {
-    searchQuery,
-    isSearchExpanded,
-    selectedFilters,
-    isFilterOpen,
-    setSearchQuery,
-    setIsSearchExpanded,
-    toggleFilter,
-    clearAllFilters,
-    setIsFilterOpen,
-  } = useSearchFilterStore();
+  // 1. Data State (Primitives & Objects)
+  const searchQuery = useSearchFilterStore((state) => state.searchQuery);
+  const isSearchExpanded = useSearchFilterStore(
+    (state) => state.isSearchExpanded,
+  );
+  const selectedFilters = useSearchFilterStore(
+    (state) => state.selectedFilters,
+  );
+  const isFilterOpen = useSearchFilterStore((state) => state.isFilterOpen);
+
+  // 2. Actions (Functions)
+  // Note: These usually don't change, but selecting them explicitly is cleaner for debugging
+  const setSearchQuery = useSearchFilterStore((state) => state.setSearchQuery);
+  const setIsSearchExpanded = useSearchFilterStore(
+    (state) => state.setIsSearchExpanded,
+  );
+  const toggleFilter = useSearchFilterStore((state) => state.toggleFilter);
+  const clearAllFilters = useSearchFilterStore(
+    (state) => state.clearAllFilters,
+  );
+  const setIsFilterOpen = useSearchFilterStore(
+    (state) => state.setIsFilterOpen,
+  );
+
   const openDetails = useDrawerStore((state) => state.openDetails);
   const setSelectedFacility = useFacilityStore(
     (state) => state.setSelectedFacility,
@@ -57,7 +70,8 @@ export function SearchAndFilter({
   const handleApplyFilters = useCallback(() => {
     onApplyFilters?.(selectedFilters);
     setIsFilterOpen(false);
-  }, [onApplyFilters, selectedFilters, setIsFilterOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFilters, setIsFilterOpen]);
 
   // Handle remove filter
   const handleRemoveFilter = (category: string, value: string) => {
@@ -76,7 +90,8 @@ export function SearchAndFilter({
   useEffect(() => {
     if (isFilterOpen) return;
     onApplyFilters?.(selectedFilters);
-  }, [isFilterOpen, onApplyFilters, selectedFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFilterOpen, selectedFilters]);
 
   return (
     <div className={className}>
@@ -133,3 +148,5 @@ export function SearchAndFilter({
     </div>
   );
 }
+export const SearchAndFilter = memo(SearchAndFilterBase);
+SearchAndFilter.displayName = "SearchAndFilter";

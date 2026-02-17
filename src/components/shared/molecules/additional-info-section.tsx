@@ -25,6 +25,7 @@ export const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({
 
   return (
     <DataSection
+      useAccordion={true}
       title="Additional Information"
       icon={<AlertCircle className="h-5 w-5" />}
       data={additionalInfo}

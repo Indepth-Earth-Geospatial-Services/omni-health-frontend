@@ -28,7 +28,6 @@ function UserPage() {
 
   // 2. Derived Data & Actions
   const { nearYouFacilities, otherFacilities } = useFacilityData();
-  console.log(otherFacilities);
   const drawerActions = useDrawerActions();
   // 3. Cleanup Effect
   useEffect(() => {
@@ -42,7 +41,6 @@ function UserPage() {
         <div className="relative z-10 flex gap-3 px-5 pt-3">
           <SideBar className="shrink-0" />
           <SearchAndFilter
-            key="user variant"
             includeExpandedSearchFilter={true}
             className="relative z-60 w-[70%]!"
             includeSearchResults={true}

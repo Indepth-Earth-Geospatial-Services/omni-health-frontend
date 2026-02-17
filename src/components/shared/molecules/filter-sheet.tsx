@@ -1,7 +1,12 @@
 "use client";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
   SheetContent,
@@ -44,53 +49,56 @@ function FilterSheetComponent({
           </SheetTitle>
         </SheetHeader>
 
-        <div className="space-y-6">
-          {FILTERCATEGORIES.map((category) => {
-            const categoryKey = category.storeKey;
-            return (
-              <div key={category.title} className="space-y-3">
-                <h3 className="text-[15px] font-normal text-[##343434]">
-                  {category.title}
-                </h3>
-                <div className={`flex flex-wrap gap-2`}>
-                  {category.options.map((option) => {
-                    const isChecked = selectedFilters[categoryKey]?.includes(
-                      option.value,
-                    );
+        <Accordion type="single" collapsible className="w-full">
+          <div className="space-y-6">
+            {FILTERCATEGORIES.map((category) => {
+              const categoryKey = category.storeKey;
+              return (
+                <AccordionItem
+                  key={category.title}
+                  value={categoryKey}
+                  className="space-y-3 border-0"
+                >
+                  <AccordionTrigger className="text-[15px] font-normal text-[##343434]">
+                    {category.title}
+                  </AccordionTrigger>
+                  <AccordionContent className={`flex flex-wrap gap-2`}>
+                    {category.options.map((option) => {
+                      const isChecked = selectedFilters[categoryKey]?.includes(
+                        option.value,
+                      );
 
-                    return (
-                      <div key={option.id} className="flex items-center">
-                        <Checkbox
-                          id={option.id}
-                          checked={selectedFilters[categoryKey]?.includes(
-                            option.value,
-                          )}
-                          onCheckedChange={() =>
-                            onFilterChange(categoryKey, option.value)
-                          }
-                          className="hidden h-5 w-5 rounded border-[#E2E4E9] data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600"
-                        />
-                        <label
-                          htmlFor={option.id}
-                          // peer-data-[state=checked]:border-primary peer-data-[state=checked]:text-primary
-                          className={cn(
-                            "flex h-6 cursor-pointer items-center justify-center gap-1 rounded-[24px] border-[0.5px] border-[#E4E4E4] px-2 text-xs tracking-[-0.5px]",
-                            isChecked && "border-primary text-primary",
-                          )}
-                        >
-                          {" "}
-                          <span>{option.icon ? option.icon : ""}</span>
-                          {option.label}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
+                      return (
+                        <div key={option.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={option.id}
+                            className="hidden"
+                            checked={isChecked}
+                            onChange={() =>
+                              onFilterChange(categoryKey, option.value)
+                            }
+                          />
+                          <label
+                            htmlFor={option.id}
+                            className={cn(
+                              "flex h-6 cursor-pointer items-center justify-center gap-1 rounded-[24px] border-[0.5px] border-[#E4E4E4] px-2 text-xs tracking-[-0.5px]",
+                              isChecked && "border-primary text-primary",
+                            )}
+                          >
+                            {" "}
+                            <span>{option.icon ? option.icon : ""}</span>
+                            {option.label}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </div>
+        </Accordion>
         <div className="mt-3.5 flex items-end justify-between gap-4">
           <button onClick={onClearAll} className="underline">
             Clear all
