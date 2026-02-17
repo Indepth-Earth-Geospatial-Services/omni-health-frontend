@@ -66,6 +66,7 @@ export const InventorySection: React.FC<InventorySectionProps> = ({
 
   return (
     <DataSection
+      useAccordion={true}
       title="Medical Equipment"
       icon={<Shield className="h-5 w-5" />}
       data={inventoryItems}
