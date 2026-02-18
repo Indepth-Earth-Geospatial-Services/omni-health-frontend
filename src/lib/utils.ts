@@ -156,6 +156,7 @@ export function formatDistance(distanceInMeters: number): string {
  * E.g., "Lagos University Teaching Hospital" -> "LUTH"
  */
 export const getInitials = (name: string): string => {
+  if (typeof name != "string") return;
   return name
     .split(" ")
     .map((word) => word[0])
@@ -245,3 +246,20 @@ export const getFacilityDefaults = (facility?: Partial<Facility>): Facility => {
     },
   };
 };
+
+/**
+ * Generates uppercase initials from a user object.
+ * @param {Object} user - The user entity.
+ * @returns {string} The formatted initials (e.g., "JD").
+ */
+export function getUserInitials(user) {
+  // 1. Nullish Coalescing and Optional Chaining
+  const firstName = user?.first_name?.trim() || "";
+  const lastName = user?.last_name?.trim() || "";
+
+  // 2. Extract first characters and capitalize
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  const lastInitial = lastName.charAt(0).toUpperCase();
+
+  return `${firstInitial}${lastInitial}`;
+}

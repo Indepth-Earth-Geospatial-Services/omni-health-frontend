@@ -7,7 +7,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import profileImage from "@assets/img/facilities/shammah.jpg";
+import { useAuthStore } from "@/store/auth-store";
+import logo from "@assets/img/image.png";
 import {
   GitCompareArrows,
   Info,
@@ -19,17 +20,17 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import logo from "@assets/img/image.png";
-import { useAuthStore } from "@/features/auth/auth-store"; // ✅ Import auth store
-import { useRouter } from "next/navigation"; // ✅ Import router
+import { useRouter } from "next/navigation";
+import { memo } from "react";
 import { toast } from "sonner";
+import { UserAvatar } from "../atoms/UserAvatar";
 
 const navLinks = [
-  {
-    icons: <UserRound size={24} />,
-    name: "Your Account",
-    href: "/profile",
-  },
+  // {
+  //   icons: <UserRound size={24} />,
+  //   name: "Your Account",
+  //   href: "/profile",
+  // },
   {
     icons: <List size={24} />,
     name: "Facilities",
@@ -76,12 +77,9 @@ const superAdminLinks = [
 ] as const;
 
 function SideBar({ className }: { className?: string }) {
-  // ✅ Get logout function and user from auth store
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-
-  // ✅ Determine which dashboard links to show based on user role
   const getDashboardLinks = () => {
     if (user?.role === "super_admin") {
       return superAdminLinks;
@@ -93,16 +91,10 @@ function SideBar({ className }: { className?: string }) {
 
   const dashboardLinks = getDashboardLinks();
 
-  // ✅ Handle logout
   const handleLogout = () => {
     try {
-      // Clear auth state
       logout();
-
-      // Show success message
       toast.success("Logged out successfully");
-
-      // Redirect to login page
       router.push("/login");
     } catch (error) {
       toast.error("Failed to log out. Please try again.");
@@ -130,8 +122,8 @@ function SideBar({ className }: { className?: string }) {
           className="flex h-dvh w-[80dvw] flex-col border-0 bg-white p-0 px-5 pb-4.5"
         >
           <div className="flex h-full flex-col">
-            <Link href="/" className="mt-10 flex h-[57px] items-center gap-3">
-              <div className="relative h-10 w-10">
+            <Link href="/" className="my-10 flex h-[57px] items-center gap-3">
+              <div className="relative size-15">
                 <Image
                   src={logo}
                   alt="RVS Healthcare Logo"
@@ -144,17 +136,14 @@ function SideBar({ className }: { className?: string }) {
             </Link>
 
             {/* PROFILE DETAILS */}
-            <div className="mt-8 flex items-center gap-2.5 py-3">
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-full">
-                <Image
-                  src={profileImage}
-                  alt="profile image"
-                  fill
-                  className="object-cover"
-                />
+            {/* <Link
+              href={"/profile"}
+              className="mt-8 flex items-center gap-2.5 py-3"
+            >
+              <div className="size-20">
+                <UserAvatar user={user} />
               </div>
               <div>
-                {/* ✅ Display actual user data from auth store */}
                 <h3 className="text-[15px] font-medium">
                   {user?.first_name && user?.last_name
                     ? `${user.first_name} ${user.last_name}`
@@ -164,16 +153,19 @@ function SideBar({ className }: { className?: string }) {
                   {user?.email || "user@example.com"}
                 </p>
               </div>
-            </div>
+            </Link> */}
 
             {/* NAVIGATION  */}
             <ul className="flex flex-col gap-3">
               {navLinks.map((nav) => (
                 <li
                   key={nav.href}
-                  className="flex h-12 items-center text-[15px]"
+                  className="flex h-12 w-full items-center text-[15px]"
                 >
-                  <Link className="flex items-center gap-3" href={nav.href}>
+                  <Link
+                    className="flex size-full items-center gap-3"
+                    href={nav.href}
+                  >
                     {nav.icons} {nav.name}
                   </Link>
                 </li>
@@ -222,4 +214,4 @@ function SideBar({ className }: { className?: string }) {
   );
 }
 
-export default SideBar;
+export default memo(SideBar);

@@ -27,6 +27,8 @@ export interface User {
   role: "admin" | "super_admin";
   is_active: boolean;
   created_at: string;
+  phone?: string | number;
+  image?: string;
 }
 
 interface AuthState {

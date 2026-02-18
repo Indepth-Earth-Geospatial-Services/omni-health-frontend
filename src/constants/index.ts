@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { FilterCategory } from "@/types/search-filter";
 
 export const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -26,51 +28,39 @@ export const FILTERCATEGORIES: FilterCategory[] = [
   {
     title: "Facility Type",
     storeKey: "facilityType",
+    selectionType: "single",
     options: [
       {
-        id: "general-hospital",
-        icon: "🏥",
-        label: "General Hospital",
-        value: "General Hospital",
-      },
-      {
-        id: "primary-health-center",
-        icon: "🏥",
-        label: "Primary Health Center",
-        value: "Primary Health Center",
-      },
-      {
-        id: "cottage-hospital",
-        icon: "🏥",
-        label: "Cottage Hospital",
-        value: "Cottage Hospital",
-      },
-      {
         id: "health-post",
-        icon: "🩺",
+        icon: "🏥",
         label: "Health Post",
         value: "Health Post",
       },
       {
-        id: "secondary",
+        id: "model-primary-health-centre",
         icon: "🏥",
-        label: "Secondary",
-        value: "Secondary",
+        label: "Model Primary Health Centre",
+        value: "model primary health centre (mphc)",
+      },
+      {
+        id: "health-clinic",
+        icon: "🏥",
+        label: "Health Clinic",
+        value: "Health Clinic (phc)",
+      },
+      {
+        id: "primary-health-clinic",
+        icon: "🏥",
+        label: "Primary Health Clinic",
+        value: "Primary Health Clinic",
       },
     ],
   },
-  {
-    title: "Performance Tier",
-    storeKey: "performanceTier",
-    options: [
-      { id: "high-performance", label: "High Performance", value: "high" },
-      { id: "moderate", label: "Moderate", value: "moderate" },
-      { id: "average", label: "Average", value: "average" },
-    ],
-  },
+
   {
     title: "Service Availability",
     storeKey: "serviceAvailability",
+    selectionType: "multiple",
     options: [
       {
         id: "routine-immunization",
@@ -131,6 +121,7 @@ export const FILTERCATEGORIES: FilterCategory[] = [
   {
     title: "Local Government",
     storeKey: "lga",
+    selectionType: "single",
     options: [
       { id: "abua-odual", label: "Abua/Odual", value: "Abua-Odual" },
       { id: "ahoada-east", label: "Ahoada East", value: "Ahoada-East" },

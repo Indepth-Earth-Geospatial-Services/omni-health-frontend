@@ -1,6 +1,11 @@
 import { getToday } from "@/lib/utils";
 import { Clock, AlertCircle } from "lucide-react";
 import { DataSection } from "../atoms/data-section";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface WorkingHoursSectionProps {
   working_hours: Record<string, string>;
@@ -24,6 +29,7 @@ export const WorkingHoursSection: React.FC<WorkingHoursSectionProps> = ({
 
   return (
     <DataSection
+      useAccordion={true}
       title="Working Hours"
       icon={<Clock className="h-5 w-5" />}
       data={working_hours}

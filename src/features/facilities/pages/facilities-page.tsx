@@ -45,7 +45,6 @@ function FacilitiesPage() {
   // Check if we have any active filters (including search)
   const hasActiveFilters =
     (filters.facilityType && filters.facilityType.length > 0) ||
-    (filters.performanceTier && filters.performanceTier.length > 0) ||
     (filters.serviceAvailability && filters.serviceAvailability.length > 0) ||
     (filters.lga && filters.lga.length > 0) ||
     debouncedSearchInput.trim().length >= 3;

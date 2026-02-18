@@ -25,7 +25,7 @@ class FacilityService {
     this.getAllFacilities = this.getAllFacilities.bind(this);
     this.searchFacilities = this.searchFacilities.bind(this);
   }
-
+  // eslint-disable-next-line
   private addFilterParams(params: any, filters: FilterQuery): void {
     if (filters.name && filters.name.length > 0) {
       params.name = filters.name;
@@ -53,6 +53,7 @@ class FacilityService {
     page?: number;
     filters?: FilterQuery;
   } = {}): Promise<GetAllFacilities> {
+    // eslint-disable-next-line
     const params: any = {
       limit,
       page,
@@ -73,6 +74,7 @@ class FacilityService {
     limit?: number;
     page?: number;
   }): Promise<SearchFacilities> {
+    // eslint-disable-next-line
     const params: any = {
       limit,
       page,

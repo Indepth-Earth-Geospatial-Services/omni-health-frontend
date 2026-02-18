@@ -10,7 +10,6 @@ export const useFacilitySearch = (
   // Check if there are any active filters
   const hasFilters =
     (filters.facilityType && filters.facilityType.length > 0) ||
-    (filters.performanceTier && filters.performanceTier.length > 0) ||
     (filters.serviceAvailability && filters.serviceAvailability.length > 0) ||
     (filters.lga && filters.lga.length > 0) ||
     (filters.name && filters.name.trim().length >= 3);
@@ -31,7 +30,6 @@ export const useFacilitySearch = (
       // Convert filter format for API FIXME CHCK WITH BACKEND
       const apiFilters: FilterQuery = {
         category: filters.facilityType || [],
-        performance_tier: filters.performanceTier || [],
         service: filters.serviceAvailability || [],
         lga_name: filters.lga,
         name: filters.name,

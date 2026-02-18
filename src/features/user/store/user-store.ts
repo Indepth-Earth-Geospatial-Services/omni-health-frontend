@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { UserStore } from "../types";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const STALE_TIME = 5 * 60 * 1000; //
+const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 export const useUserStore = create<UserStore>()(
   persist(
