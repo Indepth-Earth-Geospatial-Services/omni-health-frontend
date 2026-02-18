@@ -1,7 +1,7 @@
 "use client";
 
 import { UserAvatar } from "@/components/shared/atoms/UserAvatar";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
 import {
   ArrowLeft,
   Camera,
