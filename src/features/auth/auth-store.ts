@@ -24,7 +24,7 @@ export interface User {
   email: string;
   first_name: string | null;
   last_name: string | null;
-  role: "user" | "admin" | "super_admin";
+  role: "admin" | "super_admin";
   is_active: boolean;
   created_at: string;
 }

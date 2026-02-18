@@ -20,7 +20,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@assets/img/image.png";
-import { useAuthStore } from "@/store/auth-store"; // ✅ Import auth store
+import { useAuthStore } from "@/features/auth/auth-store"; // ✅ Import auth store
 import { useRouter } from "next/navigation"; // ✅ Import router
 import { toast } from "sonner";
 

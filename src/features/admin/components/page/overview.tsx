@@ -4,7 +4,7 @@ import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import QuickStatsHeader from "@/features/admin/components/layout/QuickStatsHeader";
 import AdmissionsRateChart from "../charts/AdmissionsRateChartProps";
 import { Users, ChevronRight, Bed, Package, UserCog } from "lucide-react";
-import { useCurrentFacilityId } from "@/store/auth-store";
+import { useCurrentFacilityId } from "@/features/auth/auth-store";
 import {
   useAdminStaff,
   useFacilityInventory,
