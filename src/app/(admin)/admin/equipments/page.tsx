@@ -2,7 +2,7 @@
 
 import Header from "@/features/admin/components/layout/Header";
 import Equipments from "@/features/admin/components/page/Equipments";
-import { useCurrentFacilityId } from "@/store/auth-store";
+import { useCurrentFacilityId } from "@/features/auth/auth-store";
 
 export default function EquipmentsPage() {
   const facilityId = useCurrentFacilityId();

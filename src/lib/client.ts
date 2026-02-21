@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import config from "./config";
 import { handleApiError, ApiError } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
 
 const AUTH_STORAGE_KEY = "omni_health_auth";
 

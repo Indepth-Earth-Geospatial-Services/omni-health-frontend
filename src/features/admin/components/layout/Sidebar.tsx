@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuthStore, useCurrentFacilityId } from "@/store/auth-store";
+import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../modals/ProfileModal";
 

@@ -19,7 +19,7 @@ import {
 
 import { loginSchema, LoginFormData } from "../schemas/login.schema";
 import { authService } from "@/services/auth.service";
-import { useAuthStore, getRedirectPath } from "@/store/auth-store";
+import { useAuthStore, getRedirectPath } from "@/features/auth/auth-store";
 import { toast } from "sonner";
 import FacilitySelectionModal from "./FacilitySelectionModal";
 // import SocialLogin from "./social-login";

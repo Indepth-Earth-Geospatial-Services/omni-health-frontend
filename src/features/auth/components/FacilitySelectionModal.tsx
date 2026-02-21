@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
 import { Facility } from "@/types/api-response";
 import QueryProvider from "@/providers/query.provider";
 
