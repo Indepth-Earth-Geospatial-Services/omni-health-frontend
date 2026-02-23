@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Loader2, Save } from "lucide-react";
-import { useStaffSchema } from "@/features/admin/hooks/useAdminStaff";
+import { X, Loader2, Save, AlertCircle } from "lucide-react";
 import type { StaffMember } from "@/services/admin.service";
 
 interface EditStaffModalProps {
@@ -15,7 +14,6 @@ interface EditStaffModalProps {
   isUpdating?: boolean;
 }
 
-// Field metadata for form generation
 interface FieldConfig {
   name: string;
   label: string;
@@ -26,265 +24,340 @@ interface FieldConfig {
   fullWidth?: boolean;
 }
 
+// All staff form fields — matches table columns exactly
+const FORM_FIELDS: FieldConfig[] = [
+  {
+    name: "full_name",
+    label: "Full Name",
+    type: "text",
+    placeholder: "Enter full name",
+    required: true,
+    fullWidth: true,
+  },
+  {
+    name: "gender",
+    label: "Sex",
+    type: "select",
+    options: ["M", "F"],
+  },
+  {
+    name: "rank_cadre",
+    label: "Rank/Cadre",
+    type: "text",
+    placeholder: "Enter rank or cadre",
+  },
+  {
+    name: "grade_level",
+    label: "Grade Level (G/L)",
+    type: "text",
+    placeholder: "e.g. GL 08",
+  },
+  {
+    name: "qualifications",
+    label: "Qualifications",
+    type: "text",
+    placeholder: "e.g. BSc Nursing, RN (comma separated)",
+    fullWidth: true,
+  },
+  {
+    name: "qualification_date",
+    label: "Qualification Date",
+    type: "date",
+  },
+  {
+    name: "date_first_appointment",
+    label: "Date of First Appointment",
+    type: "date",
+  },
+  {
+    name: "confirmation_of_appointment",
+    label: "Confirmation of Appointment",
+    type: "date",
+  },
+  {
+    name: "date_of_present_appointment",
+    label: "Date of Present Appointment",
+    type: "date",
+  },
+  {
+    name: "date_of_birth",
+    label: "Date of Birth",
+    type: "date",
+  },
+  {
+    name: "lga_of_origin",
+    label: "LGA of Origin",
+    type: "text",
+    placeholder: "Enter LGA of origin",
+  },
+  {
+    name: "years_in_present_station",
+    label: "Years in Present Station",
+    type: "number",
+    placeholder: "e.g. 3",
+  },
+  {
+    name: "phone_number",
+    label: "Phone Number",
+    type: "tel",
+    placeholder: "Enter phone number",
+  },
+  {
+    name: "email",
+    label: "Email Address",
+    type: "email",
+    placeholder: "Enter email address",
+  },
+  {
+    name: "is_active",
+    label: "Status",
+    type: "select",
+    options: ["Active", "Inactive"],
+  },
+  {
+    name: "remark",
+    label: "Remark",
+    type: "textarea",
+    placeholder: "Any additional remarks",
+    fullWidth: true,
+  },
+];
+
 const EditStaffModal = ({
   isOpen,
   onClose,
   onSubmit,
-  facilityId,
   staffData,
   isUpdating = false,
 }: EditStaffModalProps) => {
-  const { data: schema, isLoading: isLoadingSchema } =
-    useStaffSchema(facilityId);
-
-  // Define form fields configuration
-  const formFields: FieldConfig[] = [
-    {
-      name: "full_name",
-      label: "Full Name",
-      type: "text",
-      placeholder: "Enter full name",
-      required: true,
-      fullWidth: true,
-    },
-    {
-      name: "gender",
-      label: "Gender",
-      type: "select",
-      options: ["M", "F"],
-      required: false,
-    },
-    {
-      name: "rank_cadre",
-      label: "Rank/Cadre",
-      type: "text",
-      placeholder: "Enter rank",
-      required: false,
-    },
-    {
-      name: "grade_level",
-      label: "Grade Level",
-      type: "text",
-      placeholder: "Enter grade level",
-      required: false,
-    },
-    {
-      name: "qualifications",
-      label: "Qualifications",
-      type: "text",
-      placeholder: "e.g., BSc Nursing, MSc Public Health (comma separated)",
-      required: false,
-      fullWidth: true,
-    },
-    {
-      name: "phone_number",
-      label: "Phone Number",
-      type: "tel",
-      placeholder: "Enter phone number",
-      required: false,
-    },
-    {
-      name: "email",
-      label: "Email Address",
-      type: "text",
-      placeholder: "Enter email (optional)",
-      required: false,
-    },
-    {
-      name: "date_first_appointment",
-      label: "Date of First Appointment",
-      type: "date",
-      required: false,
-    },
-    {
-      name: "date_of_birth",
-      label: "Date of Birth",
-      type: "date",
-      required: false,
-    },
-    {
-      name: "is_active",
-      label: "Status",
-      type: "select",
-      options: ["Active", "Inactive"],
-      required: false,
-    },
-  ];
-
-  // Filter fields based on schema if available
-  const availableFields = schema
-    ? formFields.filter((field) => {
-        if (field.name === "full_name" || field.name === "is_active")
-          return true;
-        return schema.hasOwnProperty(field.name);
-      })
-    : formFields;
-
-  // Initialize form data from staffData prop - no useEffect needed!
-  const getInitialFormData = () => {
+  const getInitialFormData = (): Record<string, any> => {
     if (!staffData) return {};
 
-    const data: Record<string, any> = {
+    // Flatten qualifications object → comma-separated string for editing
+    let qualificationsStr = "";
+    if (staffData.qualifications && typeof staffData.qualifications === "object") {
+      qualificationsStr = Object.keys(staffData.qualifications).join(", ");
+    }
+
+    return {
       full_name: staffData.full_name || "",
       gender: staffData.gender || "",
       rank_cadre: staffData.rank_cadre || "",
       grade_level: staffData.grade_level || "",
+      qualifications: qualificationsStr,
+      qualification_date: staffData.qualification_date || "",
+      date_first_appointment: staffData.date_first_appointment || "",
+      confirmation_of_appointment: staffData.confirmation_of_appointment || "",
+      date_of_present_appointment: staffData.date_of_present_appointment || "",
+      date_of_birth: staffData.date_of_birth || "",
+      lga_of_origin: staffData.lga_of_origin || "",
+      years_in_present_station:
+        staffData.years_in_present_station !== undefined &&
+        staffData.years_in_present_station !== null
+          ? String(staffData.years_in_present_station)
+          : "",
       phone_number: staffData.phone_number || "",
       email: staffData.email || "",
-      date_first_appointment: staffData.date_first_appointment || "",
-      date_of_birth: staffData.date_of_birth || "",
       is_active: staffData.is_active ? "Active" : "Inactive",
+      remark: staffData.remark || "",
     };
-
-    // Handle qualifications - convert object to comma-separated string
-    if (
-      staffData.qualifications &&
-      typeof staffData.qualifications === "object"
-    ) {
-      const qualArray = Object.keys(staffData.qualifications);
-      data.qualifications = qualArray.join(", ");
-    } else {
-      data.qualifications = "";
-    }
-
-    return data;
   };
 
-  const [formData, setFormData] =
-    useState<Record<string, any>>(getInitialFormData);
+  const [formData, setFormData] = useState<Record<string, any>>(getInitialFormData);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleSelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+    name: string,
+  ) => {
+    setFormData((prev) => ({ ...prev, [name]: e.target.value }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const { [name]: _, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleBlur = (name: string) => {
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    const field = FORM_FIELDS.find((f) => f.name === name);
+    if (field?.required && !formData[name]?.toString().trim()) {
+      setErrors((prev) => ({ ...prev, [name]: `${field.label} is required` }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    FORM_FIELDS.forEach((field) => {
+      if (field.required && !formData[field.name]?.toString().trim()) {
+        newErrors[field.name] = `${field.label} is required`;
+      }
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Build the update payload according to schema
-    const updatePayload: Record<string, any> = {};
+    // Mark all required fields as touched
+    const allTouched: Record<string, boolean> = {};
+    FORM_FIELDS.forEach((f) => { allTouched[f.name] = true; });
+    setTouched(allTouched);
 
-    // Only include fields that have values
-    if (formData.full_name?.trim()) {
-      updatePayload.full_name = formData.full_name.trim();
+    if (!validateForm()) return;
+
+    const payload: Record<string, any> = {};
+
+    if (formData.full_name?.trim())
+      payload.full_name = formData.full_name.trim();
+    if (formData.gender?.trim()) payload.gender = formData.gender.trim();
+    if (formData.rank_cadre?.trim())
+      payload.rank_cadre = formData.rank_cadre.trim();
+    if (formData.grade_level?.trim())
+      payload.grade_level = formData.grade_level.trim();
+    if (formData.qualification_date)
+      payload.qualification_date = formData.qualification_date;
+    if (formData.date_first_appointment)
+      payload.date_first_appointment = formData.date_first_appointment;
+    if (formData.confirmation_of_appointment)
+      payload.confirmation_of_appointment = formData.confirmation_of_appointment;
+    if (formData.date_of_present_appointment)
+      payload.date_of_present_appointment = formData.date_of_present_appointment;
+    if (formData.date_of_birth) payload.date_of_birth = formData.date_of_birth;
+    if (formData.lga_of_origin?.trim())
+      payload.lga_of_origin = formData.lga_of_origin.trim();
+    if (formData.years_in_present_station !== "") {
+      const num = Number(formData.years_in_present_station);
+      if (!isNaN(num)) payload.years_in_present_station = num;
     }
+    if (formData.phone_number?.trim())
+      payload.phone_number = formData.phone_number.trim();
+    if (formData.email?.trim()) payload.email = formData.email.trim();
+    if (formData.remark?.trim()) payload.remark = formData.remark.trim();
 
-    if (formData.gender?.trim()) {
-      updatePayload.gender = formData.gender.trim();
-    }
-
-    if (formData.rank_cadre?.trim()) {
-      updatePayload.rank_cadre = formData.rank_cadre.trim();
-    }
-
-    if (formData.grade_level?.trim()) {
-      updatePayload.grade_level = formData.grade_level.trim();
-    }
-
-    if (formData.phone_number?.trim()) {
-      updatePayload.phone_number = formData.phone_number.trim();
-    }
-
-    if (formData.email?.trim()) {
-      updatePayload.email = formData.email.trim();
-    }
-
-    if (formData.date_first_appointment) {
-      updatePayload.date_first_appointment = formData.date_first_appointment;
-    }
-
-    if (formData.date_of_birth) {
-      updatePayload.date_of_birth = formData.date_of_birth;
-    }
-
-    // Handle is_active (convert string to boolean)
+    // Boolean conversion
     if (formData.is_active) {
-      updatePayload.is_active = formData.is_active === "Active";
+      payload.is_active = formData.is_active === "Active";
     }
 
-    // Handle qualifications (convert comma-separated string to object)
-    if (
-      formData.qualifications &&
-      typeof formData.qualifications === "string"
-    ) {
-      const qualString = formData.qualifications.trim();
-      if (qualString) {
-        const qualArray = qualString
-          .split(",")
-          .map((q) => q.trim())
-          .filter(Boolean);
-        const qualObj: Record<string, any> = {};
-        qualArray.forEach((qual) => {
-          qualObj[qual] = {};
-        });
-        updatePayload.qualifications = qualObj;
-      }
+    // Qualifications: comma-separated string → object
+    if (formData.qualifications?.trim()) {
+      const qualArr = formData.qualifications
+        .split(",")
+        .map((q: string) => q.trim())
+        .filter(Boolean);
+      const qualObj: Record<string, any> = {};
+      qualArr.forEach((q: string) => { qualObj[q] = {}; });
+      payload.qualifications = qualObj;
     }
 
-    // console.log("Update Payload:", updatePayload); // Debug log
-
-    onSubmit(updatePayload);
+    onSubmit(payload);
   };
 
   const handleClose = () => {
-    if (!isUpdating) {
-      onClose();
-    }
+    if (!isUpdating) onClose();
   };
+
+  const inputBase =
+    "w-full rounded-lg border border-slate-200 bg-gray-50 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:ring-2 focus:ring-primary focus:outline-none disabled:opacity-50";
+  const inputError =
+    "border-red-400 focus:ring-red-300";
 
   const renderField = (field: FieldConfig) => {
-    switch (field.type) {
-      case "select":
-        return (
-          <select
-            value={formData[field.name] || ""}
-            onChange={(e) => handleSelectChange(field.name, e.target.value)}
-            className="focus:ring-primary w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
-          >
-            <option value="">Select {field.label}</option>
-            {field.options?.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        );
+    const hasError = touched[field.name] && errors[field.name];
 
-      case "textarea":
-        return (
-          <textarea
-            id={field.name}
-            name={field.name}
-            value={formData[field.name] || ""}
-            onChange={handleInputChange}
-            placeholder={field.placeholder}
-            rows={3}
-            className="focus:ring-primary w-full resize-none rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
-          />
-        );
-
-      default:
-        return (
-          <input
-            type={field.type}
-            id={field.name}
-            name={field.name}
-            value={formData[field.name] || ""}
-            onChange={handleInputChange}
-            placeholder={field.placeholder}
-            required={field.required}
-            min={field.type === "number" ? "0" : undefined}
-            className="focus:ring-primary w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
-          />
-        );
+    if (field.type === "select") {
+      return (
+        <select
+          value={formData[field.name] || ""}
+          onChange={(e) => handleSelectChange(e, field.name)}
+          onBlur={() => handleBlur(field.name)}
+          disabled={isUpdating}
+          className={`${inputBase} ${hasError ? inputError : ""}`}
+        >
+          <option value="">Select {field.label}</option>
+          {field.options?.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      );
     }
+
+    if (field.type === "textarea") {
+      return (
+        <textarea
+          id={field.name}
+          name={field.name}
+          value={formData[field.name] || ""}
+          onChange={handleInputChange}
+          onBlur={() => handleBlur(field.name)}
+          placeholder={field.placeholder}
+          rows={3}
+          disabled={isUpdating}
+          className={`${inputBase} resize-none ${hasError ? inputError : ""}`}
+        />
+      );
+    }
+
+    return (
+      <input
+        type={field.type}
+        id={field.name}
+        name={field.name}
+        value={formData[field.name] || ""}
+        onChange={handleInputChange}
+        onBlur={() => handleBlur(field.name)}
+        placeholder={field.placeholder}
+        disabled={isUpdating}
+        min={field.type === "number" ? "0" : undefined}
+        className={`${inputBase} ${hasError ? inputError : ""}`}
+      />
+    );
   };
+
+  const renderFieldWithLabel = (field: FieldConfig) => {
+    const hasError = touched[field.name] && errors[field.name];
+    return (
+      <div key={field.name}>
+        <label
+          htmlFor={field.name}
+          className="mb-1.5 block text-sm font-medium text-slate-700"
+        >
+          {field.label}
+          {field.required && <span className="ml-1 text-red-500">*</span>}
+        </label>
+        {renderField(field)}
+        {hasError && (
+          <div className="mt-1 flex items-center gap-1">
+            <AlertCircle size={13} className="text-red-500" />
+            <span className="text-xs text-red-500">{errors[field.name]}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const fullWidthFields = FORM_FIELDS.filter((f) => f.fullWidth);
+  const twoColFields = FORM_FIELDS.filter((f) => !f.fullWidth);
 
   return (
     <AnimatePresence>
@@ -297,104 +370,79 @@ const EditStaffModal = ({
           onClick={handleClose}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+            {/* ── Sticky Header ── */}
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   Edit Staff Member
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Update information for{" "}
-                  {staffData?.full_name || "staff member"}
+                <p className="mt-0.5 text-sm text-slate-500">
+                  Update details for{" "}
+                  <span className="font-medium text-slate-700">
+                    {staffData?.full_name || "staff member"}
+                  </span>
                 </p>
               </div>
               <button
                 onClick={handleClose}
                 disabled={isUpdating}
-                className="rounded-lg p-2 transition-colors hover:bg-slate-100 disabled:opacity-50"
+                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
               >
-                <X size={20} className="text-slate-600" />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Form Content */}
-            <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-6">
-              {isLoadingSchema ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="text-primary h-8 w-8 animate-spin" />
-                    <p className="text-sm text-slate-500">Loading form...</p>
-                  </div>
+            {/* ── Scrollable Form Body ── */}
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              <div className="flex-1 space-y-4 overflow-y-auto p-6">
+                {/* Full-width fields */}
+                {fullWidthFields.map(renderFieldWithLabel)}
+
+                {/* Two-column grid */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {twoColFields.map(renderFieldWithLabel)}
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Full width fields */}
-                  {availableFields
-                    .filter((field) => field.fullWidth)
-                    .map((field) => (
-                      <div key={field.name}>
-                        <label
-                          htmlFor={field.name}
-                          className="mb-2 block text-sm font-medium text-slate-700"
-                        >
-                          {field.label}
-                          {field.required && (
-                            <span className="ml-1 text-red-500">*</span>
-                          )}
-                        </label>
-                        {renderField(field)}
-                      </div>
-                    ))}
+              </div>
 
-                  {/* Two column layout for non-full-width fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {availableFields
-                      .filter((field) => !field.fullWidth)
-                      .map((field) => (
-                        <div key={field.name}>
-                          <label
-                            htmlFor={field.name}
-                            className="mb-2 block text-sm font-medium text-slate-700"
-                          >
-                            {field.label}
-                            {field.required && (
-                              <span className="ml-1 text-red-500">*</span>
-                            )}
-                          </label>
-                          {renderField(field)}
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="flex justify-end pt-4">
-                    <button
-                      type="submit"
-                      disabled={isUpdating}
-                      className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isUpdating ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={16} />
-                          Update Staff
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
+              {/* ── Sticky Footer ── */}
+              <div className="flex shrink-0 items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  disabled={isUpdating}
+                  className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={15} />
+                      Update Staff
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </motion.div>
         </motion.div>
       )}

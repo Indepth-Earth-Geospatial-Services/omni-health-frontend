@@ -153,97 +153,95 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="font-geist fixed inset-0 z-50 flex items-center justify-center">
+    <div className="font-geist fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
-      {/* Modal */}
-      <div className="relative mx-4 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b bg-white px-6 py-4">
+      {/* Modal — fixed height with flex column so header/footer stay sticky */}
+      <div className="relative flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        {/* ── Sticky Header ── */}
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
           <div>
             <h2 className="text-xl font-bold text-slate-800">New Staff</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Provide details about the staff
+            <p className="mt-0.5 text-sm text-slate-500">
+              Fill in the staff member&apos;s details below
             </p>
           </div>
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="rounded-lg p-2 transition-colors hover:bg-slate-100 disabled:opacity-50"
+            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
           >
-            <X size={20} className="text-slate-600" />
+            <X size={20} />
           </button>
         </div>
 
-        {/* Loading State */}
+        {/* ── Scrollable Body ── */}
         {isLoadingSchema ? (
-          <div className="flex items-center justify-center p-12">
+          <div className="flex flex-1 items-center justify-center">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <Loader2 className="text-primary h-8 w-8 animate-spin" />
               <p className="text-sm text-slate-500">Loading form fields...</p>
             </div>
           </div>
         ) : isSchemaError ? (
-          <div className="flex items-center justify-center p-12">
+          <div className="flex flex-1 items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-center">
               <AlertCircle className="h-12 w-12 text-red-500" />
-              <div>
-                <p className="text-sm font-medium text-slate-800">
-                  Failed to load form
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Please try again later
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleClose}
-              >
+              <p className="text-sm font-medium text-slate-800">
+                Failed to load form
+              </p>
+              <p className="text-xs text-slate-500">Please try again later</p>
+              <Button variant="outline" size="sm" onClick={handleClose}>
                 Close
               </Button>
             </div>
           </div>
         ) : (
-          /* Form */
-          <div className="space-y-5 p-6">
-            {/* Full width fields */}
+          <div className="flex-1 space-y-4 overflow-y-auto p-6">
+            {/* Full-width fields */}
             {formFields
               .filter((field) => field.fullWidth)
               .map((field) => renderFieldWithError(field))}
 
-            {/* Two column layout for non-full-width fields */}
+            {/* Two-column grid */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {formFields
                 .filter((field) => !field.fullWidth)
                 .map((field) => renderFieldWithError(field))}
             </div>
+          </div>
+        )}
 
-            {/* Submit Button */}
-            <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="default"
-                size="xl"
-                disabled={isSubmitting}
-                onClick={handleSubmit}
-                className="text-lg"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    Submit
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </Button>
-            </div>
+        {/* ── Sticky Footer ── */}
+        {!isLoadingSchema && !isSchemaError && (
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <Button
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleSubmit}
+              className="gap-2 bg-primary text-white hover:bg-primary/90"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Submit
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </Button>
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import {
   generateFormFields,
   transformFormDataForApi,
+  FIELD_ORDER,
   type FieldConfig,
 } from "@/features/admin/constants/staff-form-config";
 
@@ -37,11 +38,12 @@ export function useStaffForm({
     return generateFormFields(schema);
   }, [schema]);
 
-  // Initial form data based on schema
+  // Initial form data — always initialise every field in FIELD_ORDER,
+  // not just the keys the API happened to return.
   const initialFormData = useMemo(() => {
     if (!schema) return {};
     const data: Record<string, string> = {};
-    Object.keys(schema).forEach((key) => {
+    FIELD_ORDER.forEach((key) => {
       data[key] = "";
     });
     return data;
