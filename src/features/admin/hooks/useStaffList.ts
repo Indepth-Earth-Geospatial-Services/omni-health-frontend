@@ -91,21 +91,23 @@ export const useStaffList = (facilityId: string) => {
         ? currentPage + 1
         : currentPage;
 
-  /**
-   * Dynamic Column Visibility
-   * Shows columns based on schema field existence (not data presence).
-   * Checks if the field exists in the schema (key is present), regardless of null values.
-   */
+  // All columns are always visible — columns with no data will render "-"
   const columnVisibility = {
-    hasGender: staffs.some((s) => "gender" in s),
-    hasRank: staffs.some((s) => "rank_cadre" in s),
-    hasGradeLevel: staffs.some((s) => "grade_level" in s),
-    hasPhone: staffs.some((s) => "phone_number" in s),
-    hasEmail: staffs.some((s) => "email" in s),
-    hasDateFirstAppt: staffs.some((s) => "date_first_appointment" in s),
-    hasDateOfBirth: staffs.some((s) => "date_of_birth" in s),
-    hasQualifications: staffs.some((s) => "qualifications" in s),
-    hasStatus: staffs.some((s) => "is_active" in s),
+    hasGender: true,
+    hasRank: true,
+    hasGradeLevel: true,
+    hasPhone: true,
+    hasEmail: true,
+    hasDateFirstAppt: true,
+    hasConfirmationAppt: true,
+    hasDatePresentAppt: true,
+    hasDateOfBirth: true,
+    hasLgaOfOrigin: true,
+    hasYearsInStation: true,
+    hasQualifications: true,
+    hasQualificationDate: true,
+    hasRemark: true,
+    hasStatus: true,
   };
 
   // ============================================================================
