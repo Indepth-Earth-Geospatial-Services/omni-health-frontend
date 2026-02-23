@@ -29,8 +29,13 @@ CODE_REVIEW.md
 # debug
 npm-debug.log*
 yarn-debug.log*
+yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# pnpm (team to add locally as needed)
+.npmrc
+pnpm-lock.yaml
 
 # env files (can opt-in for committing if needed)
 .env
