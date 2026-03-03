@@ -5,9 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/features/auth/auth-store";
+
+function useHomeHref(): string {
+  const role = useAuthStore((s) => s.user?.role);
+  if (role === "admin") return "/admin";
+  if (role === "super_admin") return "/super-admin/dashboard";
+  return "/";
+}
 
 export default function NotFoundPage() {
   const router = useRouter();
+  const homeHref = useHomeHref();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 py-16">
@@ -73,7 +82,7 @@ export default function NotFoundPage() {
           size="lg"
           className="w-40 gap-2 bg-[#51a199] text-white hover:bg-[#3d8880]"
         >
-          <Link href="/">
+          <Link href={homeHref}>
             <Home size={16} />
             Go to Home
           </Link>

@@ -34,7 +34,6 @@ interface StaffTableProps {
     hasLgaOfOrigin: boolean;
     hasYearsInStation: boolean;
     hasQualifications: boolean;
-    hasQualificationDate: boolean;
     hasRemark: boolean;
     hasStatus: boolean;
   };
@@ -69,7 +68,6 @@ const StaffTable: React.FC<StaffTableProps> = ({
     hasLgaOfOrigin,
     hasYearsInStation,
     hasQualifications,
-    hasQualificationDate,
     hasRemark,
     hasStatus,
   } = columnVisibility;
@@ -240,19 +238,13 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   )}
                   {hasQualifications && (
                     <td className="max-w-48 p-4 text-sm text-slate-600">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="truncate">
-                          {item.qualifications &&
-                          Object.keys(item.qualifications).length > 0
-                            ? Object.keys(item.qualifications).join(", ")
-                            : "-"}
-                        </span>
-                        {hasQualificationDate && item.qualification_date && (
-                          <span className="text-xs text-slate-400">
-                            {item.qualification_date}
-                          </span>
-                        )}
-                      </div>
+                      <span className="block min-w-40 whitespace-normal wrap-break-word">
+                        {item.qualifications && item.qualifications.length > 0
+                          ? item.qualifications
+                              .map((q) => `${q.qualification} (${q.year})`)
+                              .join(", ")
+                          : "-"}
+                      </span>
                     </td>
                   )}
                   {hasDateFirstAppt && (
@@ -262,12 +254,12 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   )}
                   {hasConfirmationAppt && (
                     <td className="p-4 text-sm text-slate-600">
-                      {item.confirmation_of_appointment || "-"}
+                      {item.date_confirmation || "-"}
                     </td>
                   )}
                   {hasDatePresentAppt && (
                     <td className="p-4 text-sm text-slate-600">
-                      {item.date_of_present_appointment || "-"}
+                      {item.date_present_appointment || "-"}
                     </td>
                   )}
                   {hasDateOfBirth && (
@@ -277,7 +269,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   )}
                   {hasLgaOfOrigin && (
                     <td className="p-4 text-sm text-slate-600">
-                      {item.lga_of_origin || "-"}
+                      {item.lga_origin || "-"}
                     </td>
                   )}
                   {hasYearsInStation && (

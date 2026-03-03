@@ -1,14 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Building2,
-  MapPin,
-  Star,
-  Loader2,
-  AlertCircle,
-  LogOut,
-} from "lucide-react";
+import { Building2, MapPin, Loader2, AlertCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
 import { useAuthStore } from "@/features/auth/auth-store";
@@ -61,7 +54,7 @@ function FacilitySelectCard({
   facility: Facility;
   onSelect: (id: string) => void;
 }) {
-  const rating = facility.average_rating ?? 0;
+  // const rating = facility.average_rating ?? 0;
 
   return (
     <motion.button
@@ -85,7 +78,7 @@ function FacilitySelectCard({
         </span>
       </div>
 
-      <div className="mt-2 flex items-center gap-1.5">
+      {/* <div className="mt-2 flex items-center gap-1.5">
         <Star size={13} className="fill-amber-400 text-amber-400" />
         <span className="text-sm font-medium text-slate-600">
           {rating.toFixed(1)}
@@ -94,7 +87,7 @@ function FacilitySelectCard({
           ({facility.total_reviews ?? 0}{" "}
           {facility.total_reviews === 1 ? "review" : "reviews"})
         </span>
-      </div>
+      </div> */}
     </motion.button>
   );
 }

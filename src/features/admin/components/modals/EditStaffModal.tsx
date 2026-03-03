@@ -56,13 +56,8 @@ const FORM_FIELDS: FieldConfig[] = [
     name: "qualifications",
     label: "Qualifications",
     type: "text",
-    placeholder: "e.g. BSc Nursing, RN (comma separated)",
+    placeholder: "e.g. MBBS:2010, BSc:2015 (name:year, comma separated)",
     fullWidth: true,
-  },
-  {
-    name: "qualification_date",
-    label: "Qualification Date",
-    type: "date",
   },
   {
     name: "date_first_appointment",
@@ -70,12 +65,12 @@ const FORM_FIELDS: FieldConfig[] = [
     type: "date",
   },
   {
-    name: "confirmation_of_appointment",
+    name: "date_confirmation",
     label: "Confirmation of Appointment",
     type: "date",
   },
   {
-    name: "date_of_present_appointment",
+    name: "date_present_appointment",
     label: "Date of Present Appointment",
     type: "date",
   },
@@ -85,7 +80,7 @@ const FORM_FIELDS: FieldConfig[] = [
     type: "date",
   },
   {
-    name: "lga_of_origin",
+    name: "lga_origin",
     label: "LGA of Origin",
     type: "text",
     placeholder: "Enter LGA of origin",
@@ -133,11 +128,17 @@ const EditStaffModal = ({
   const getInitialFormData = (): Record<string, any> => {
     if (!staffData) return {};
 
-    // Flatten qualifications object → comma-separated string for editing
-    let qualificationsStr = "";
-    if (staffData.qualifications && typeof staffData.qualifications === "object") {
-      qualificationsStr = Object.keys(staffData.qualifications).join(", ");
-    }
+    // Flatten qualifications array → "qualification:year" comma-separated for editing
+    const qualificationsStr = Array.isArray(staffData.qualifications)
+      ? staffData.qualifications
+          .map((q) => (q.year ? `${q.qualification}:${q.year}` : q.qualification))
+          .join(", ")
+      : "";
+
+    // phone_number may be an array or string
+    const phoneStr = Array.isArray(staffData.phone_number)
+      ? staffData.phone_number.join(", ")
+      : staffData.phone_number || "";
 
     return {
       full_name: staffData.full_name || "",
@@ -145,18 +146,17 @@ const EditStaffModal = ({
       rank_cadre: staffData.rank_cadre || "",
       grade_level: staffData.grade_level || "",
       qualifications: qualificationsStr,
-      qualification_date: staffData.qualification_date || "",
       date_first_appointment: staffData.date_first_appointment || "",
-      confirmation_of_appointment: staffData.confirmation_of_appointment || "",
-      date_of_present_appointment: staffData.date_of_present_appointment || "",
+      date_confirmation: staffData.date_confirmation || "",
+      date_present_appointment: staffData.date_present_appointment || "",
       date_of_birth: staffData.date_of_birth || "",
-      lga_of_origin: staffData.lga_of_origin || "",
+      lga_origin: staffData.lga_origin || "",
       years_in_present_station:
         staffData.years_in_present_station !== undefined &&
         staffData.years_in_present_station !== null
           ? String(staffData.years_in_present_station)
           : "",
-      phone_number: staffData.phone_number || "",
+      phone_number: phoneStr,
       email: staffData.email || "",
       is_active: staffData.is_active ? "Active" : "Inactive",
       remark: staffData.remark || "",
@@ -232,17 +232,15 @@ const EditStaffModal = ({
       payload.rank_cadre = formData.rank_cadre.trim();
     if (formData.grade_level?.trim())
       payload.grade_level = formData.grade_level.trim();
-    if (formData.qualification_date)
-      payload.qualification_date = formData.qualification_date;
     if (formData.date_first_appointment)
       payload.date_first_appointment = formData.date_first_appointment;
-    if (formData.confirmation_of_appointment)
-      payload.confirmation_of_appointment = formData.confirmation_of_appointment;
-    if (formData.date_of_present_appointment)
-      payload.date_of_present_appointment = formData.date_of_present_appointment;
+    if (formData.date_confirmation)
+      payload.date_confirmation = formData.date_confirmation;
+    if (formData.date_present_appointment)
+      payload.date_present_appointment = formData.date_present_appointment;
     if (formData.date_of_birth) payload.date_of_birth = formData.date_of_birth;
-    if (formData.lga_of_origin?.trim())
-      payload.lga_of_origin = formData.lga_of_origin.trim();
+    if (formData.lga_origin?.trim())
+      payload.lga_origin = formData.lga_origin.trim();
     if (formData.years_in_present_station !== "") {
       const num = Number(formData.years_in_present_station);
       if (!isNaN(num)) payload.years_in_present_station = num;
@@ -257,15 +255,17 @@ const EditStaffModal = ({
       payload.is_active = formData.is_active === "Active";
     }
 
-    // Qualifications: comma-separated string → object
+    // Qualifications: "name:year" comma-separated → [{qualification, year}]
     if (formData.qualifications?.trim()) {
-      const qualArr = formData.qualifications
+      payload.qualifications = formData.qualifications
         .split(",")
         .map((q: string) => q.trim())
-        .filter(Boolean);
-      const qualObj: Record<string, any> = {};
-      qualArr.forEach((q: string) => { qualObj[q] = {}; });
-      payload.qualifications = qualObj;
+        .filter(Boolean)
+        .map((q: string) => {
+          const [qualification, yearStr] = q.split(":").map((s) => s.trim());
+          const year = yearStr ? parseInt(yearStr, 10) : 0;
+          return { qualification, year };
+        });
     }
 
     onSubmit(payload);

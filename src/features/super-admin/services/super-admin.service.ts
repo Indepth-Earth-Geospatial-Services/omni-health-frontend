@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/client";
-import type { StaffMember, StaffPagination } from "@/services/admin.service";
+import type { StaffMember, StaffPagination, StaffQualification } from "@/services/admin.service";
 
 // User API Response Types
 export interface ManagedFacility {
@@ -60,7 +60,7 @@ export interface CreateStaffRequest {
   email?: string;
   date_first_appointment?: string;
   date_of_birth?: string;
-  qualifications?: Record<string, any>;
+  qualifications?: StaffQualification[];
   is_active?: boolean;
 }
 
@@ -73,7 +73,7 @@ export interface CreateStaffResponse {
   email: string;
   date_first_appointment?: string;
   date_of_birth?: string;
-  qualifications?: Record<string, any>;
+  qualifications?: StaffQualification[];
   staff_id: string;
   facility_id: string;
   is_active: boolean;
@@ -88,14 +88,13 @@ export interface UpdateStaffRequest {
   email?: string;
   date_first_appointment?: string;
   date_of_birth?: string;
-  qualifications?: Record<string, any>;
+  qualifications?: StaffQualification[];
   is_active?: boolean;
   // Optional fields — safe for future backend support
-  confirmation_of_appointment?: string;
-  date_of_present_appointment?: string;
-  lga_of_origin?: string;
+  date_confirmation?: string;
+  date_present_appointment?: string;
+  lga_origin?: string;
   years_in_present_station?: number | string;
-  qualification_date?: string;
   remark?: string;
 }
 

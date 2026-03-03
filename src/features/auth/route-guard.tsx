@@ -60,7 +60,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
       }
 
       if (user?.role === "admin" && facilityIds && facilityIds.length > 0) {
-        router.push("/admin/staff");
+        router.push("/admin");
         return;
       }
 
