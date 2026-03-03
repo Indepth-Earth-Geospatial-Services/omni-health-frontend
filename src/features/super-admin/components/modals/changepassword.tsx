@@ -259,13 +259,17 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       if (!value) return;
 
       if (key === "qualifications") {
-        // Convert comma-separated string to { "MBBS": {}, "BSc": {} } format
-        const quals: Record<string, Record<string, never>> = {};
-        value.split(",").forEach((q) => {
-          const trimmed = q.trim();
-          if (trimmed) quals[trimmed] = {};
-        });
-        if (Object.keys(quals).length > 0) {
+        // Convert "name:year" comma-separated string to [{qualification, year}]
+        const quals = value
+          .split(",")
+          .map((q: string) => q.trim())
+          .filter(Boolean)
+          .map((q: string) => {
+            const [qualification, yearStr] = q.split(":").map((s: string) => s.trim());
+            const year = yearStr ? parseInt(yearStr, 10) : 0;
+            return { qualification, year };
+          });
+        if (quals.length > 0) {
           staffData.qualifications = quals;
         }
       } else if (key === "is_active") {

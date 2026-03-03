@@ -1,6 +1,11 @@
 import { apiClient } from "@/lib/client";
 
 // Staff API Response Types
+export interface StaffQualification {
+  year: number;
+  qualification: string;
+}
+
 export interface StaffMember {
   staff_id: string;
   facility_id: string;
@@ -8,16 +13,15 @@ export interface StaffMember {
   gender?: string;
   rank_cadre?: string;
   grade_level?: string;
-  phone_number?: string;
-  email?: string;
+  phone_number?: string | string[];
+  email?: string | null;
   date_first_appointment?: string;
-  confirmation_of_appointment?: string;
-  date_of_present_appointment?: string;
+  date_confirmation?: string;
+  date_present_appointment?: string;
   date_of_birth?: string;
-  lga_of_origin?: string;
+  lga_origin?: string;
   years_in_present_station?: number | string;
-  qualifications?: Record<string, unknown>;
-  qualification_date?: string;
+  qualifications?: StaffQualification[];
   remark?: string;
   is_active?: boolean;
 }

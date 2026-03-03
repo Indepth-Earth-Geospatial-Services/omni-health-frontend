@@ -98,7 +98,7 @@ const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
     type: "text",
     fullWidth: true,
     icon: Award,
-    placeholder: "e.g. MBBS, BSc Nursing (comma separated)",
+    placeholder: "e.g. MBBS:2010, BSc:2015 (name:year, comma separated)",
   },
   date_first_appointment: {
     label: "Date of 1st Appt",
@@ -305,13 +305,17 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       if (!value) return;
 
       if (key === "qualifications") {
-        // Convert comma-separated string to { "MBBS": {}, "BSc": {} } format
-        const quals: Record<string, Record<string, never>> = {};
-        value.split(",").forEach((q) => {
-          const trimmed = q.trim();
-          if (trimmed) quals[trimmed] = {};
-        });
-        if (Object.keys(quals).length > 0) {
+        // Convert "name:year" comma-separated string to [{qualification, year}]
+        const quals = value
+          .split(",")
+          .map((q: string) => q.trim())
+          .filter(Boolean)
+          .map((q: string) => {
+            const [qualification, yearStr] = q.split(":").map((s: string) => s.trim());
+            const year = yearStr ? parseInt(yearStr, 10) : 0;
+            return { qualification, year };
+          });
+        if (quals.length > 0) {
           staffData.qualifications = quals;
         }
       } else if (key === "is_active") {

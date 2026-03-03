@@ -5,13 +5,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Home, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/features/auth/auth-store";
 
 interface ServerErrorPageProps {
   reset?: () => void;
 }
 
+function useHomeHref(): string {
+  const role = useAuthStore((s) => s.user?.role);
+  if (role === "admin") return "/admin";
+  if (role === "super_admin") return "/super-admin/dashboard";
+  return "/";
+}
+
 export default function ServerErrorPage({ reset }: ServerErrorPageProps) {
   const router = useRouter();
+  const homeHref = useHomeHref();
 
   const handleRetry = () => {
     if (reset) {
@@ -38,7 +47,7 @@ export default function ServerErrorPage({ reset }: ServerErrorPageProps) {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.45, delay: 0.12 }}
-        className="mb-2 select-none text-8xl font-extrabold tracking-tight text-[#51a199]"
+        className="mb-2 text-8xl font-extrabold tracking-tight text-[#51a199] select-none"
       >
         500
       </motion.p>
@@ -85,7 +94,7 @@ export default function ServerErrorPage({ reset }: ServerErrorPageProps) {
           size="lg"
           className="w-40 gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
         >
-          <Link href="/">
+          <Link href={homeHref}>
             <Home size={16} />
             Go to Home
           </Link>
@@ -263,11 +272,21 @@ function ServerErrorSVG() {
       />
 
       {/* Decorative plus marks */}
-      <g opacity="0.18" stroke="#51a199" strokeWidth="1.5" strokeLinecap="round">
+      <g
+        opacity="0.18"
+        stroke="#51a199"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      >
         <line x1="30" y1="128" x2="40" y2="128" />
         <line x1="35" y1="123" x2="35" y2="133" />
       </g>
-      <g opacity="0.18" stroke="#51a199" strokeWidth="1.5" strokeLinecap="round">
+      <g
+        opacity="0.18"
+        stroke="#51a199"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      >
         <line x1="222" y1="155" x2="232" y2="155" />
         <line x1="227" y1="150" x2="227" y2="160" />
       </g>

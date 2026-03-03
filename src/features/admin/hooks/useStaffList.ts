@@ -105,7 +105,6 @@ export const useStaffList = (facilityId: string) => {
     hasLgaOfOrigin: true,
     hasYearsInStation: true,
     hasQualifications: true,
-    hasQualificationDate: true,
     hasRemark: true,
     hasStatus: true,
   };

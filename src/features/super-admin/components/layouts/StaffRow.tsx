@@ -58,15 +58,13 @@ export const StaffRow = ({
   const formattedName = toSentenceCase(item.full_name);
   const initials = getInitials(item.full_name);
 
-  // Format qualifications with date - keys are qualification names per API schema
   const formatQualifications = () => {
-    if (!item.qualifications || Object.keys(item.qualifications).length === 0) {
+    if (!item.qualifications || item.qualifications.length === 0) {
       return "-";
     }
-    const quals = Object.keys(item.qualifications).filter(Boolean).join(", ");
-    return item.qualification_date
-      ? `${quals} (${item.qualification_date})`
-      : quals;
+    return item.qualifications
+      .map((q) => `${q.qualification} (${q.year})`)
+      .join(", ");
   };
 
   return (
@@ -138,7 +136,7 @@ export const StaffRow = ({
       </td>
 
       {/* Qualification with Date */}
-      <td className="max-w-48 truncate p-4 text-sm text-slate-600">
+      <td className="min-w-40 p-4 text-sm whitespace-normal wrap-break-word text-slate-600">
         {formatQualifications()}
       </td>
 
@@ -149,12 +147,12 @@ export const StaffRow = ({
 
       {/* Confirmation of Appt */}
       <td className="p-4 text-sm text-slate-600">
-        {item.confirmation_of_appointment || "-"}
+        {item.date_confirmation || "-"}
       </td>
 
       {/* Date of Present Appt */}
       <td className="p-4 text-sm text-slate-600">
-        {item.date_of_present_appointment || "-"}
+        {item.date_present_appointment || "-"}
       </td>
 
       {/* Date of Birth */}
@@ -164,7 +162,7 @@ export const StaffRow = ({
 
       {/* LGA of Origin */}
       <td className="p-4 text-sm text-slate-600">
-        {item.lga_of_origin || "-"}
+        {item.lga_origin || "-"}
       </td>
 
       {/* Years in Present Station */}
