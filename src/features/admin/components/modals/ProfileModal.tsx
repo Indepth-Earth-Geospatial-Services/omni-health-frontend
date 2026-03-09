@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAuthStore, User } from "@/store/auth-store";
+import { useAuthStore, User } from "@/features/auth/auth-store";
 import { Facility } from "@/types/api-response";
 import {
   User as UserIcon,

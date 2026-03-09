@@ -56,14 +56,14 @@ export default function HeroSection() {
               size="lg"
               className="bg-primary hover:bg-primary/90 w-52 rounded-full px-6 py-5 text-sm font-semibold text-white transition-all hover:scale-105 sm:px-8 sm:text-base md:w-76 md:px-10 md:py-6 md:text-lg"
             >
-              <Link href="/login">Explore Facilities Near You</Link>
+              <Link href="/user">Explore Facilities Near You</Link>
             </Button>
             <Button
               asChild
               size="lg"
               className="hover:text-primary w-52 rounded-full border-2 border-white bg-transparent px-6 py-5 text-sm font-semibold text-white transition-all hover:scale-105 hover:bg-white sm:px-8 sm:text-base md:w-76 md:px-10 md:py-6 md:text-lg"
             >
-              <Link href="/login">Compare Facility</Link>
+              <Link href="/user/facility">Compare Facility</Link>
             </Button>
           </div>
         </div>

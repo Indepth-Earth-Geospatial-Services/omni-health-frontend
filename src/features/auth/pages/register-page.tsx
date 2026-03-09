@@ -18,12 +18,12 @@ export default function RegisterPage() {
   return (
     <div className="relative flex min-h-screen">
       {/* Left Side - Benefits & Branding */}
-      <div className="relative hidden w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-blue-50 lg:block xl:w-3/5">
+      <div className="from-primary/10 via-primary/5 relative hidden w-1/2 bg-gradient-to-br to-blue-50 lg:block xl:w-3/5">
         {/* Decorative Elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="bg-primary/10 absolute -left-20 -top-20 h-96 w-96 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-blue-200/30 blur-3xl" />
-          <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-200/20 blur-3xl" />
+          <div className="bg-primary/10 absolute -top-20 -left-20 h-96 w-96 rounded-full blur-3xl" />
+          <div className="absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-blue-200/30 blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-200/20 blur-3xl" />
         </div>
 
         {/* Content */}
@@ -34,8 +34,8 @@ export default function RegisterPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-              <div className="flex h-18 items-center px-4 gap-4">
+            <Link href="/" className="group flex items-center gap-2 sm:gap-2.5">
+              <div className="flex h-18 items-center gap-4 px-4">
                 <Image
                   src="/img/image.png"
                   alt="Healthcare facility background"
@@ -44,7 +44,7 @@ export default function RegisterPage() {
                   height={60}
                   quality={75}
                 />
-                <h1 className="text-primary text-sm sm:text-base md:text-xl font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+                <h1 className="text-primary text-sm font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105 sm:text-base md:text-xl">
                   RSPHCMB
                 </h1>
               </div>
@@ -58,9 +58,8 @@ export default function RegisterPage() {
             transition={{ delay: 0.4 }}
             className="max-w-lg"
           >
-            <h2 className="mb-4 text-4xl font-bold leading-tight text-gray-900 xl:text-5xl">
-              Join{" "}
-              <span className="text-primary">Thousands</span> of Users
+            <h2 className="mb-4 text-4xl leading-tight font-bold text-gray-900 xl:text-5xl">
+              Join <span className="text-primary">Thousands</span> of Users
             </h2>
             <p className="mb-8 text-lg text-gray-600">
               Create your free account and start discovering quality healthcare
@@ -92,8 +91,9 @@ export default function RegisterPage() {
             className="max-w-md rounded-2xl bg-white/60 p-6 backdrop-blur-sm"
           >
             <p className="mb-4 text-gray-700 italic">
-              &ldquo;OmniHealth made it so easy to find a quality hospital near me.
-              The performance metrics helped me make an informed decision.&rdquo;
+              &ldquo;OmniHealth made it so easy to find a quality hospital near
+              me. The performance metrics helped me make an informed
+              decision.&rdquo;
             </p>
             <div className="flex items-center gap-3">
               <div className="bg-primary/20 flex h-10 w-10 items-center justify-center rounded-full">
@@ -117,8 +117,8 @@ export default function RegisterPage() {
             animate={{ opacity: 1 }}
             className="mb-6 text-center lg:hidden"
           >
-            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-              <div className="flex h-18 items-center px-4 gap-4">
+            <Link href="/" className="group flex items-center gap-2 sm:gap-2.5">
+              <div className="flex h-18 items-center gap-4 px-4">
                 <Image
                   src="/img/image.png"
                   alt="Healthcare facility background"
@@ -127,7 +127,7 @@ export default function RegisterPage() {
                   height={40}
                   quality={75}
                 />
-                <h1 className="text-primary text-sm sm:text-base md:text-xl font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105">
+                <h1 className="text-primary text-sm font-bold tracking-tight drop-shadow-lg transition-transform group-hover:scale-105 sm:text-base md:text-xl">
                   RSPHCMB
                 </h1>
               </div>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
             </h2>
             <p className="mt-2 text-gray-600">
               Get started with OmniHealth today
-            </p>s
+            </p>
           </motion.div>
 
           {/* Register Form */}

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
 import HydrationLoader from "@/components/shared/atoms/hydration-loader";
 
 export function AuthHydration({ children }: { children: React.ReactNode }) {

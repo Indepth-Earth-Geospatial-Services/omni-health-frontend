@@ -1,6 +1,6 @@
 import axios from "axios";
 import { handleApiError } from "@/lib/utils";
-import type { User } from "@/store/auth-store";
+import type { User } from "@/features/auth/auth-store";
 
 // Types for API requests/responses
 export interface LoginRequest {

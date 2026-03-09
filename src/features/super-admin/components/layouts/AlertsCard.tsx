@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
 import { useNotifications } from "@/features/super-admin/hooks/useNotifications";
 import type { Notification } from "@/features/super-admin/services/super-admin.service";
 
@@ -51,23 +51,20 @@ function getTypeStyles(type: Notification["type"]) {
     case "critical":
       return {
         icon: <TriangleAlert className="h-5 w-5 text-red-500" />,
-        badgeClass:
-          "border-red-200 bg-red-50 text-red-600",
+        badgeClass: "border-red-200 bg-red-50 text-red-600",
         label: "Critical",
       };
     case "warning":
       return {
         icon: <AlertCircle className="h-5 w-5 text-amber-500" />,
-        badgeClass:
-          "border-amber-200 bg-amber-50 text-amber-600",
+        badgeClass: "border-amber-200 bg-amber-50 text-amber-600",
         label: "Warning",
       };
     case "info":
     default:
       return {
         icon: <Info className="h-5 w-5 text-blue-500" />,
-        badgeClass:
-          "border-blue-200 bg-blue-50 text-blue-600",
+        badgeClass: "border-blue-200 bg-blue-50 text-blue-600",
         label: "Info",
       };
   }
@@ -75,7 +72,11 @@ function getTypeStyles(type: Notification["type"]) {
 
 const AlertsCard = () => {
   const user = useAuthStore((state) => state.user);
-  const { data: notifications, isLoading, isError } = useNotifications(user?.user_id);
+  const {
+    data: notifications,
+    isLoading,
+    isError,
+  } = useNotifications(user?.user_id);
 
   // Get only unread or recent notifications (limit to 5)
   const displayedAlerts = useMemo(() => {
@@ -152,7 +153,7 @@ const AlertsCard = () => {
                         {alert.title}
                       </h4>
                       <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${typeStyles.badgeClass}`}
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${typeStyles.badgeClass}`}
                       >
                         {typeStyles.label}
                       </span>

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
-import { useAuthStore, useCurrentFacilityId } from "@/store/auth-store";
+import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
 import FacilityCard from "../ui/FacilityCard";
 import { toast } from "sonner";

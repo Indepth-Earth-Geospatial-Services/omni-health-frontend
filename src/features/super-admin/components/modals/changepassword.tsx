@@ -50,7 +50,7 @@ interface FieldConfig {
 
 // Map of known field configurations — only fields present in schema will be rendered
 const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
-  full_name: {
+  old_password: {
     label: "Full Name",
     type: "text",
     required: true,
@@ -58,66 +58,13 @@ const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
     icon: User,
     placeholder: "Enter full name",
   },
-  email: {
+  new_password: {
     label: "Email Address",
     type: "text",
     required: false,
     fullWidth: true,
     icon: Mail,
     placeholder: "Enter email (optional)",
-  },
-  phone_number: {
-    label: "Phone Number",
-    type: "tel",
-    icon: Phone,
-    placeholder: "Enter phone number",
-  },
-  gender: {
-    label: "Gender",
-    type: "select",
-    icon: User,
-    options: [
-      { value: "M", label: "Male" },
-      { value: "F", label: "Female" },
-    ],
-  },
-  rank_cadre: {
-    label: "Rank/Cadre",
-    type: "text",
-    icon: Briefcase,
-    placeholder: "Enter rank/cadre",
-  },
-  grade_level: {
-    label: "Grade Level",
-    type: "text",
-    icon: Hash,
-    placeholder: "Enter grade level",
-  },
-  qualifications: {
-    label: "Qualifications",
-    type: "text",
-    fullWidth: true,
-    icon: Award,
-    placeholder: "e.g. MBBS:2010, BSc:2015 (name:year, comma separated)",
-  },
-  date_first_appointment: {
-    label: "Date of 1st Appt",
-    type: "date",
-    icon: Calendar,
-  },
-  date_of_birth: {
-    label: "Date of Birth",
-    type: "date",
-    icon: Calendar,
-  },
-  is_active: {
-    label: "Status",
-    type: "select",
-    icon: ToggleLeft,
-    options: [
-      { value: "true", label: "Active" },
-      { value: "false", label: "Inactive" },
-    ],
   },
 };
 
@@ -143,8 +90,9 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
   const selectDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Fetch schema dynamically based on selected facility
-  const { data: schema, isLoading: schemaLoading } =
-    useSuperAdminStaffSchema(selectedFacilityId || undefined);
+  const { data: schema, isLoading: schemaLoading } = useSuperAdminStaffSchema(
+    selectedFacilityId || undefined,
+  );
 
   // Determine which fields to render based on schema
   const fieldsToRender = useMemo(() => {
@@ -195,11 +143,17 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
     },
     onError: (error: unknown) => {
       console.error("Failed to add staff:", error);
-      const err = error as { response?: { data?: { message?: string; detail?: Array<{ loc: string[]; msg: string }> } } };
+      const err = error as {
+        response?: {
+          data?: {
+            message?: string;
+            detail?: Array<{ loc: string[]; msg: string }>;
+          };
+        };
+      };
       toast.error("Failed to add staff member", {
         description:
-          err.response?.data?.message ||
-          "Please check the form and try again.",
+          err.response?.data?.message || "Please check the form and try again.",
       });
       if (err.response?.data?.detail) {
         if (Array.isArray(err.response.data.detail)) {
@@ -353,7 +307,9 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       return (
         <div key={fieldKey}>
           <label className="mb-2 block text-sm font-medium text-slate-700">
-            {fieldKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            {fieldKey
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase())}
           </label>
           <input
             type="text"
@@ -401,11 +357,10 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
               )}
             >
               <span
-                className={
-                  selectedOption ? "text-slate-800" : "text-slate-400"
-                }
+                className={selectedOption ? "text-slate-800" : "text-slate-400"}
               >
-                {selectedOption?.label || `Select ${config.label.toLowerCase()}`}
+                {selectedOption?.label ||
+                  `Select ${config.label.toLowerCase()}`}
               </span>
               <ChevronDown
                 size={16}

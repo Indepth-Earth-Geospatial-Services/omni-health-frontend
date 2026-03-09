@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuthStore } from "@/store/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
 import HydrationLoader from "@/components/shared/atoms/hydration-loader";
 
 interface RouteGuardProps {
@@ -29,13 +29,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
   useEffect(() => {
     if (!isHydrated) return;
 
-    const protectedRoutes = [
-      "/user",
-      "/admin",
-      "/super-admin",
-      "/profile",
-      "/facilities",
-    ];
+    const protectedRoutes = ["/admin", "/super-admin"];
 
     const isProtectedRoute = protectedRoutes.some((route) =>
       pathname.startsWith(route),
@@ -66,7 +60,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
       }
 
       if (user?.role === "admin" && facilityIds && facilityIds.length > 0) {
-        router.push("/admin/staff");
+        router.push("/admin");
         return;
       }
 

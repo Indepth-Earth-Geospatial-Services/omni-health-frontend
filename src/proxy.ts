@@ -27,6 +27,11 @@ const PUBLIC_ROUTES = [
   "/verify-email",
   "/",
   "/user",
+  "/profile",
+  "/facilities",
+  "/compare-facilities",
+  "/explore-facilities",
+  "/help",
 ];
 
 /**
@@ -97,7 +102,7 @@ export function proxy(request: NextRequest) {
 
   // Check if current path is a public route
   const isPublicRoute = PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
   // If not authenticated and trying to access protected route

@@ -28,8 +28,13 @@ interface StaffTableProps {
     hasPhone: boolean;
     hasEmail: boolean;
     hasDateFirstAppt: boolean;
+    hasConfirmationAppt: boolean;
+    hasDatePresentAppt: boolean;
     hasDateOfBirth: boolean;
+    hasLgaOfOrigin: boolean;
+    hasYearsInStation: boolean;
     hasQualifications: boolean;
+    hasRemark: boolean;
     hasStatus: boolean;
   };
   onEdit: (staff: StaffMember) => void;
@@ -57,8 +62,13 @@ const StaffTable: React.FC<StaffTableProps> = ({
     hasPhone,
     hasEmail,
     hasDateFirstAppt,
+    hasConfirmationAppt,
+    hasDatePresentAppt,
     hasDateOfBirth,
+    hasLgaOfOrigin,
+    hasYearsInStation,
     hasQualifications,
+    hasRemark,
     hasStatus,
   } = columnVisibility;
 
@@ -71,21 +81,21 @@ const StaffTable: React.FC<StaffTableProps> = ({
             <th className="w-12 p-4 text-[11.38px] text-[#475467]">S/N</th>
             <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
               <div className="flex items-center gap-2 text-[11.38px] text-[#475467]">
-                Staff Name <ArrowUpDown size={14} />
+                Names of Officers <ArrowUpDown size={14} />
               </div>
             </th>
             {hasGender && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Gender</th>
+              <th className="p-4 text-[11.38px] text-[#475467]">Sex</th>
             )}
             {hasRank && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Rank/Cadre</th>
+              <th className="p-4 text-[11.38px] text-[#475467]">Rank</th>
             )}
             {hasGradeLevel && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Grade Level</th>
+              <th className="p-4 text-[11.38px] text-[#475467]">G/L</th>
             )}
-            {hasPhone && (
+            {hasQualifications && (
               <th className="p-4 text-[11.38px] text-[#475467]">
-                Phone Number
+                Qualification with Date
               </th>
             )}
             {hasDateFirstAppt && (
@@ -93,15 +103,38 @@ const StaffTable: React.FC<StaffTableProps> = ({
                 Date of 1st Appt
               </th>
             )}
+            {hasConfirmationAppt && (
+              <th className="p-4 text-[11.38px] text-[#475467]">
+                Confirmation of Appt
+              </th>
+            )}
+            {hasDatePresentAppt && (
+              <th className="p-4 text-[11.38px] text-[#475467]">
+                Date of Present Appt
+              </th>
+            )}
             {hasDateOfBirth && (
               <th className="p-4 text-[11.38px] text-[#475467]">
                 Date of Birth
               </th>
             )}
-            {hasQualifications && (
+            {hasLgaOfOrigin && (
               <th className="p-4 text-[11.38px] text-[#475467]">
-                Qualifications
+                LGA of Origin
               </th>
+            )}
+            {hasYearsInStation && (
+              <th className="p-4 text-[11.38px] text-[#475467]">
+                Years in Present Station
+              </th>
+            )}
+            {hasPhone && (
+              <th className="p-4 text-[11.38px] text-[#475467]">
+                Phone Number
+              </th>
+            )}
+            {hasRemark && (
+              <th className="p-4 text-[11.38px] text-[#475467]">Remark</th>
             )}
             {hasStatus && (
               <th className="p-4 text-[11.38px] text-[#475467]">Status</th>
@@ -195,7 +228,6 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   )}
                   {hasGradeLevel && (
                     <td className="p-4 text-sm text-slate-600">
-                      {/* {item.grade_level || "-"} */}
                       {item.grade_level &&
                       typeof item.grade_level === "string" &&
                       item.grade_level !== "NaN" &&
@@ -204,9 +236,15 @@ const StaffTable: React.FC<StaffTableProps> = ({
                         : "-"}
                     </td>
                   )}
-                  {hasPhone && (
-                    <td className="p-4 text-sm text-slate-600">
-                      {item.phone_number || "-"}
+                  {hasQualifications && (
+                    <td className="max-w-48 p-4 text-sm text-slate-600">
+                      <span className="block min-w-40 whitespace-normal wrap-break-word">
+                        {item.qualifications && item.qualifications.length > 0
+                          ? item.qualifications
+                              .map((q) => `${q.qualification} (${q.year})`)
+                              .join(", ")
+                          : "-"}
+                      </span>
                     </td>
                   )}
                   {hasDateFirstAppt && (
@@ -214,17 +252,39 @@ const StaffTable: React.FC<StaffTableProps> = ({
                       {item.date_first_appointment || "-"}
                     </td>
                   )}
+                  {hasConfirmationAppt && (
+                    <td className="p-4 text-sm text-slate-600">
+                      {item.date_confirmation || "-"}
+                    </td>
+                  )}
+                  {hasDatePresentAppt && (
+                    <td className="p-4 text-sm text-slate-600">
+                      {item.date_present_appointment || "-"}
+                    </td>
+                  )}
                   {hasDateOfBirth && (
                     <td className="p-4 text-sm text-slate-600">
                       {item.date_of_birth || "-"}
                     </td>
                   )}
-                  {hasQualifications && (
-                    <td className="max-w-48 truncate p-4 text-sm text-slate-600">
-                      {item.qualifications &&
-                      Object.keys(item.qualifications).length > 0
-                        ? Object.keys(item.qualifications).join(", ")
-                        : "-"}
+                  {hasLgaOfOrigin && (
+                    <td className="p-4 text-sm text-slate-600">
+                      {item.lga_origin || "-"}
+                    </td>
+                  )}
+                  {hasYearsInStation && (
+                    <td className="p-4 text-sm text-slate-600">
+                      {item.years_in_present_station ?? "-"}
+                    </td>
+                  )}
+                  {hasPhone && (
+                    <td className="p-4 text-sm text-slate-600">
+                      {item.phone_number || "-"}
+                    </td>
+                  )}
+                  {hasRemark && (
+                    <td className="max-w-40 truncate p-4 text-sm text-slate-600">
+                      {item.remark || "-"}
                     </td>
                   )}
                   {hasStatus && (

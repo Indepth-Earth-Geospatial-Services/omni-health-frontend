@@ -12,7 +12,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { useCurrentFacilityId } from "@/store/auth-store";
+import { useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import { useCollapsibleSections } from "@/hooks/use-collapsible-sections";
 import { CollapsibleSection, LoadingSkeleton } from "../ui/CollapsibleSection";
