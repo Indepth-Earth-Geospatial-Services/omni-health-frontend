@@ -198,7 +198,7 @@ function SideBar({ className }: { className?: string }) {
             )}
 
             {/* ✅ LOGOUT BUTTON */}
-            <div className="mt-auto pb-4.5">
+            {/* <div className="mt-auto pb-4.5">
               <Button
                 variant="ghost"
                 onClick={handleLogout} // ✅ Added onClick handler
@@ -206,7 +206,7 @@ function SideBar({ className }: { className?: string }) {
               >
                 <LogOut size={24} /> Log out
               </Button>
-            </div>
+            </div> */}
           </div>
         </SheetContent>
       </Sheet>
