@@ -54,12 +54,12 @@ export const StatsContent = ({
           <p className="text-sm text-gray-600">Lower is better</p>
         </div>
 
-        <div className="rounded-lg border bg-white p-4">
+        {/* <div className="rounded-lg border bg-white p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="font-medium">Total Reviews</span>
             <span className="text-lg font-bold">{totalReviews || 0}</span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   </div>
