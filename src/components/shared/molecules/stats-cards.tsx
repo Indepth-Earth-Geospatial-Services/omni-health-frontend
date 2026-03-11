@@ -50,7 +50,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
           key={index}
           title={stat.title}
           value={stat.value}
-          icon={stat.icon}
+          // icon={stat.icon}
           color={stat.color}
           loading={isLoading}
         />

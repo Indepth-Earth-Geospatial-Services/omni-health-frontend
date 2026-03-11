@@ -180,21 +180,21 @@ function FacilityDetailsBase({
               <span>{formattedRating}</span>
             </div>
           }
-          icon={<Star className="size-5 text-yellow-500" />}
+          // icon={<Star className="size-5 text-yellow-500" />}
           color="orange"
           size="sm"
         />
         <InfoCard
           title="Beds"
           value={totalBeds || "0"}
-          icon={<Bed className="size-5 text-blue-600" />}
+          // icon={<Bed className="size-5 text-blue-600" />}
           color="blue"
           size="sm"
         />
         <InfoCard
           title="Specialists"
           value={specialists.length || "0"}
-          icon={<Stethoscope className="size-5 text-green-600" />}
+          // icon={<Stethoscope className="size-5 text-green-600" />}
           color="green"
           size="sm"
         />
