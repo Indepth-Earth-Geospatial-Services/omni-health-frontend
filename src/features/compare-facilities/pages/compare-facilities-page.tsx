@@ -18,7 +18,7 @@ import { ComparisonResults } from "@/features/compare-facilities/components/Comp
 
 import { useUserStore } from "@/features/user/store/user-store";
 import { useFacilityDirections } from "../hooks/useFacilityDirections";
-import EmptyState from "@/features/compare-facilities/components/emptyState"; // Import EmptyState
+import EmptyState from "@/features/compare-facilities/components/emptyState";
 import { useUserLocation } from "@/features/user/hooks/use-user-location";
 
 function CompareFacilitiesPage() {
@@ -32,7 +32,7 @@ function CompareFacilitiesPage() {
   } = useCompareFacilities();
 
   // Location and Directions Hooks
-  const { requestLocation } = useUserLocation(); // Initialize location fetching
+  useUserLocation(); // Initialize location fetching
   const { userLocation, locationError } = useUserStore();
   const [facilityA, facilityB] = facilities;
   const {

@@ -18,7 +18,7 @@ export function ServicesList({ services }: ServicesListProps) {
           <Badge
             key={service}
             variant="outline"
-            className="border-[#E2E4E9] text-[#868C98]"
+            className="border-[#E2E4E9] px-4 whitespace-break-spaces text-[#868C98]"
           >
             {service}
           </Badge>
