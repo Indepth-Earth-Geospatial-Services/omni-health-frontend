@@ -172,8 +172,8 @@ function FacilityDetailsBase({
       </div>
 
       {/* Stats Bar */}
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        <InfoCard
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        {/* <InfoCard
           title="Rating"
           value={
             <div className="flex items-center gap-1">
@@ -183,12 +183,12 @@ function FacilityDetailsBase({
           // icon={<Star className="size-5 text-yellow-500" />}
           color="orange"
           size="sm"
-        />
+        /> */}
         <InfoCard
           title="Beds"
           value={totalBeds || "0"}
           // icon={<Bed className="size-5 text-blue-600" />}
-          color="blue"
+          color="orange"
           size="sm"
         />
         <InfoCard

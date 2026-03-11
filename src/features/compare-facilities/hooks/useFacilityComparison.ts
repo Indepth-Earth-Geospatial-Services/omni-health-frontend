@@ -216,22 +216,22 @@ export function useFacilityComparison(
     });
 
     // 6. Total Reviews
-    winner = higherIsBetter(reviewsA, reviewsB, COMPARISON_THRESHOLDS.reviews);
-    if (winner === "A") {
-      reasonsA.push(`More established (${reviewsA} vs ${reviewsB} reviews)`);
-    }
-    if (winner === "B") {
-      reasonsB.push(`More established (${reviewsB} vs ${reviewsA} reviews)`);
-    }
-    scoreA += normalize(reviewsA, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
-    scoreB += normalize(reviewsB, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
-    detailedResults.push({
-      key: "reviews",
-      label: "Total Reviews",
-      valueA: reviewsA,
-      valueB: reviewsB,
-      winner,
-    });
+    // winner = higherIsBetter(reviewsA, reviewsB, COMPARISON_THRESHOLDS.reviews);
+    // if (winner === "A") {
+    //   reasonsA.push(`More established (${reviewsA} vs ${reviewsB} reviews)`);
+    // }
+    // if (winner === "B") {
+    //   reasonsB.push(`More established (${reviewsB} vs ${reviewsA} reviews)`);
+    // }
+    // scoreA += normalize(reviewsA, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
+    // scoreB += normalize(reviewsB, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
+    // detailedResults.push({
+    //   key: "reviews",
+    //   label: "Total Reviews",
+    //   valueA: reviewsA,
+    //   valueB: reviewsB,
+    //   winner,
+    // });
 
     // 7. Inpatient Beds
     winner = higherIsBetter(bedsA, bedsB, COMPARISON_THRESHOLDS.count);
