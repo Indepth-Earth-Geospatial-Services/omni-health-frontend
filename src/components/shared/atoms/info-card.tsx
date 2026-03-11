@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 interface InfoCardProps {
   title: string;
   value: string | number | ReactNode;
-  icon: ReactNode;
+  icon?: ReactNode;
   color?: "blue" | "green" | "purple" | "orange" | "red" | "gray";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
