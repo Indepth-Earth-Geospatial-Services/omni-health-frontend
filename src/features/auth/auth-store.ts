@@ -1,18 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-
-const AUTH_STORAGE_KEY = "omni_health_auth";
-const AUTH_COOKIE_NAME = "omni_health_token";
-const AUTH_DATA_COOKIE_NAME = "omni_health_auth_data";
-
-// Cookie helper functions for middleware access
-function setCookie(name: string, value: string, days: number = 7): void {
-  if (typeof document === "undefined") return;
-  const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
-}
+import { isTokenExpired } from "@/lib/token";
+import {
+  AUTH_STORAGE_KEY,
+  AUTH_COOKIE_NAME,
+  AUTH_DATA_COOKIE_NAME,
+} from "@/lib/auth-constants";
 
 function deleteCookie(name: string): void {
   if (typeof document === "undefined") return;
@@ -87,12 +81,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         }),
       );
 
-      setCookie(AUTH_COOKIE_NAME, token, 7);
-      setCookie(
-        AUTH_DATA_COOKIE_NAME,
-        JSON.stringify({ role: user?.role, facilityIds }),
-        7,
-      );
+      // Write cookies so the proxy (middleware) can enforce route protection.
+      // No expiry = session cookies — cleared when the browser closes.
+      document.cookie = `${AUTH_COOKIE_NAME}=${token};path=/;SameSite=Strict`;
+      // Role is taken from the API response body (not the JWT), so we store it
+      // in a separate cookie for the proxy to read.
+      document.cookie = `${AUTH_DATA_COOKIE_NAME}=${encodeURIComponent(JSON.stringify({ role: user?.role }))};path=/;SameSite=Strict`;
     }
 
     set({
@@ -180,12 +174,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           pendingFacilitySelection,
         }),
       );
-
-      setCookie(
-        AUTH_DATA_COOKIE_NAME,
-        JSON.stringify({ role: user.role, facilityIds }),
-        7,
-      );
     }
 
     set({ user });
@@ -225,18 +213,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 }));
 
-// Helper to check if JWT token is expired
-function isTokenExpired(token: string): boolean {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(base64));
-    return Date.now() >= payload.exp * 1000 - 5000;
-  } catch {
-    return true;
-  }
-}
-
 export const useCurrentFacilityId = (): string => {
   const { currentFacilityId, facilityIds } = useAuthStore();
   return (
@@ -245,12 +221,3 @@ export const useCurrentFacilityId = (): string => {
   );
 };
 
-export function getRedirectPath(
-  facilityIds: string[] | null,
-  userRole?: string,
-): string {
-  if (userRole === "super_admin") return "/super-admin/dashboard";
-  if (userRole === "admin" && facilityIds && facilityIds.length > 0)
-    return "/admin";
-  return "/user";
-}

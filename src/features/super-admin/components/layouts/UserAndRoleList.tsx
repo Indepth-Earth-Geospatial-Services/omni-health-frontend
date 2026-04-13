@@ -96,8 +96,12 @@ export default function UserAndRoleList({
     return (
       <div className="flex w-full items-center justify-center rounded-xl border border-red-200 bg-white p-12">
         <div className="flex flex-col items-center gap-3 text-center">
-          <p className="text-sm font-medium text-red-600">Failed to load users</p>
-          <p className="text-xs text-slate-500">{error?.message || "An error occurred"}</p>
+          <p className="text-sm font-medium text-red-600">
+            Failed to load users
+          </p>
+          <p className="text-xs text-slate-500">
+            {error?.message || "An error occurred"}
+          </p>
         </div>
       </div>
     );
@@ -117,7 +121,13 @@ export default function UserAndRoleList({
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
                 <th className="w-12 p-4">
-                  <MinusSquare size={18} className="rounded bg-teal-50 text-teal-500" />
+                  <MinusSquare
+                    size={18}
+                    className="rounded bg-teal-50 text-teal-500"
+                  />
+                </th>
+                <th className="w-12 p-4 text-[11.38px] font-medium text-[#475467]">
+                  S/NO
                 </th>
                 <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
                   <div className="font-inter-medium font-inter flex items-center gap-2 text-[11.38px] text-[#475467]">
@@ -161,6 +171,10 @@ export default function UserAndRoleList({
                         className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                       />
                     </td>
+                    {/* S/NO */}
+                    <td className="p-4 text-sm text-slate-600">
+                      {startIndex + idx + 1}
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div
@@ -199,29 +213,24 @@ export default function UserAndRoleList({
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400">No facilities</span>
+                        <span className="text-xs text-slate-400">
+                          No facilities
+                        </span>
                       )}
                     </td>
                     <td className="p-4 text-sm font-medium text-slate-600">
                       {formatDate(user.created_at)}
                     </td>
                     <td className="p-4 text-center">
-                      <div className="flex flex-col gap-2">
-                        <span
-                          className={`rounded-full border px-4 py-1 text-xs font-medium ${
-                            user.is_active
-                              ? "bg-primary text-white"
-                              : "bg-[#E2E4E9] text-gray-600"
-                          }`}
-                        >
-                          {user.is_active ? "Active" : "Not Active"}
+                      {user.is_active ? (
+                        <span className="bg-primary rounded-full border px-4 py-1 text-xs font-medium text-white">
+                          Active
                         </span>
-                        {user.is_suspended && (
-                          <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-                            Suspended
-                          </span>
-                        )}
-                      </div>
+                      ) : (
+                        <span className="rounded-full border bg-[#E2E4E9] px-4 py-1 text-xs font-medium text-gray-600">
+                          Not Active
+                        </span>
+                      )}
                     </td>
                     <td className="p-4 text-center">
                       <div className="relative flex items-center justify-center gap-1">
@@ -230,7 +239,9 @@ export default function UserAndRoleList({
                           isOpen={openDropdownId === user.user_id}
                           onToggle={() =>
                             setOpenDropdownId(
-                              openDropdownId === user.user_id ? null : user.user_id
+                              openDropdownId === user.user_id
+                                ? null
+                                : user.user_id,
                             )
                           }
                           onViewProfile={() => {
@@ -266,7 +277,9 @@ export default function UserAndRoleList({
         {/* Pagination Footer */}
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 p-4 md:flex-row">
           <button
-            onClick={() => effectivePage > 1 && setCurrentPage(effectivePage - 1)}
+            onClick={() =>
+              effectivePage > 1 && setCurrentPage(effectivePage - 1)
+            }
             disabled={effectivePage === 1 || isFetching}
             className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors ${
               effectivePage === 1 || isFetching
@@ -287,7 +300,9 @@ export default function UserAndRoleList({
             </p>
           </div>
           <button
-            onClick={() => effectivePage < totalPages && setCurrentPage(effectivePage + 1)}
+            onClick={() =>
+              effectivePage < totalPages && setCurrentPage(effectivePage + 1)
+            }
             disabled={effectivePage === totalPages || isFetching}
             className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition-colors ${
               effectivePage === totalPages || isFetching

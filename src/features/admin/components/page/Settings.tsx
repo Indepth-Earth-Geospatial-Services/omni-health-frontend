@@ -4,27 +4,26 @@ import { useState } from "react";
 import {
   ChevronUp,
   ChevronDown,
-  Bell,
   Lock,
   HelpCircle,
   ExternalLink,
   Hospital,
   Loader2,
 } from "lucide-react";
-import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
 import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
 import FacilityCard from "../ui/FacilityCard";
 import { toast } from "sonner";
+import ResetPasswordModal from "@/features/auth/components/ResetPasswordModal";
 
 export default function Settings() {
   const [isFacilitiesOpen, setIsFacilitiesOpen] = useState(true);
-  // const [isNotificationsOpen, setIsNotificationsOpen] = useState(true);
   const [isSecurityOpen, setIsSecurityOpen] = useState(true);
   const [isHelpOpen, setIsHelpOpen] = useState(true);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
 
-  const { facilityIds, setCurrentFacilityId } = useAuthStore();
+  const { facilityIds, setCurrentFacilityId, user } = useAuthStore();
   const currentFacilityId = useCurrentFacilityId();
   const facilityQueries = useMultipleFacilities(facilityIds ?? []);
 
@@ -39,17 +38,6 @@ export default function Settings() {
     const name = facility?.data?.facility?.facility_name ?? "facility";
     toast.success(`Switched to ${name}`);
   };
-
-  // Notification preferences state
-  // const [emailNotifications, setEmailNotifications] = useState(true);
-  // const [pushNotifications, setPushNotifications] = useState(false);
-  // const [dailyReport, setDailyReport] = useState(true);
-  // const [appointmentAlerts, setAppointmentAlerts] = useState(true);
-  // const [capacityAlerts, setCapacityAlerts] = useState(false);
-
-  // Security settings state
-  // const [twoFactorAuth, setTwoFactorAuth] = useState(false);
-  // const [activeSessions, setActiveSessions] = useState(true);
 
   return (
     <>
@@ -110,122 +98,6 @@ export default function Settings() {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-          {/* Notifications Preferences Card */}
-          {/* <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white"> */}
-          {/* Card Header */}
-          {/* <button
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
-                  <Bell size={20} className="text-slate-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-base font-bold text-slate-900">
-                    Notifications Preferences
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Manage how you receive updates
-                  </p>
-                </div>
-              </div>
-              {isNotificationsOpen ? (
-                <ChevronUp size={20} className="text-slate-400" />
-              ) : (
-                <ChevronDown size={20} className="text-slate-400" />
-              )}
-            </button> */}
-
-          {/* Card Content */}
-          {/* {isNotificationsOpen && (
-              <div className="space-y-4 px-4 pt-2 pb-4"> */}
-          {/* Email Notifications */}
-          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Email Notifications
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      Receive updates via email
-                    </p>
-                  </div>
-                  <Switch
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
-                  />
-                </div> */}
-
-          {/* Push Notifications */}
-          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Push Notifications
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      Get instant browser alerts
-                    </p>
-                  </div>
-                  <Switch
-                    checked={pushNotifications}
-                    onCheckedChange={setPushNotifications}
-                  />
-                </div> */}
-
-          {/* Daily Report Reminder */}
-          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Daily Report Reminder
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      Daily summary notifications
-                    </p>
-                  </div>
-                  <Switch
-                    checked={dailyReport}
-                    onCheckedChange={setDailyReport}
-                  />
-                </div> */}
-
-          {/* Appointment Alerts */}
-          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Appointment Alerts
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      Alerts for new appointments
-                    </p>
-                  </div>
-                  <Switch
-                    checked={appointmentAlerts}
-                    onCheckedChange={setAppointmentAlerts}
-                  />
-                </div> */}
-
-          {/* Capacity Alerts */}
-          {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Capacity Alerts
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      Alerts when nearing capacity
-                    </p>
-                  </div>
-                  <Switch
-                    checked={capacityAlerts}
-                    onCheckedChange={setCapacityAlerts}
-                  />
-                </div>
-              </div>
-            )}
-          </div> */}
-
-          {/* Right Column - Security and Help */}
-          {/* <div className="flex max-w-full flex-row items-center justify-between"> */}
-          {/* Security Card */}
           <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
             {/* Card Header */}
             <button
@@ -253,22 +125,6 @@ export default function Settings() {
             {/* Card Content */}
             {isSecurityOpen && (
               <div className="space-y-2 px-4 pt-2 pb-6">
-                {/* Two-Factor Authentication */}
-                {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        Two-Factor Authentication
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        Add extra security layer
-                      </p>
-                    </div>
-                    <Switch
-                      checked={twoFactorAuth}
-                      onCheckedChange={setTwoFactorAuth}
-                    />
-                  </div> */}
-
                 {/* Change Password */}
                 <div className="py-3">
                   <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
@@ -277,42 +133,27 @@ export default function Settings() {
                         Password
                       </p>
                       <p className="mt-0.5 text-xs text-slate-500">
-                        Last changed 2 months ago
+                        Reset via email OTP
                       </p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       className="bg-primary text-xs text-white"
+                      onClick={() => setIsResetPasswordOpen(true)}
                     >
                       Change
                     </Button>
                   </div>
                 </div>
-
-                {/* Active Sessions */}
-                {/* <div className="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        Active Sessions
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        Manage logged-in devices
-                      </p>
-                    </div>
-                    <Switch
-                      checked={activeSessions}
-                      onCheckedChange={setActiveSessions}
-                    />
-                  </div> */}
               </div>
             )}
           </div>
 
           {/* Help & Support Card */}
-          <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-            {/* Card Header */}
-            <button
+          {/* <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white"> */}
+          {/* Card Header */}
+          {/* <button
               onClick={() => setIsHelpOpen(!isHelpOpen)}
               className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
             >
@@ -334,58 +175,63 @@ export default function Settings() {
               ) : (
                 <ChevronDown size={20} className="text-slate-400" />
               )}
-            </button>
+            </button> */}
 
-            {/* Card Content */}
-            {isHelpOpen && (
+          {/* Card Content */}
+          {/* {isHelpOpen && (
               <div className="px-6 pt-2 pb-6">
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Documentation */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+                <div className="grid grid-cols-2 gap-3"> */}
+          {/* Documentation */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         Documentation
                       </span>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* Customer Support */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* Customer Support */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         Customer Support
                       </span>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* FAQ's */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* FAQ's */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         FAQ&apos;s
                       </span>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* Report amn issue */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* Report amn issue */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         Report amn issue
                       </span>
                     </div>
-                  </button>
-                </div>
+                  </button> */}
+          {/* </div>
               </div>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
-      {/* </div> */}
+
+      <ResetPasswordModal
+        isOpen={isResetPasswordOpen}
+        onClose={() => setIsResetPasswordOpen(false)}
+        userEmail={user?.email ?? ""}
+      />
     </>
   );
 }

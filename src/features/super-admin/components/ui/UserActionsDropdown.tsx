@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Eye, Trash2, ArrowLeftRight, Ban, Pen } from "lucide-react";
+import { Eye, ShieldOff, ShieldCheck, ArrowLeftRight, Ban, Pen } from "lucide-react";
 import type { User } from "../../services/super-admin.service";
 
 interface UserActionsDropdownProps {
@@ -53,27 +53,27 @@ export function UserActionsDropdown({
             View Profile
           </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSuspend();
-            }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            <Trash2 size={16} className="text-amber-400" />
-            Suspend Account
-          </button>
-
-          {user.is_suspended && (
+          {!user.is_active ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onUnsuspend();
               }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-green-700 transition-colors hover:bg-green-50"
             >
-              <Trash2 size={16} className="text-green-500" />
+              <ShieldCheck size={16} className="text-green-500" />
               Unsuspend Account
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSuspend();
+              }}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-amber-700 transition-colors hover:bg-amber-50"
+            >
+              <ShieldOff size={16} className="text-amber-500" />
+              Suspend Account
             </button>
           )}
 

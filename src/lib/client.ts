@@ -2,11 +2,11 @@ import axios, { AxiosInstance } from "axios";
 import config from "./config";
 import { handleApiError, ApiError } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/auth-store";
-
-const AUTH_STORAGE_KEY = "omni_health_auth";
+import { isTokenExpired } from "@/lib/token";
 
 class ApiClient {
   public instance: AxiosInstance;
+
   constructor() {
     this.instance = axios.create({
       baseURL: config.API_BASE_URL,
@@ -19,13 +19,15 @@ class ApiClient {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor - Add token to all requests
+    // Request interceptor — attach token, reject if expired before the request
     this.instance.interceptors.request.use((config) => {
       const token = useAuthStore.getState().token;
 
       if (token) {
-        if (this.isTokenExpired(token)) {
-          this.clearAuth();
+        if (isTokenExpired(token)) {
+          // logout() clears sessionStorage, cookies, Zustand state, and
+          // dispatches the "auth:logout" event — no extra work needed here.
+          useAuthStore.getState().logout();
           throw new ApiError("Token expired", 401, "TOKEN_EXPIRED");
         }
         config.headers.Authorization = `Bearer ${token}`;
@@ -34,38 +36,18 @@ class ApiClient {
       return config;
     });
 
-    // Response interceptor - Handle errors globally
+    // Response interceptor — handle 401s from the backend
     this.instance.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          this.clearAuth();
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("auth:logout"));
-          }
+          // logout() handles everything: storage, cookies, state, and the
+          // "auth:logout" event — no need to dispatch it separately.
+          useAuthStore.getState().logout();
         }
         return Promise.reject(handleApiError(error));
       },
     );
-  }
-
-  private isTokenExpired(token: string): boolean {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const payload = JSON.parse(atob(base64));
-
-      // Check if token expires in the next 5 seconds
-      return Date.now() >= payload.exp * 1000 - 5000;
-    } catch {
-      return true;
-    }
-  }
-
-  private clearAuth(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    }
   }
 }
 

@@ -19,7 +19,8 @@ import {
 
 import { loginSchema, LoginFormData } from "../schemas/login.schema";
 import { authService } from "@/services/auth.service";
-import { useAuthStore, getRedirectPath } from "@/features/auth/auth-store";
+import { useAuthStore } from "@/features/auth/auth-store";
+import { getRoleDashboard } from "@/lib/auth-constants";
 import { toast } from "sonner";
 import FacilitySelectionModal from "./FacilitySelectionModal";
 // import SocialLogin from "./social-login";
@@ -135,8 +136,7 @@ export default function LoginForm() {
       toast.success("Login successful!");
 
       // 7. Redirect based on role
-      const redirectPath = getRedirectPath(facilityIds, user.role);
-      router.push(redirectPath);
+      router.push(getRoleDashboard(user.role));
     } catch (error: any) {
       // ✅ Better error handling with specific messages
       let errorMessage = "Invalid email or password";

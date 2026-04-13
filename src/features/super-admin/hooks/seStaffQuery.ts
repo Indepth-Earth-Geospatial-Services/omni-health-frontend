@@ -54,12 +54,17 @@ const FALLBACK_SCHEMA: Record<string, { type: string; nullable: boolean }> = {
   gender: { type: "string", nullable: true },
   rank_cadre: { type: "string", nullable: true },
   grade_level: { type: "string", nullable: true },
+  qualifications: { type: "object", nullable: true },
+  date_first_appointment: { type: "string", nullable: true },
+  date_confirmation: { type: "string", nullable: true },
+  date_present_appointment: { type: "string", nullable: true },
+  date_of_birth: { type: "string", nullable: true },
+  lga_origin: { type: "string", nullable: true },
+  years_in_present_station: { type: "string", nullable: true },
   phone_number: { type: "string", nullable: true },
   email: { type: "string", nullable: true },
-  date_first_appointment: { type: "string", nullable: true },
-  date_of_birth: { type: "string", nullable: true },
-  qualifications: { type: "object", nullable: true },
   is_active: { type: "boolean", nullable: true },
+  remark: { type: "string", nullable: true },
 };
 
 const EXCLUDED_SCHEMA_KEYS = ["staff_id", "facility_id"];

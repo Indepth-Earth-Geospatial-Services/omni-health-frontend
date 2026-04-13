@@ -75,6 +75,13 @@ export const StaffRow = ({
       whileHover={{ backgroundColor: "#f8fafc" }}
       className="group border-b border-slate-100 transition-colors last:border-0"
     >
+      <td className="p-4">
+        <input
+          type="checkbox"
+          className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+        />
+      </td>
+
       {/* S/NO */}
       <td className="p-4 text-sm text-slate-600">{serialNumber}</td>
 
@@ -136,7 +143,7 @@ export const StaffRow = ({
       </td>
 
       {/* Qualification with Date */}
-      <td className="min-w-40 p-4 text-sm whitespace-normal wrap-break-word text-slate-600">
+      <td className="min-w-40 p-4 text-sm wrap-break-word whitespace-normal text-slate-600">
         {formatQualifications()}
       </td>
 
@@ -161,9 +168,7 @@ export const StaffRow = ({
       </td>
 
       {/* LGA of Origin */}
-      <td className="p-4 text-sm text-slate-600">
-        {item.lga_origin || "-"}
-      </td>
+      <td className="p-4 text-sm text-slate-600">{item.lga_origin || "-"}</td>
 
       {/* Years in Present Station */}
       <td className="p-4 text-sm text-slate-600">
