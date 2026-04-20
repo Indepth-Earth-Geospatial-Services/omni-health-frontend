@@ -1,20 +1,17 @@
 "use client";
 
-"use client";
-
 import { useState } from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  Lock,
-  HelpCircle,
-  ExternalLink,
-} from "lucide-react";
-
+import { ChevronUp, ChevronDown, Lock } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
+import { useAuthStore } from "@/features/auth/auth-store";
+import ResetPasswordModal from "@/features/auth/components/ResetPasswordModal";
+
 export default function Settings() {
   const [isSecurityOpen, setIsSecurityOpen] = useState(true);
-  const [isHelpOpen, setIsHelpOpen] = useState(true);
+  // const [isHelpOpen, setIsHelpOpen] = useState(true);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+
+  const { user } = useAuthStore();
 
   return (
     <>
@@ -57,11 +54,15 @@ export default function Settings() {
                       <p className="text-sm font-medium text-slate-900">
                         Password
                       </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        Reset via email OTP
+                      </p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       className="bg-primary text-xs text-white"
+                      onClick={() => setIsResetPasswordOpen(true)}
                     >
                       Change
                     </Button>
@@ -72,9 +73,9 @@ export default function Settings() {
           </div>
 
           {/* Help & Support Card */}
-          <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-            {/* Card Header */}
-            <button
+          {/* <div className="h-58 max-h-92 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white"> */}
+          {/* Card Header */}
+          {/* <button
               onClick={() => setIsHelpOpen(!isHelpOpen)}
               className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
             >
@@ -96,58 +97,63 @@ export default function Settings() {
               ) : (
                 <ChevronDown size={20} className="text-slate-400" />
               )}
-            </button>
+            </button> */}
 
-            {/* Card Content */}
-            {isHelpOpen && (
+          {/* Card Content */}
+          {/* {isHelpOpen && (
               <div className="px-6 pt-2 pb-6">
                 <div className="grid grid-cols-2 gap-3">
                   {/* Documentation */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         Documentation
                       </span>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* Customer Support */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* Customer Support */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         Customer Support
                       </span>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* FAQ's */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* FAQ's */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
                         FAQ&apos;s
                       </span>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* Report amn issue */}
-                  <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
+          {/* Report amn issue */}
+          {/* <button className="group flex items-center justify-between rounded-lg border border-slate-200 bg-gray-50 p-4 transition-all hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-center gap-3">
                       <ExternalLink size={16} className="text-slate-600" />
                       <span className="text-sm font-medium text-slate-900">
-                        Report amn issue
+                        Report an issue
                       </span>
                     </div>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+                  </button> */}
         </div>
       </div>
+      {/* )}
+          </div> */}
       {/* </div> */}
+      {/* </div> */}
+
+      <ResetPasswordModal
+        isOpen={isResetPasswordOpen}
+        onClose={() => setIsResetPasswordOpen(false)}
+        userEmail={user?.email ?? ""}
+      />
     </>
   );
 }

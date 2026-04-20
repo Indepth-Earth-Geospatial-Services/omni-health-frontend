@@ -26,8 +26,8 @@ export default function AllUserPage() {
         add: "Click 'Add New User' button to create a new account",
         changeRole:
           "Select a user from the list and click the edit icon, then 'Change Role'",
-        suspend:
-          "Select a user from the list and click the edit icon, then 'Suspend Account'",
+        unsuspend:
+          "Select a user from the list and click the edit icon, then 'Unsuspend'",
         deactivate:
           "Select a user from the list and click the edit icon, then 'Deactivate'",
       };

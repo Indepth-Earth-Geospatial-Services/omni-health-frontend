@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/features/auth/auth-store";
 import HydrationLoader from "@/components/shared/atoms/hydration-loader";
 
@@ -9,73 +7,15 @@ interface RouteGuardProps {
   children: React.ReactNode;
 }
 
+/**
+ * RouteGuard's only job is to block rendering until sessionStorage has been
+ * read and Zustand hydrated. All route-protection redirects are handled by
+ * the Next.js middleware (proxy.ts / middleware.ts) which runs server-side
+ * before any page is served — this avoids client/server conflicts and the
+ * race conditions caused by re-running hydrate() on every pathname change.
+ */
 export function RouteGuard({ children }: RouteGuardProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  // Added pendingFacilitySelection to the destructured store
-  const {
-    isAuthenticated,
-    isHydrated,
-    facilityIds,
-    user,
-    pendingFacilitySelection,
-    hydrate,
-  } = useAuthStore();
-
-  useEffect(() => {
-    hydrate();
-  }, [pathname, hydrate]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    const protectedRoutes = ["/admin", "/super-admin"];
-
-    const isProtectedRoute = protectedRoutes.some((route) =>
-      pathname.startsWith(route),
-    );
-
-    // 1. Handle Unauthenticated Access
-    if (!isAuthenticated && isProtectedRoute) {
-      router.push("/login");
-      return;
-    }
-
-    // 2. Handle Authenticated Redirects (The logic you needed fixed)
-    if (
-      isAuthenticated &&
-      (pathname === "/login" || pathname === "/register")
-    ) {
-      // IF an admin still needs to select a facility, STOP HERE.
-      // This prevents the "flash" or immediate redirect away from the login page/modal.
-      if (pendingFacilitySelection) {
-        return;
-      }
-
-      // If we reach here, it means they are authenticated AND
-      // have either selected a facility or don't need to.
-      if (user?.role === "super_admin") {
-        router.push("/super-admin/dashboard");
-        return;
-      }
-
-      if (user?.role === "admin" && facilityIds && facilityIds.length > 0) {
-        router.push("/admin");
-        return;
-      }
-
-      router.push("/user");
-      return;
-    }
-  }, [
-    isAuthenticated,
-    isHydrated,
-    pathname,
-    router,
-    facilityIds,
-    user,
-    pendingFacilitySelection, // Added dependency
-  ]);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
 
   if (!isHydrated) return <HydrationLoader />;
 

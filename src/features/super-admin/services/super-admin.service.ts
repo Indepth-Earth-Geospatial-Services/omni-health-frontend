@@ -15,7 +15,7 @@ export interface User {
   managed_facilities: ManagedFacility[];
   created_at: string;
   is_active: boolean;
-  is_suspended?: boolean;
+  is_suspended: boolean;
 }
 
 export interface UserPagination {
@@ -626,7 +626,7 @@ class SuperAdminService {
    */
   async suspendUser(userId: string, reason: string): Promise<any> {
     try {
-      const response = await apiClient.post(
+      const response = await apiClient.patch(
         `${this.ENDPOINTS.SUSPEND_USER}/${userId}/suspend`,
         { reason },
       );
@@ -639,17 +639,17 @@ class SuperAdminService {
 
   /**
    * Unsuspend a user account
-   * POST /api/v1/admin/users/{user_id}/unsuspend
+   * PATCH /api/v1/admin/users/{user_id}/unsuspend
    * @param userId - The ID of the user to unsuspend
    */
   async unsuspendUser(userId: string): Promise<any> {
     try {
-      const response = await apiClient.post(
+      const response = await apiClient.patch(
         `${this.ENDPOINTS.UNSUSPEND_USER}/${userId}/unsuspend`,
       );
       return response.data;
     } catch (error) {
-      console.error("Error unsuspending user:", error);
+      console.error("Error lifting suspension for user:", error);
       throw error;
     }
   }

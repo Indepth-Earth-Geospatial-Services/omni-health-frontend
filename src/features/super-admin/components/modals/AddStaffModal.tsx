@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   ChevronDown,
@@ -16,6 +16,8 @@ import {
   Briefcase,
   Hash,
   ToggleLeft,
+  MapPin,
+  AlignLeft,
 } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 import { apiClient } from "@/lib/client";
@@ -40,7 +42,7 @@ interface AddStaffModalProps {
 
 interface FieldConfig {
   label: string;
-  type: "text" | "tel" | "date" | "select";
+  type: "text" | "tel" | "date" | "select" | "textarea";
   required?: boolean;
   fullWidth?: boolean;
   icon?: LucideIcon;
@@ -48,7 +50,25 @@ interface FieldConfig {
   options?: { value: string; label: string }[];
 }
 
-// Map of known field configurations — only fields present in schema will be rendered
+// All fields in display order — always rendered regardless of schema
+const FIELD_ORDER = [
+  "full_name",
+  "gender",
+  "rank_cadre",
+  "grade_level",
+  "qualifications",
+  "date_first_appointment",
+  "date_confirmation",
+  "date_present_appointment",
+  "date_of_birth",
+  "lga_origin",
+  "years_in_present_station",
+  "phone_number",
+  "email",
+  "is_active",
+  "remark",
+];
+
 const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
   full_name: {
     label: "Full Name",
@@ -58,22 +78,8 @@ const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
     icon: User,
     placeholder: "Enter full name",
   },
-  email: {
-    label: "Email Address",
-    type: "text",
-    required: false,
-    fullWidth: true,
-    icon: Mail,
-    placeholder: "Enter email (optional)",
-  },
-  phone_number: {
-    label: "Phone Number",
-    type: "tel",
-    icon: Phone,
-    placeholder: "Enter phone number",
-  },
   gender: {
-    label: "Gender",
+    label: "Sex",
     type: "select",
     icon: User,
     options: [
@@ -88,7 +94,7 @@ const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
     placeholder: "Enter rank/cadre",
   },
   grade_level: {
-    label: "Grade Level",
+    label: "Grade Level (G/L)",
     type: "text",
     icon: Hash,
     placeholder: "Enter grade level",
@@ -105,10 +111,45 @@ const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
     type: "date",
     icon: Calendar,
   },
+  date_confirmation: {
+    label: "Confirmation of Appt",
+    type: "date",
+    icon: Calendar,
+  },
+  date_present_appointment: {
+    label: "Date of Present Appt",
+    type: "date",
+    icon: Calendar,
+  },
   date_of_birth: {
     label: "Date of Birth",
     type: "date",
     icon: Calendar,
+  },
+  lga_origin: {
+    label: "LGA of Origin",
+    type: "text",
+    icon: MapPin,
+    placeholder: "Enter LGA of origin",
+  },
+  years_in_present_station: {
+    label: "Years in Present Station",
+    type: "text",
+    icon: Hash,
+    placeholder: "Enter years",
+  },
+  phone_number: {
+    label: "Phone Number",
+    type: "tel",
+    icon: Phone,
+    placeholder: "e.g. 08012345678",
+  },
+  email: {
+    label: "Email Address",
+    type: "text",
+    fullWidth: true,
+    icon: Mail,
+    placeholder: "Enter email (optional)",
   },
   is_active: {
     label: "Status",
@@ -119,10 +160,14 @@ const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
       { value: "false", label: "Inactive" },
     ],
   },
+  remark: {
+    label: "Remark",
+    type: "textarea",
+    fullWidth: true,
+    icon: AlignLeft,
+    placeholder: "Any additional remarks",
+  },
 };
-
-// Fields that should always appear even if not in schema
-const ALWAYS_SHOW_FIELDS = ["full_name"];
 
 const AddStaffModal: React.FC<AddStaffModalProps> = ({
   isOpen,
@@ -142,26 +187,11 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
   const facilityDropdownRef = useRef<HTMLDivElement>(null);
   const selectDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Fetch schema dynamically based on selected facility
-  const { data: schema, isLoading: schemaLoading } =
-    useSuperAdminStaffSchema(selectedFacilityId || undefined);
+  // Schema is still fetched (kept for backward compat) but field list uses FIELD_ORDER
+  useSuperAdminStaffSchema(selectedFacilityId || undefined);
 
-  // Determine which fields to render based on schema
-  const fieldsToRender = useMemo(() => {
-    const schemaKeys = schema ? Object.keys(schema) : [];
-    const fieldKeys = schema
-      ? schemaKeys.filter(
-          (key) => FIELD_CONFIG_MAP[key] || ALWAYS_SHOW_FIELDS.includes(key),
-        )
-      : Object.keys(FIELD_CONFIG_MAP);
-
-    // Ensure always-show fields are present
-    ALWAYS_SHOW_FIELDS.forEach((key) => {
-      if (!fieldKeys.includes(key)) fieldKeys.unshift(key);
-    });
-
-    return fieldKeys;
-  }, [schema]);
+  // Always render all fields in fixed order
+  const fieldsToRender = FIELD_ORDER;
 
   // Initialize form data when fields change
   useEffect(() => {
@@ -318,6 +348,12 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
         if (quals.length > 0) {
           staffData.qualifications = quals;
         }
+      } else if (key === "phone_number") {
+        // Send phone_number as string[]
+        (staffData as unknown as Record<string, unknown>)[key] = value
+          .split(",")
+          .map((p: string) => p.trim())
+          .filter(Boolean);
       } else if (key === "is_active") {
         staffData.is_active = value === "true";
       } else {
@@ -443,6 +479,33 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       );
     }
 
+    // Textarea fields
+    if (config.type === "textarea") {
+      return (
+        <div key={fieldKey} className={isFullWidth ? "col-span-2" : ""}>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            {config.label}
+          </label>
+          <textarea
+            name={fieldKey}
+            value={formData[fieldKey] || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, [fieldKey]: e.target.value }))
+            }
+            placeholder={config.placeholder}
+            rows={3}
+            className={cn(
+              "focus:border-primary focus:ring-primary/20 w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none resize-none",
+              errors[fieldKey] ? "border-red-500" : "border-slate-300",
+            )}
+          />
+          {errors[fieldKey] && (
+            <p className="mt-1 text-xs text-red-500">{errors[fieldKey]}</p>
+          )}
+        </div>
+      );
+    }
+
     // Text, tel, date fields
     return (
       <div key={fieldKey} className={isFullWidth ? "col-span-2" : ""}>
@@ -486,9 +549,9 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white shadow-2xl">
+      <div className="fixed top-1/2 left-1/2 z-50 flex h-[90vh] w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 p-6">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 p-6">
           <h2 className="text-lg font-semibold text-slate-800">
             Add New Staff
           </h2>
@@ -501,7 +564,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="max-h-[70vh] overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-2 gap-4">
             {/* Facility Selector — always shown first */}
             <div className="col-span-2" ref={facilityDropdownRef}>
@@ -591,21 +654,13 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
               )}
             </div>
 
-            {/* Schema loading indicator */}
-            {schemaLoading && selectedFacilityId && (
-              <div className="col-span-2 flex items-center justify-center gap-2 py-4 text-sm text-slate-500">
-                <Loader2 size={16} className="animate-spin" />
-                Loading form fields...
-              </div>
-            )}
-
-            {/* Dynamic fields from schema */}
+            {/* All fields */}
             {fieldsToRender.map((fieldKey) => renderField(fieldKey))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t border-slate-200 p-6">
+        <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 p-6">
           <Button
             variant="outline"
             onClick={handleClose}
