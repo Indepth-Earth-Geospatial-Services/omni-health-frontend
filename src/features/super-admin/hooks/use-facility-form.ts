@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/client";
+import { RIVERS_STATE_LGAS } from "@/features/super-admin/constants/lga";
 
 export interface FacilityFormData {
   facility_name: string;
@@ -15,9 +16,6 @@ export interface FacilityFormData {
   street_address: string;
   latitude: string;
   longitude: string;
-  total_beds: string;
-  staff_count: string;
-  operation: string;
 }
 
 export interface FacilityData {
@@ -53,9 +51,6 @@ const INITIAL_FORM_DATA: FacilityFormData = {
   street_address: "",
   latitude: "",
   longitude: "",
-  total_beds: "",
-  staff_count: "",
-  operation: "",
 };
 
 interface UseFacilityFormOptions {
@@ -83,13 +78,14 @@ export function useFacilityForm({
         contact_number: facility.contact_info?.phone || "",
         contact_email: facility.contact_info?.email || "",
         state: facility.state || "Rivers",
-        lga: facility.facility_lga || facility.lga || "",
+        // LGA dropdown stores numeric IDs — look up the ID from the stored name
+        lga:
+          RIVERS_STATE_LGAS.find(
+            (l) => l.label === (facility.facility_lga || facility.lga || ""),
+          )?.value || "",
         street_address: facility.address || facility.street_address || "",
         latitude: facility.lat?.toString() || "",
         longitude: facility.lon?.toString() || "",
-        total_beds: facility.total_beds?.toString() || "",
-        staff_count: facility.staff_count?.toString() || "",
-        operation: facility.operation || facility.description || "",
       });
     }
   }, [facility, isOpen]);
@@ -101,30 +97,23 @@ export function useFacilityForm({
   }, [onClose]);
 
   // Create facility mutation
+  // POST /api/v1/facilities/ — FacilityCreate schema (confirmed from backend docs)
+  // Required: facility_name, lga_id (int), lat, lon
+  // Optional: facility_category, hfr_id, town, address, contact_info, working_hours
   const createMutation = useMutation({
     mutationFn: async (data: FacilityFormData) => {
-      const response = await axios.post(
-        "/api/backend/facilities",
-        {
-          facility_name: data.facility_name,
-          facility_category: data.facility_type,
-          facility_lga: data.lga,
-          state: data.state,
-          address: data.street_address,
-          contact_info: {
-            phone: data.contact_number,
-            email: data.contact_email,
-          },
-          lat: parseFloat(data.latitude),
-          lon: parseFloat(data.longitude),
-          total_beds: parseInt(data.total_beds) || 0,
-          staff_count: parseInt(data.staff_count) || 0,
-          description: data.operation,
+      const response = await apiClient.post("/facilities/", {
+        facility_name: data.facility_name,
+        facility_category: data.facility_type || null,
+        lga_id: parseInt(data.lga, 10),
+        address: data.street_address || null,
+        contact_info: {
+          phone: data.contact_number,
+          email: data.contact_email,
         },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+        lat: parseFloat(data.latitude),
+        lon: parseFloat(data.longitude),
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -133,22 +122,32 @@ export function useFacilityForm({
       handleClose();
     },
     onError: (error: unknown) => {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.detail || "Failed to add facility"
-        : "Failed to add facility";
-      toast.error(message);
+      const detail = (error as any)?.response?.data?.detail;
+      toast.error(
+        typeof detail === "string" ? detail : "Failed to add facility",
+      );
     },
   });
 
   // Update facility mutation
+  // PATCH /api/v1/admin/facility/profile/{facility_id}
   const updateMutation = useMutation({
     mutationFn: async (data: FacilityFormData) => {
-      const response = await axios.patch(
-        `/api/v1/admin/facility/profile/${facility?.facility_id}`,
-        data,
+      const lgaId = data.lga ? parseInt(data.lga, 10) : undefined;
+      const response = await apiClient.patch(
+        `/admin/facility/profile/${facility?.facility_id}`,
         {
-          headers: { "Content-Type": "application/json" },
-        }
+          facility_name: data.facility_name,
+          facility_category: data.facility_type,
+          ...(lgaId ? { lga_id: lgaId } : {}),
+          address: data.street_address,
+          contact_info: {
+            phone: data.contact_number,
+            email: data.contact_email,
+          },
+          lat: parseFloat(data.latitude),
+          lon: parseFloat(data.longitude),
+        },
       );
       return response.data;
     },
@@ -158,10 +157,10 @@ export function useFacilityForm({
       handleClose();
     },
     onError: (error: unknown) => {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.detail || "Failed to update facility"
-        : "Failed to update facility";
-      toast.error(message);
+      const detail = (error as any)?.response?.data?.detail;
+      toast.error(
+        typeof detail === "string" ? detail : "Failed to update facility",
+      );
     },
   });
 
@@ -176,7 +175,7 @@ export function useFacilityForm({
         });
       }
     },
-    [errors]
+    [errors],
   );
 
   const validateForm = useCallback(() => {

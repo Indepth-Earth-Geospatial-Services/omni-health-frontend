@@ -3,11 +3,9 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   ArrowUpDown,
-  MinusSquare,
   ChevronRight,
   ChevronLeft,
   PenIcon,
-  Trash2,
   Loader2,
 } from "lucide-react";
 import RegistryHeader from "../layouts/RegistryHeader";
@@ -25,24 +23,38 @@ import {
   type Facility,
 } from "../../services/super-admin.service";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function FacilityRegistry() {
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] =
     useState<FacilityFilterState>(INITIAL_FILTER_STATE);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedFacility, setSelectedFacility] = useState<any>(null);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => superAdminService.bulkDeleteFacilities(ids),
+    onSuccess: (_data, ids) => {
+      const label = ids.length === 1 ? "1 facility" : `${ids.length} facilities`;
+      toast.success(`${label} deleted`);
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["facilities"] });
+    },
+    onError: (error: unknown) => {
+      const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : "Failed to delete facilities");
+    },
+  });
+
   // When sorting is active, we need to fetch ALL data to sort properly
-  // Otherwise, sorting only applies to the current page which is misleading
   const isSorting = !!filters.sortBy;
 
-  // Build search params from filters for the API
   const searchParams = useMemo(
     () => ({
-      // When sorting, fetch all data (use large limit), otherwise paginate normally
       page: isSorting ? 1 : currentPage,
       limit: isSorting ? 1000 : itemsPerPage,
       name: filters.searchQuery || undefined,
@@ -70,7 +82,6 @@ export default function FacilityRegistry() {
   );
   const pagination = data?.pagination;
 
-  // Client-side sorting (API doesn't support sort params)
   const sortedFacilities = useMemo(() => {
     if (!filters.sortBy) return rawFacilities;
 
@@ -107,14 +118,10 @@ export default function FacilityRegistry() {
   // When sorting, handle pagination client-side
   const facilities = useMemo(() => {
     if (!isSorting) return sortedFacilities;
-
-    // Client-side pagination when sorting
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return sortedFacilities.slice(startIndex, endIndex);
+    return sortedFacilities.slice(startIndex, startIndex + itemsPerPage);
   }, [sortedFacilities, isSorting, currentPage]);
 
-  // Calculate pagination values
   const totalRecords = isSorting
     ? sortedFacilities.length
     : pagination?.total_records || 0;
@@ -122,6 +129,40 @@ export default function FacilityRegistry() {
     ? Math.ceil(sortedFacilities.length / itemsPerPage)
     : pagination?.total_pages || 1;
 
+  // ── Selection handlers (declared after `facilities`) ──────────────────────
+  const allOnPageSelected =
+    facilities.length > 0 && facilities.every((f) => selectedIds.has(f.facility_id));
+
+  const handleCheckboxToggle = useCallback(
+    (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
+  const handleSelectAll = useCallback(() => {
+    if (allOnPageSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(facilities.map((f) => f.facility_id)));
+    }
+  }, [allOnPageSelected, facilities]);
+
+  const handleBulkDelete = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    bulkDeleteMutation.mutate(Array.from(selectedIds));
+  }, [selectedIds, bulkDeleteMutation]);
+
+  // ── Other handlers ────────────────────────────────────────────────────────
   const handleSearch = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, searchQuery: value }));
     setCurrentPage(1);
@@ -142,10 +183,7 @@ export default function FacilityRegistry() {
   const handleExport = useCallback(async (format: ExportFormat) => {
     try {
       toast.loading("Exporting facilities...", { id: "export-facilities" });
-
       const blob = await superAdminService.exportFacilities({ format });
-
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -154,12 +192,10 @@ export default function FacilityRegistry() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
       toast.success("Facilities exported successfully", {
         id: "export-facilities",
       });
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch {
       toast.error("Failed to export facilities", { id: "export-facilities" });
     }
   }, []);
@@ -185,12 +221,6 @@ export default function FacilityRegistry() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (facilityId: string, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    // TODO: Implement delete functionality
-    // console.log("Delete facility:", facilityId);
-  };
-
   return (
     <>
       <RegistryHeader
@@ -202,6 +232,9 @@ export default function FacilityRegistry() {
         filters={filters}
         buttonLabel="Add New Facility"
         onButtonClick={handleAddNew}
+        selectedCount={selectedIds.size}
+        onDeleteSelected={handleBulkDelete}
+        isDeleting={bulkDeleteMutation.isPending}
       />
 
       <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -213,9 +246,11 @@ export default function FacilityRegistry() {
             <thead className="sticky top-0 border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
                 <th className="w-12 p-4">
-                  <MinusSquare
-                    size={18}
-                    className="text-primary bg-primary/10 rounded"
+                  <input
+                    type="checkbox"
+                    checked={allOnPageSelected}
+                    onChange={handleSelectAll}
+                    className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-teal-600"
                   />
                 </th>
                 <th className="cursor-pointer p-4">
@@ -282,12 +317,19 @@ export default function FacilityRegistry() {
                   <tr
                     key={facility.facility_id}
                     onClick={() => handleRowClick(facility)}
-                    className="cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50"
+                    className={`cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50 ${
+                      selectedIds.has(facility.facility_id) ? "bg-teal-50/50" : ""
+                    }`}
                   >
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border-slate-300"
+                        checked={selectedIds.has(facility.facility_id)}
+                        onChange={(e) =>
+                          handleCheckboxToggle(facility.facility_id, e as unknown as React.MouseEvent)
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-teal-600"
                       />
                     </td>
                     <td className="p-4 text-sm font-medium text-slate-900">
@@ -297,7 +339,6 @@ export default function FacilityRegistry() {
                       {facility.hfr_id || "-"}
                     </td>
                     <td className="max-w-xs truncate p-4 text-sm text-slate-600">
-                      {/* {facility.address} */}
                       {facility.address &&
                       typeof facility.address === "string" &&
                       facility.address !== "NaN" &&
@@ -327,12 +368,6 @@ export default function FacilityRegistry() {
                         >
                           <PenIcon size={18} />
                         </button>
-                        {/* <button
-                          onClick={(e) => handleDelete(facility.facility_id, e)}
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                        >
-                          <Trash2 size={18} />
-                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -380,14 +415,12 @@ export default function FacilityRegistry() {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
       <AddFacilityModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         facility={selectedFacility}
       />
 
-      {/* Facility Details Slide-in Modal */}
       <FacilityDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
