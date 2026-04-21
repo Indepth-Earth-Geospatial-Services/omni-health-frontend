@@ -1,10 +1,9 @@
-// app/(admin)/layout.tsx (Admin Layout)
 import type { Metadata } from "next";
-import "../globals.css";
 import Sidebar from "@/features/admin/components/layout/Sidebar";
 import { UnregisterServiceWorker } from "@/features/auth/UnregisterServiceWorker";
 import QueryProvider from "@/providers/query.provider";
-import { AuthHydration } from "@/./features/auth/AuthHydration";
+import { AuthHydration } from "@/features/auth/AuthHydration";
+import { AdminSessionGuard } from "@/features/auth/AdminSessionGuard";
 
 export const metadata: Metadata = {
   title: "Omni Health Admin",
@@ -19,13 +18,13 @@ export default function RootLayout({
   return (
     <QueryProvider>
       <AuthHydration>
-        <UnregisterServiceWorker />
-        <div className="flex h-screen overflow-hidden">
-          {/* Sidebar - Fixed width */}
-          <Sidebar />
-          {/* Main Content Area - This will render your pages */}
-          <div className="flex flex-1 flex-col overflow-hidden">{children}</div>
-        </div>
+        <AdminSessionGuard>
+          <UnregisterServiceWorker />
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <div className="flex flex-1 flex-col overflow-hidden">{children}</div>
+          </div>
+        </AdminSessionGuard>
       </AuthHydration>
     </QueryProvider>
   );

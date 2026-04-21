@@ -76,6 +76,21 @@ export default function LoginForm() {
         description: "You can now log in with your credentials.",
       });
     }
+
+    const reason = searchParams.get("reason");
+    if (reason === "session_expired") {
+      toast.warning("Session expired", {
+        description: "Your session has expired. Please log in again.",
+      });
+    } else if (reason === "no_facility") {
+      toast.warning("No facility selected", {
+        description: "Please log in and select a facility to continue.",
+      });
+    } else if (reason === "unauthorized") {
+      toast.error("Access denied", {
+        description: "You do not have permission to access that page.",
+      });
+    }
   }, [searchParams]);
 
   const form = useForm<LoginFormData>({
