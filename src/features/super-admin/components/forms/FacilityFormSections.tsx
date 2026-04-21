@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Input } from "@/features/super-admin/components/ui/input";
-import { Textarea } from "@/features/super-admin/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  LGA_OPTIONS,
+  RIVERS_STATE_LGAS,
   FACILITY_TYPES,
   NIGERIAN_STATES,
 } from "@/features/super-admin/constants/lga";
@@ -190,9 +189,9 @@ export function LocationDetailsSection({
               <SelectValue placeholder="Select LGA" />
             </SelectTrigger>
             <SelectContent>
-              {LGA_OPTIONS.map((lga) => (
-                <SelectItem key={lga} value={lga}>
-                  {lga}
+              {RIVERS_STATE_LGAS.map((lga) => (
+                <SelectItem key={lga.value} value={lga.value}>
+                  {lga.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -241,52 +240,3 @@ export function LocationDetailsSection({
   );
 }
 
-// Capacity & Resources Section
-export function CapacityResourcesSection({
-  formData,
-  onInputChange,
-}: Omit<FormSectionProps, "errors">) {
-  return (
-    <FormSection
-      title="Capacity & Resources"
-      description="Populate a new healthcare facility to the platform"
-    >
-      {/* Two Column: Total Beds & Staff Count */}
-      <div className="grid grid-cols-2 gap-4">
-        <FormField id="total_beds" label="Total Beds">
-          <Input
-            id="total_beds"
-            type="number"
-            value={formData.total_beds}
-            onChange={(e) => onInputChange("total_beds", e.target.value)}
-            placeholder="Typical number of staff in facility"
-            className="mt-1.5"
-          />
-        </FormField>
-
-        <FormField id="staff_count" label="Staff Count">
-          <Input
-            id="staff_count"
-            type="number"
-            value={formData.staff_count}
-            onChange={(e) => onInputChange("staff_count", e.target.value)}
-            placeholder="Typical number of staff in facility"
-            className="mt-1.5"
-          />
-        </FormField>
-      </div>
-
-      {/* Operation */}
-      <FormField id="operation" label="Operation">
-        <Textarea
-          id="operation"
-          value={formData.operation}
-          onChange={(e) => onInputChange("operation", e.target.value)}
-          placeholder="Brief Description of services offered and specialties etc."
-          className="mt-1.5"
-          rows={3}
-        />
-      </FormField>
-    </FormSection>
-  );
-}

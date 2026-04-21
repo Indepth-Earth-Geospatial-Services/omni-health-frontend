@@ -23,11 +23,7 @@ const Tabs: React.FC<TabsProps> = ({
   return (
     // Removed fixed w-116 and max-w-200.
     // Uses w-fit to wrap content size, or you can use w-full to fill parent.
-    <div className={`flex w-fit items-center py-2 ${className}`}>
-      {/* - Removed fixed width (w-4xl).
-         - Added 'flex-wrap' for safety on very small screens (optional).
-         - 'bg-[#F6F8FA]' wraps all buttons.
-      */}
+    <div className={`flex items-center py-2 ${className}`}>
       <div className="flex w-full items-center gap-2 rounded-lg bg-[#F6F8FA] p-2">
         {tabs.map((tab) => (
           <button

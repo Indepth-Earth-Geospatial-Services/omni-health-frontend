@@ -17,6 +17,7 @@ import { useFacility } from "@/hooks/use-facilities";
 import { useCollapsibleSections } from "@/hooks/use-collapsible-sections";
 import { CollapsibleSection, LoadingSkeleton } from "../ui/CollapsibleSection";
 import EditFacilityProfileModal from "../modals/EditFacilityProfileModal";
+import FacilityImageButton from "../ui/proifleImage";
 import {
   formatTimeRange,
   formatDate,
@@ -63,27 +64,30 @@ export default function FacilityProfile() {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="w-full">
-        <div className="mb-6 flex justify-end">
-          <Button
-            type="button"
-            variant="default"
-            size="xl"
-            className="text-lg"
-            onClick={() => setIsEditModalOpen(true)}
-          >
-            <Calendar size={18} />
-            Edit Profile
-          </Button>
-        </div>
-
-        <EditFacilityProfileModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          facilityId={facilityId}
-          currentData={facility}
+      <div className="mb-6 flex items-center justify-end gap-3">
+        <FacilityImageButton
+          facilityId={facilityId ?? ""}
+          facilityName={facility?.facility_name}
+          imageUrl={(facility as any)?.image_urls?.[0] ?? null}
         />
+        <Button
+          type="button"
+          variant="default"
+          size="xl"
+          className="text-lg"
+          onClick={() => setIsEditModalOpen(true)}
+        >
+          <Calendar size={18} />
+          Edit Profile
+        </Button>
       </div>
+
+      <EditFacilityProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        facilityId={facilityId}
+        currentData={facility}
+      />
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

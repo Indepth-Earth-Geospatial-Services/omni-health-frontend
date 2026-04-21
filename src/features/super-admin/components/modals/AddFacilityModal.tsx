@@ -9,7 +9,6 @@ import {
 import {
   BasicDetailsSection,
   LocationDetailsSection,
-  CapacityResourcesSection,
 } from "@/features/super-admin/components/forms/FacilityFormSections";
 
 interface AddFacilityModalProps {
@@ -71,10 +70,6 @@ export default function AddFacilityModal({
               onInputChange={handleInputChange}
             />
 
-            <CapacityResourcesSection
-              formData={formData}
-              onInputChange={handleInputChange}
-            />
           </div>
         </div>
 

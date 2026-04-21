@@ -272,6 +272,7 @@ class SuperAdminService {
     ANALYTICS_FACILITIES: "/admin/analytics/facilities", // GET facilities analytics with rating and reviews
     NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
     EXPORT_FACILITIES: "/admin/export/facilities", // Export facilities to CSV or Excel
+    BULK_DELETE_FACILITIES: "/admin/facilities/bulk-delete", // DELETE bulk facilities
   };
 
   constructor() {
@@ -285,6 +286,7 @@ class SuperAdminService {
     this.exportStaff = this.exportStaff.bind(this);
     this.exportUsers = this.exportUsers.bind(this);
     this.exportFacilities = this.exportFacilities.bind(this);
+    this.bulkDeleteFacilities = this.bulkDeleteFacilities.bind(this);
     this.searchFacilities = this.searchFacilities.bind(this);
     this.getFacilitiesByInventory = this.getFacilitiesByInventory.bind(this);
     this.getUniqueInventory = this.getUniqueInventory.bind(this);
@@ -548,6 +550,17 @@ class SuperAdminService {
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Bulk delete facilities
+   * DELETE /api/v1/admin/facilities/bulk-delete
+   * Body: { ids: string[] }
+   */
+  async bulkDeleteFacilities(ids: string[]): Promise<void> {
+    await apiClient.delete(this.ENDPOINTS.BULK_DELETE_FACILITIES, {
+      data: { ids },
+    });
   }
 
   async searchFacilities(

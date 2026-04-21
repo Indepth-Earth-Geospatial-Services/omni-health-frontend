@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Search, Plus, X } from "lucide-react";
+import { Search, Plus, X, Trash2 } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 import { apiClient } from "@/lib/client";
 
@@ -30,6 +30,9 @@ interface RegistryHeaderProps {
   onButtonClick?: () => void;
   buttonIcon?: React.ReactNode;
   filters?: FacilityFilterState;
+  selectedCount?: number;
+  onDeleteSelected?: () => void;
+  isDeleting?: boolean;
 }
 
 const RegistryHeader: React.FC<RegistryHeaderProps> = ({
@@ -45,7 +48,11 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
   onButtonClick,
   buttonIcon = <Plus size={18} />,
   filters = INITIAL_FILTER_STATE,
+  selectedCount = 0,
+  onDeleteSelected,
+  isDeleting = false,
 }) => {
+  const hasSelection = selectedCount > 0;
   // --- States ---
   const [activeDropdown, setActiveDropdown] = useState<
     "none" | "sort" | "filter" | "export"
@@ -155,62 +162,86 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           <div className="hidden h-10 w-px bg-gray-200 md:block" />
 
+          {/* Delete button — only visible when rows are selected */}
+          {hasSelection && (
+            <button
+              onClick={onDeleteSelected}
+              disabled={isDeleting}
+              className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-60"
+            >
+              {isDeleting ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-400 border-t-transparent" />
+              ) : (
+                <Trash2 size={15} />
+              )}
+              Delete ({selectedCount})
+            </button>
+          )}
+
           {/* Sort Dropdown */}
           {showSortBy && (
-            <SortDropdown
-              isOpen={activeDropdown === "sort"}
-              onToggle={() =>
-                setActiveDropdown(activeDropdown === "sort" ? "none" : "sort")
-              }
-              currentSort={filters.sortBy}
-              onSortChange={onSortChange}
-              dropdownRef={sortRef}
-            />
+            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+              <SortDropdown
+                isOpen={activeDropdown === "sort"}
+                onToggle={() =>
+                  setActiveDropdown(activeDropdown === "sort" ? "none" : "sort")
+                }
+                currentSort={filters.sortBy}
+                onSortChange={onSortChange}
+                dropdownRef={sortRef}
+              />
+            </div>
           )}
 
           {/* Filter Dropdown */}
           {showFilters && (
-            <FilterDropdown
-              isOpen={activeDropdown === "filter"}
-              onToggle={() =>
-                setActiveDropdown(
-                  activeDropdown === "filter" ? "none" : "filter",
-                )
-              }
-              filters={filters}
-              onFilterChange={onFilterChange}
-              onClearFilters={handleClearFilters}
-              activeFilterCount={activeFilterCount - (filters.sortBy ? 1 : 0)}
-              dropdownRef={filterRef}
-              facilities={facilities}
-              loadingFacilities={loadingFacilities}
-            />
+            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+              <FilterDropdown
+                isOpen={activeDropdown === "filter"}
+                onToggle={() =>
+                  setActiveDropdown(
+                    activeDropdown === "filter" ? "none" : "filter",
+                  )
+                }
+                filters={filters}
+                onFilterChange={onFilterChange}
+                onClearFilters={handleClearFilters}
+                activeFilterCount={activeFilterCount - (filters.sortBy ? 1 : 0)}
+                dropdownRef={filterRef}
+                facilities={facilities}
+                loadingFacilities={loadingFacilities}
+              />
+            </div>
           )}
 
           {/* Export Dropdown */}
           {showExport && (
-            <ExportDropdown
-              isOpen={activeDropdown === "export"}
-              onToggle={() =>
-                setActiveDropdown(
-                  activeDropdown === "export" ? "none" : "export",
-                )
-              }
-              onExport={onExport}
-              dropdownRef={exportRef}
-            />
+            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+              <ExportDropdown
+                isOpen={activeDropdown === "export"}
+                onToggle={() =>
+                  setActiveDropdown(
+                    activeDropdown === "export" ? "none" : "export",
+                  )
+                }
+                onExport={onExport}
+                dropdownRef={exportRef}
+              />
+            </div>
           )}
 
           {/* Add New Button */}
           {buttonLabel && (
-            <Button
-              onClick={onButtonClick}
-              size="xl"
-              className="flex items-center gap-2 shadow-sm"
-            >
-              {buttonIcon}
-              {buttonLabel}
-            </Button>
+            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+              <Button
+                onClick={onButtonClick}
+                size="xl"
+                className="flex items-center gap-2 shadow-sm"
+              >
+                {buttonIcon}
+                {buttonLabel}
+              </Button>
+            </div>
           )}
         </div>
       </div>
