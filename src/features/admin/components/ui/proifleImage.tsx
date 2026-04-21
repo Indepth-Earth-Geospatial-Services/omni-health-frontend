@@ -20,7 +20,10 @@ export default function FacilityImageButton({
   imageUrl,
 }: FacilityImageButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  // previewUrl: optimistic local display (may be a blob: URL after upload)
   const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl);
+  // serverUrl: the last known URL confirmed to exist on the server (from prop)
+  const [serverUrl, setServerUrl] = useState<string | null>(imageUrl);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,6 +32,7 @@ export default function FacilityImageButton({
 
   useEffect(() => {
     setPreviewUrl(imageUrl);
+    setServerUrl(imageUrl);
   }, [imageUrl]);
 
   useEffect(() => {
@@ -62,37 +66,32 @@ export default function FacilityImageButton({
     }
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
-    uploadMutation.mutate(
-      [file],
-      {
-        onSuccess: () => {
-          toast.success("Facility image uploaded successfully.");
-          setIsOpen(false);
-        },
-        onError: () => {
-          toast.error("Failed to upload image. Please try again.");
-          setPreviewUrl(imageUrl);
-        },
+    uploadMutation.mutate([file], {
+      onSuccess: () => {
+        toast.success("Facility image uploaded successfully.");
+        setIsOpen(false);
       },
-    );
+      onError: () => {
+        toast.error("Failed to upload image. Please try again.");
+        setPreviewUrl(imageUrl);
+      },
+    });
     e.target.value = "";
   };
 
   const handleDelete = () => {
-    if (!previewUrl) return;
-    deleteMutation.mutate(
-      previewUrl,
-      {
-        onSuccess: () => {
-          setPreviewUrl(null);
-          toast.success("Facility image removed.");
-          setIsOpen(false);
-        },
-        onError: () => {
-          toast.error("Failed to delete image. Please try again.");
-        },
+    if (!serverUrl) return;
+    deleteMutation.mutate(serverUrl, {
+      onSuccess: () => {
+        setPreviewUrl(null);
+        setServerUrl(null);
+        toast.success("Facility image removed.");
+        setIsOpen(false);
       },
-    );
+      onError: () => {
+        toast.error("Failed to delete image. Please try again.");
+      },
+    });
   };
 
   const isBusy = uploadMutation.isPending || deleteMutation.isPending;
@@ -110,7 +109,7 @@ export default function FacilityImageButton({
       {/* Avatar trigger */}
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-lg ring-2 ring-primary/20 transition-all duration-200 hover:ring-primary/50 focus:outline-none"
+        className="ring-primary/20 hover:ring-primary/50 relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-lg ring-2 transition-all duration-200 focus:outline-none"
       >
         {previewUrl ? (
           <img
@@ -130,7 +129,7 @@ export default function FacilityImageButton({
 
       {/* Dropdown panel */}
       {isOpen && (
-        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-86 min-h-[86px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="absolute top-[calc(100%+8px)] right-0 z-50 min-h-[86px] w-86 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
           {/* Image preview */}
           <div className="flex h-48 w-full items-center justify-center bg-slate-100">
             {previewUrl ? (
@@ -152,7 +151,7 @@ export default function FacilityImageButton({
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isBusy}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
+              className="bg-primary hover:bg-primary/90 flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-60"
             >
               {uploadMutation.isPending ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -162,7 +161,7 @@ export default function FacilityImageButton({
               Upload Image
             </button>
 
-            {previewUrl && (
+            {serverUrl && (
               <button
                 onClick={handleDelete}
                 disabled={isBusy}
