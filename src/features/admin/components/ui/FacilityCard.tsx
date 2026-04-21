@@ -13,8 +13,8 @@ export default function FacilityCard({
   isActive,
   onExplore,
 }: FacilityCardProps) {
-  const rating = facility.average_rating ?? 0;
-  const reviews = facility.total_reviews ?? 0;
+  // const rating = facility.average_rating ?? 0;
+  // const reviews = facility.total_reviews ?? 0;
 
   return (
     <div
@@ -66,7 +66,7 @@ export default function FacilityCard({
       </div>
 
       {/* Rating */}
-      <div className="mt-3 flex items-center gap-2">
+      {/* <div className="mt-3 flex items-center gap-2">
         <div className="flex items-center gap-1">
           <Star size={14} className="fill-amber-400 text-amber-400" />
           <span className="text-sm font-medium text-slate-700">
@@ -76,7 +76,7 @@ export default function FacilityCard({
         <span className="text-xs text-slate-400">
           ({reviews} {reviews === 1 ? "review" : "reviews"})
         </span>
-      </div>
+      </div> */}
 
       {/* Explore button */}
       <div className="mt-4 border-t border-slate-100 pt-4">
