@@ -1,8 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from "react";
 import { Facility } from "@/types/api-response";
 import { DirectionsRoute, mapboxService } from "@/services/mapbox.service";
-import { COMPARISON_WEIGHTS, COMPARISON_THRESHOLDS } from "@/constants/comparison-config";
-import { normalize, higherIsBetter, lowerIsBetter } from "@/lib/comparison-utils"; // Import utility functions
+import {
+  COMPARISON_WEIGHTS,
+  COMPARISON_THRESHOLDS,
+} from "@/constants/comparison-config";
+import {
+  normalize,
+  higherIsBetter,
+  lowerIsBetter,
+} from "@/lib/comparison-utils";
 
 type Winner = "A" | "B" | "TIE";
 
@@ -67,33 +75,38 @@ export function useFacilityComparison(
     // --- Scoring & Reasons ---
 
     // 1. Average Rating
-    let winner = higherIsBetter(ratingA, ratingB, COMPARISON_THRESHOLDS.rating);
-    if (winner === "A") {
-      reasonsA.push(
-        `Higher average rating (${ratingA?.toFixed(1)} vs ${ratingB?.toFixed(
-          1,
-        )})`,
-      );
-    }
-    if (winner === "B") {
-      reasonsB.push(
-        `Higher average rating (${ratingB?.toFixed(1)} vs ${ratingA?.toFixed(
-          1,
-        )})`,
-      );
-    }
-    scoreA += normalize(ratingA ?? 0, 0, maxRating) * COMPARISON_WEIGHTS.rating;
-    scoreB += normalize(ratingB ?? 0, 0, maxRating) * COMPARISON_WEIGHTS.rating;
-    detailedResults.push({
-      key: "rating",
-      label: "Average Rating",
-      valueA: ratingA?.toFixed(1) ?? "N/A",
-      valueB: ratingB?.toFixed(1) ?? "N/A",
-      winner,
-    });
+    let winner;
+    // = higherIsBetter(ratingA, ratingB, COMPARISON_THRESHOLDS.rating);
+    //     if (winner === "A") {
+    //       reasonsA.push(
+    //         `Higher average rating (${ratingA?.toFixed(1)} vs ${ratingB?.toFixed(
+    //           1,
+    //         )})`,
+    //       );
+    //     }
+    //     if (winner === "B") {
+    //       reasonsB.push(
+    //         `Higher average rating (${ratingB?.toFixed(1)} vs ${ratingA?.toFixed(
+    //           1,
+    //         )})`,
+    //       );
+    //     }
+    //     scoreA += normalize(ratingA ?? 0, 0, maxRating) * COMPARISON_WEIGHTS.rating;
+    //     scoreB += normalize(ratingB ?? 0, 0, maxRating) * COMPARISON_WEIGHTS.rating;
+    //     detailedResults.push({
+    //       key: "rating",
+    //       label: "Average Rating",
+    //       valueA: ratingA?.toFixed(1) ?? "N/A",
+    //       valueB: ratingB?.toFixed(1) ?? "N/A",
+    //       winner,
+    //     });
 
     // 2. Travel Time
-    winner = lowerIsBetter(durationA, durationB, COMPARISON_THRESHOLDS.travelTime);
+    winner = lowerIsBetter(
+      durationA,
+      durationB,
+      COMPARISON_THRESHOLDS.travelTime,
+    );
     if (winner === "A") {
       reasonsA.push(
         `Shorter travel time (by ${mapboxService.formatDuration(
@@ -123,7 +136,11 @@ export function useFacilityComparison(
     });
 
     // 3. Distance
-    winner = lowerIsBetter(distanceA, distanceB, COMPARISON_THRESHOLDS.distance);
+    winner = lowerIsBetter(
+      distanceA,
+      distanceB,
+      COMPARISON_THRESHOLDS.distance,
+    );
     if (winner === "A") reasonsA.push("Closer distance");
     if (winner === "B") reasonsB.push("Closer distance");
     scoreA +=
@@ -141,7 +158,11 @@ export function useFacilityComparison(
     });
 
     // 4. Services
-    winner = higherIsBetter(servicesA.length, servicesB.length, COMPARISON_THRESHOLDS.count);
+    winner = higherIsBetter(
+      servicesA.length,
+      servicesB.length,
+      COMPARISON_THRESHOLDS.count,
+    );
     if (winner === "A") {
       reasonsA.push(
         `Offers ${servicesA.length - servicesB.length} more services`,
@@ -152,8 +173,10 @@ export function useFacilityComparison(
         `Offers ${servicesB.length - servicesA.length} more services`,
       );
     }
-    scoreA += normalize(servicesA.length, 0, maxServices) * COMPARISON_WEIGHTS.services;
-    scoreB += normalize(servicesB.length, 0, maxServices) * COMPARISON_WEIGHTS.services;
+    scoreA +=
+      normalize(servicesA.length, 0, maxServices) * COMPARISON_WEIGHTS.services;
+    scoreB +=
+      normalize(servicesB.length, 0, maxServices) * COMPARISON_WEIGHTS.services;
     detailedResults.push({
       key: "services",
       label: "Available Services",
@@ -163,7 +186,11 @@ export function useFacilityComparison(
     });
 
     // 5. Specialists
-    winner = higherIsBetter(specialistsA.length, specialistsB.length, COMPARISON_THRESHOLDS.count);
+    winner = higherIsBetter(
+      specialistsA.length,
+      specialistsB.length,
+      COMPARISON_THRESHOLDS.count,
+    );
     if (winner === "A") {
       reasonsA.push(
         `Has ${specialistsA.length - specialistsB.length} more specialists`,
@@ -175,9 +202,11 @@ export function useFacilityComparison(
       );
     }
     scoreA +=
-      normalize(specialistsA.length, 0, maxSpecialists) * COMPARISON_WEIGHTS.specialists;
+      normalize(specialistsA.length, 0, maxSpecialists) *
+      COMPARISON_WEIGHTS.specialists;
     scoreB +=
-      normalize(specialistsB.length, 0, maxSpecialists) * COMPARISON_WEIGHTS.specialists;
+      normalize(specialistsB.length, 0, maxSpecialists) *
+      COMPARISON_WEIGHTS.specialists;
     detailedResults.push({
       key: "specialists",
       label: "Available Specialists",
@@ -187,22 +216,22 @@ export function useFacilityComparison(
     });
 
     // 6. Total Reviews
-    winner = higherIsBetter(reviewsA, reviewsB, COMPARISON_THRESHOLDS.reviews);
-    if (winner === "A") {
-      reasonsA.push(`More established (${reviewsA} vs ${reviewsB} reviews)`);
-    }
-    if (winner === "B") {
-      reasonsB.push(`More established (${reviewsB} vs ${reviewsA} reviews)`);
-    }
-    scoreA += normalize(reviewsA, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
-    scoreB += normalize(reviewsB, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
-    detailedResults.push({
-      key: "reviews",
-      label: "Total Reviews",
-      valueA: reviewsA,
-      valueB: reviewsB,
-      winner,
-    });
+    // winner = higherIsBetter(reviewsA, reviewsB, COMPARISON_THRESHOLDS.reviews);
+    // if (winner === "A") {
+    //   reasonsA.push(`More established (${reviewsA} vs ${reviewsB} reviews)`);
+    // }
+    // if (winner === "B") {
+    //   reasonsB.push(`More established (${reviewsB} vs ${reviewsA} reviews)`);
+    // }
+    // scoreA += normalize(reviewsA, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
+    // scoreB += normalize(reviewsB, 0, maxReviews) * COMPARISON_WEIGHTS.reviews;
+    // detailedResults.push({
+    //   key: "reviews",
+    //   label: "Total Reviews",
+    //   valueA: reviewsA,
+    //   valueB: reviewsB,
+    //   winner,
+    // });
 
     // 7. Inpatient Beds
     winner = higherIsBetter(bedsA, bedsB, COMPARISON_THRESHOLDS.count);

@@ -17,7 +17,6 @@ import { useFacility } from "@/hooks/use-facilities";
 import { useCollapsibleSections } from "@/hooks/use-collapsible-sections";
 import { CollapsibleSection, LoadingSkeleton } from "../ui/CollapsibleSection";
 import EditFacilityProfileModal from "../modals/EditFacilityProfileModal";
-import FacilityImageButton from "../ui/proifleImage";
 import {
   formatTimeRange,
   formatDate,
@@ -30,7 +29,6 @@ import {
 const SECTIONS = [
   { id: "facilityOverview", label: "Facility Overview", defaultOpen: true },
   { id: "operatingHours", label: "Operating Hours", defaultOpen: true },
-  { id: "staffInventory", label: "Staff Inventory", defaultOpen: true },
   { id: "services", label: "Services", defaultOpen: true },
   { id: "specialists", label: "Specialists", defaultOpen: true },
   { id: "activity", label: "Activity", defaultOpen: true },
@@ -64,12 +62,7 @@ export default function FacilityProfile() {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-end gap-3">
-        <FacilityImageButton
-          facilityId={facilityId ?? ""}
-          facilityName={facility?.facility_name}
-          imageUrl={(facility as any)?.image_urls?.[0] ?? null}
-        />
+      <div className="mb-6 flex items-center justify-end">
         <Button
           type="button"
           variant="default"
@@ -125,7 +118,7 @@ export default function FacilityProfile() {
           </CollapsibleSection>
 
           {/* Staff Inventory */}
-          <CollapsibleSection
+          {/* <CollapsibleSection
             title="Staff Inventory"
             description="Number of Staff"
             icon={<Users size={20} className="text-slate-600" />}
@@ -134,7 +127,7 @@ export default function FacilityProfile() {
             maxHeight="360px"
           >
             <StaffInventoryContent />
-          </CollapsibleSection>
+          </CollapsibleSection> */}
 
           {/* Services */}
           <CollapsibleSection
@@ -143,7 +136,7 @@ export default function FacilityProfile() {
             icon={<Stethoscope size={20} className="text-slate-600" />}
             isOpen={sections.isOpen("services")}
             onToggle={() => sections.toggle("services")}
-            maxHeight="342px"
+            maxHeight="600px"
           >
             <ServicesContent
               services={facility?.services_list}
@@ -201,8 +194,8 @@ interface FacilityData {
   address?: string;
   lat?: number;
   lon?: number;
-  average_rating?: number;
-  total_reviews?: number;
+  // average_rating?: number;
+  // total_reviews?: number;
   last_updated?: string | Date;
   working_hours?: {
     monday?: string;
@@ -285,7 +278,7 @@ function FacilityOverviewContent({
               </span>
             </div>
           </div>
-          <div>
+          {/* <div>
             <label className="mb-1 block text-sm text-slate-500">
               Average Rating
             </label>
@@ -298,7 +291,7 @@ function FacilityOverviewContent({
                 ({facility?.total_reviews || 0} reviews)
               </span>
             </div>
-          </div>
+          </div> */}
           <FieldDisplay
             label="Last Updated"
             value={formatDate(String(facility?.last_updated || ""))}
@@ -392,22 +385,22 @@ function OperatingHoursContent({
   );
 }
 
-function StaffInventoryContent() {
-  return (
-    <div className="py-8 text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-        <Users size={28} className="text-[#868C98]" />
-      </div>
-      <p className="font-geist mb-1 text-[15px] font-normal text-[#868C98]">
-        Staff inventory data is not available
-      </p>
-      <p className="font-geist text-[13px] font-normal text-[#868C98]/70">
-        Staff category counts will appear here once the data is provided by the
-        backend.
-      </p>
-    </div>
-  );
-}
+// function StaffInventoryContent() {
+//   return (
+//     <div className="py-8 text-center">
+//       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+//         <Users size={28} className="text-[#868C98]" />
+//       </div>
+//       <p className="font-geist mb-1 text-[15px] font-normal text-[#868C98]">
+//         Staff inventory data is not available
+//       </p>
+//       <p className="font-geist text-[13px] font-normal text-[#868C98]/70">
+//         Staff category counts will appear here once the data is provided by the
+//         backend.
+//       </p>
+//     </div>
+//   );
+// }
 
 function ServicesContent({
   services,

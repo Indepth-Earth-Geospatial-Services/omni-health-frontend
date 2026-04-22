@@ -114,7 +114,7 @@ export default function SuperSidebar() {
           })}
         </div>
 
-        {/* User Menu Header */}
+        {/* User Portal Header */}
         <div className="px-2 pt-6 pb-2">
           <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
             User Portal
@@ -152,7 +152,7 @@ export default function SuperSidebar() {
           onClick={() => setIsProfileModalOpen(true)}
           className="group flex w-full items-center gap-3 rounded-lg p-2 transition-all duration-200 hover:bg-gray-100"
         >
-          <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold">
+          <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
             {userInitials}
           </div>
 

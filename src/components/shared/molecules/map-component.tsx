@@ -4,7 +4,6 @@ import { useDrawerStore } from "@/features/user/store/drawer-store";
 import { useFacilityStore } from "@/features/user/store/facility-store";
 import { Facility } from "@/features/user/types";
 import { useMapCamera } from "@/hooks/use-map-camera";
-import "mapbox-gl/dist/mapbox-gl.css";
 import { useRef, useState } from "react";
 import Map from "react-map-gl/mapbox";
 import {
