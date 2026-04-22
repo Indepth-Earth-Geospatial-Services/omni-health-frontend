@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -15,6 +15,7 @@ import UserProfileModal from "../modals/UserProfileModal";
 import ChangeUserRoleModal from "../modals/ChangeUserRoleModal";
 import DeactivateUserModal from "../modals/DeactivateUserModal";
 import SuspendUserModal from "../modals/SuspendUserModal";
+import AssignFacilityModal from "../modals/AssignFacility";
 import {
   formatDate,
   getRoleBadgeColor,
@@ -36,6 +37,21 @@ export default function UserAndRoleList({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [expandedFacilities, setExpandedFacilities] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const toggleFacilities = (userId: string) => {
+    setExpandedFacilities((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
 
   // Fetch ALL users (large limit for client-side filtering)
   const { data, isLoading, isError, error, isFetching, refetch } =
@@ -161,113 +177,158 @@ export default function UserAndRoleList({
                 </tr>
               ) : (
                 users.map((user, idx) => (
-                  <tr
-                    key={user.user_id}
-                    className="group border-b border-slate-100 transition-colors last:border-0"
-                  >
-                    <td className="p-4">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                      />
-                    </td>
-                    {/* S/NO */}
-                    <td className="p-4 text-sm text-slate-600">
-                      {startIndex + idx + 1}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-xs font-bold text-white shadow-sm`}
-                        >
-                          {getInitials(user.full_name)}
-                        </div>
-                        <div>
-                          <p className="font-dmsans text-sm text-[13.69px] font-medium text-slate-900">
-                            {user.full_name}
-                          </p>
-                          <p className="font-dmsans mt-0.5 text-[12.64px] font-normal text-[#475467]">
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <span
-                        className={`rounded-full border px-4 py-1 text-xs font-medium ${getRoleBadgeColor(user.role)}`}
-                      >
-                        {user.role.replace("_", " ").toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      {user.managed_facilities.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {user.managed_facilities.map((facility) => (
-                            <div
-                              key={facility.facility_id}
-                              className="flex items-center gap-2 text-xs text-slate-600"
-                            >
-                              <Building2 size={14} className="text-slate-400" />
-                              <span>{facility.facility_name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400">
-                          No facilities
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 text-sm font-medium text-slate-600">
-                      {formatDate(user.created_at)}
-                    </td>
-                    <td className="p-4 text-center">
-                      {user.is_active ? (
-                        <span className="bg-primary rounded-full border px-4 py-1 text-xs font-medium text-white">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="rounded-full border bg-[#E2E4E9] px-4 py-1 text-xs font-medium text-gray-600">
-                          Not Active
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 text-center">
-                      <div className="relative flex items-center justify-center gap-1">
-                        <UserActionsDropdown
-                          user={user}
-                          isOpen={openDropdownId === user.user_id}
-                          onToggle={() =>
-                            setOpenDropdownId(
-                              openDropdownId === user.user_id
-                                ? null
-                                : user.user_id,
-                            )
-                          }
-                          onViewProfile={() => {
-                            userActions.openProfileModal(user);
-                            setOpenDropdownId(null);
-                          }}
-                          onSuspend={() => {
-                            userActions.openSuspendModal(user, "suspend");
-                            setOpenDropdownId(null);
-                          }}
-                          onUnsuspend={() => {
-                            userActions.openSuspendModal(user, "unsuspend");
-                            setOpenDropdownId(null);
-                          }}
-                          onChangeRole={() => {
-                            userActions.openChangeRoleModal(user);
-                            setOpenDropdownId(null);
-                          }}
-                          onDeactivate={() => {
-                            userActions.openDeactivateModal(user);
-                            setOpenDropdownId(null);
-                          }}
+                  <React.Fragment key={user.user_id}>
+                    {/* ── Main row ── */}
+                    <tr className="group border-b border-slate-100 transition-colors">
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
                         />
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="p-4 text-sm text-slate-600">
+                        {startIndex + idx + 1}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-xs font-bold text-white shadow-sm`}
+                          >
+                            {getInitials(user.full_name)}
+                          </div>
+                          <div>
+                            <p className="font-dmsans text-[13.69px] font-medium text-slate-900">
+                              {user.full_name}
+                            </p>
+                            <p className="font-dmsans mt-0.5 text-[12.64px] font-normal text-[#475467]">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span
+                          className={`rounded-full border px-4 py-1 text-xs font-medium ${getRoleBadgeColor(user.role)}`}
+                        >
+                          {user.role.replace("_", " ").toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        {user.managed_facilities.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {user.managed_facilities.slice(0, 2).map((f) => (
+                              <div
+                                key={f.facility_id}
+                                className="flex items-center gap-2 text-xs text-slate-600"
+                              >
+                                <Building2
+                                  size={12}
+                                  className="shrink-0 text-slate-400"
+                                />
+                                <span className="max-w-45 truncate">
+                                  {f.facility_name}
+                                </span>
+                              </div>
+                            ))}
+                            {user.managed_facilities.length > 2 && (
+                              <button
+                                onClick={() => toggleFacilities(user.user_id)}
+                                className="mt-1 w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
+                              >
+                                {expandedFacilities.has(user.user_id)
+                                  ? "Hide facilities"
+                                  : `+${user.managed_facilities.length - 2} more`}
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">
+                            No facilities
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 text-sm font-medium text-slate-600">
+                        {formatDate(user.created_at)}
+                      </td>
+                      <td className="p-4 text-center">
+                        {user.is_active ? (
+                          <span className="bg-primary rounded-full border px-4 py-1 text-xs font-medium text-white">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="rounded-full border bg-[#E2E4E9] px-4 py-1 text-xs font-medium text-gray-600">
+                            Not Active
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 text-center">
+                        <div className="relative flex items-center justify-center gap-1">
+                          <UserActionsDropdown
+                            user={user}
+                            isOpen={openDropdownId === user.user_id}
+                            onToggle={() =>
+                              setOpenDropdownId(
+                                openDropdownId === user.user_id
+                                  ? null
+                                  : user.user_id,
+                              )
+                            }
+                            onViewProfile={() => {
+                              userActions.openProfileModal(user);
+                              setOpenDropdownId(null);
+                            }}
+                            onSuspend={() => {
+                              userActions.openSuspendModal(user, "suspend");
+                              setOpenDropdownId(null);
+                            }}
+                            onUnsuspend={() => {
+                              userActions.openSuspendModal(user, "unsuspend");
+                              setOpenDropdownId(null);
+                            }}
+                            onChangeRole={() => {
+                              userActions.openChangeRoleModal(user);
+                              setOpenDropdownId(null);
+                            }}
+                            onDeactivate={() => {
+                              userActions.openDeactivateModal(user);
+                              setOpenDropdownId(null);
+                            }}
+                            onAssignLga={() => {
+                              userActions.openAssignFacilityModal(user);
+                              setOpenDropdownId(null);
+                            }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* ── Expanded facilities row ── */}
+                    {expandedFacilities.has(user.user_id) &&
+                      user.managed_facilities.length > 2 && (
+                        <tr className="border-b border-slate-100 bg-slate-50">
+                          <td colSpan={8} className="px-6 py-4">
+                            <p className="mb-2 text-[12px] font-semibold tracking-wide text-slate-400 uppercase">
+                              All assigned facilities (
+                              {user.managed_facilities.length})
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {user.managed_facilities.map((f) => (
+                                <span
+                                  key={f.facility_id}
+                                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600"
+                                >
+                                  <Building2
+                                    size={10}
+                                    className="text-slate-400"
+                                  />
+                                  {f.facility_name}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                  </React.Fragment>
                 ))
               )}
             </tbody>
@@ -325,7 +386,7 @@ export default function UserAndRoleList({
         isOpen={userActions.isChangeRoleModalOpen}
         onClose={userActions.closeAllModals}
         user={userActions.selectedUser}
-        onSubmit={userActions.handleAssignToFacility}
+        onSubmit={() => {}}
       />
       <DeactivateUserModal
         isOpen={userActions.isDeactivateModalOpen}
@@ -340,6 +401,12 @@ export default function UserAndRoleList({
         onSubmit={userActions.handleSuspendUser}
         isLoading={userActions.isSuspendLoading}
         mode={userActions.suspendMode}
+      />
+      <AssignFacilityModal
+        isOpen={userActions.isAssignFacilityModalOpen}
+        onClose={userActions.closeAllModals}
+        user={userActions.selectedUser}
+        onSuccess={refetch}
       />
     </>
   );

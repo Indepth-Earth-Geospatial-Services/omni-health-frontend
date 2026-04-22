@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { Eye, ShieldOff, ShieldCheck, ArrowLeftRight, Ban, Pen } from "lucide-react";
+import { Eye, ShieldOff, ShieldCheck, ArrowLeftRight, Ban, Pen, MapPin } from "lucide-react";
 import type { User } from "../../services/super-admin.service";
 
 interface UserActionsDropdownProps {
@@ -13,6 +12,7 @@ interface UserActionsDropdownProps {
   onUnsuspend: () => void;
   onChangeRole: () => void;
   onDeactivate: () => void;
+  onAssignLga: () => void;
 }
 
 export function UserActionsDropdown({
@@ -24,6 +24,7 @@ export function UserActionsDropdown({
   onUnsuspend,
   onChangeRole,
   onDeactivate,
+  onAssignLga,
 }: UserActionsDropdownProps) {
   return (
     <div className="relative">
@@ -76,6 +77,17 @@ export function UserActionsDropdown({
               Suspend Account
             </button>
           )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAssignLga();
+            }}
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-teal-700 transition-colors hover:bg-teal-50"
+          >
+            <MapPin size={16} className="text-teal-500" />
+            Assign LGA
+          </button>
 
           <button
             onClick={(e) => {

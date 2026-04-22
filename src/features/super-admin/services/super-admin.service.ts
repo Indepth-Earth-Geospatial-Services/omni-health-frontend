@@ -1,5 +1,9 @@
 import { apiClient } from "@/lib/client";
-import type { StaffMember, StaffPagination, StaffQualification } from "@/services/admin.service";
+import type {
+  StaffMember,
+  StaffPagination,
+  StaffQualification,
+} from "@/services/admin.service";
 
 // User API Response Types
 export interface ManagedFacility {
@@ -33,7 +37,7 @@ export interface GetUsersResponse {
 
 export interface AssignManagerRequest {
   user_id: number;
-  facility_id: string;
+  lga_ids: number[];
 }
 
 export interface AssignManagerResponse {
@@ -657,7 +661,7 @@ class SuperAdminService {
    */
   async unsuspendUser(userId: string): Promise<any> {
     try {
-      const response = await apiClient.patch(
+      const response = await apiClient.post(
         `${this.ENDPOINTS.UNSUSPEND_USER}/${userId}/unsuspend`,
       );
       return response.data;

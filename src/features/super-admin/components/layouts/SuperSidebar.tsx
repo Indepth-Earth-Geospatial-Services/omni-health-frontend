@@ -5,8 +5,6 @@ import {
   UserCog,
   Hospital,
   Settings,
-  Search,
-  Loader2,
   BarChart3,
   Map,
   ChevronRight,
@@ -16,7 +14,6 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/features/auth/auth-store";
-import { useFacility } from "@/hooks/use-facilities";
 import ProfileModal from "../../../admin/components/modals/ProfileModal";
 
 const adminMenuItems = [
@@ -53,19 +50,18 @@ const userMenuItems = [
 
 export default function SuperSidebar() {
   const pathname = usePathname();
-  const { facilityIds } = useAuthStore();
+  const { user } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Get the first facility ID (admin may manage multiple facilities)
-  const facilityId = facilityIds?.[0] || "";
+  const userInitials =
+    user?.first_name && user?.last_name
+      ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+      : user?.email?.[0]?.toUpperCase() || "U";
 
-  // Fetch facility details
-  const { data: facilityData, isLoading: isFacilityLoading } =
-    useFacility(facilityId);
-  const facility = facilityData?.facility;
-
-  // Get Facility Image (if available)
-  const facilityImage = facility?.image_urls?.[0];
+  const displayName =
+    user?.first_name || user?.last_name
+      ? `${user?.first_name || ""} ${user?.last_name || ""}`.trim()
+      : "My Account";
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white shadow-lg">
@@ -150,55 +146,25 @@ export default function SuperSidebar() {
         </div>
       </nav>
 
-      {/* Facility Profile - Clickable */}
-      <div className="p-4">
+      {/* User Profile — opens ProfileModal */}
+      <div className="border-t border-gray-100 p-4">
         <button
           onClick={() => setIsProfileModalOpen(true)}
           className="group flex w-full items-center gap-3 rounded-lg p-2 transition-all duration-200 hover:bg-gray-100"
         >
-          <div className="flex-shrink-0">
-            {isFacilityLoading ? (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                <Loader2 size={16} className="animate-spin text-gray-400" />
-              </div>
-            ) : facilityImage ? (
-              /* --- NEW: Display Image if available --- */
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-200">
-                <Image
-                  src={facilityImage}
-                  alt={facility?.facility_name || "Facility"}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              /* Fallback to Initials */
-              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold">
-                {facility?.facility_name
-                  ?.split(" ")
-                  .slice(0, 2)
-                  .map((n: string) => n[0])
-                  .join("") || "F"}
-              </div>
-            )}
+          <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold">
+            {userInitials}
           </div>
+
           <div className="flex-1 overflow-hidden text-left">
-            {isFacilityLoading ? (
-              <>
-                <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                <div className="mt-1 h-3 w-16 animate-pulse rounded bg-gray-100" />
-              </>
-            ) : (
-              <>
-                <p className="truncate text-sm font-medium text-gray-900">
-                  {facility?.facility_name || "No Facility"}
-                </p>
-                <p className="truncate text-xs text-gray-500">
-                  {facility?.facility_category || "Unknown Category"}
-                </p>
-              </>
-            )}
+            <p className="truncate text-sm font-semibold text-gray-900">
+              {displayName}
+            </p>
+            <p className="truncate text-xs text-gray-500">
+              {user?.email || ""}
+            </p>
           </div>
+
           <ChevronRight
             size={16}
             className="group-hover:text-primary text-gray-400 transition-all duration-200 group-hover:translate-x-0.5"
@@ -210,8 +176,6 @@ export default function SuperSidebar() {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        facility={facility}
-        isFacilityLoading={isFacilityLoading}
       />
     </aside>
   );

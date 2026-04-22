@@ -17,6 +17,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
   const [isChangeRoleModalOpen, setIsChangeRoleModalOpen] = useState(false);
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [isAssignFacilityModalOpen, setIsAssignFacilityModalOpen] = useState(false);
   const [suspendMode, setSuspendMode] = useState<"suspend" | "unsuspend">("suspend");
   const [isSuspendLoading, setIsSuspendLoading] = useState(false);
 
@@ -41,27 +42,33 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     setIsSuspendModalOpen(true);
   }, []);
 
+  const openAssignFacilityModal = useCallback((user: User) => {
+    setSelectedUser(user);
+    setIsAssignFacilityModalOpen(true);
+  }, []);
+
   const closeAllModals = useCallback(() => {
     setIsProfileModalOpen(false);
     setIsChangeRoleModalOpen(false);
     setIsDeactivateModalOpen(false);
     setIsSuspendModalOpen(false);
+    setIsAssignFacilityModalOpen(false);
     setSelectedUser(null);
   }, []);
 
   const handleAssignToFacility = useCallback(
-    async (userId: number, facilityId: string) => {
+    async (userId: number, lgaIds: number[]) => {
       try {
         await superAdminService.assignManager({
           user_id: userId,
-          facility_id: facilityId,
+          lga_ids: lgaIds,
         });
-        toast.success("User assigned to facility successfully!");
-        setIsChangeRoleModalOpen(false);
+        toast.success("User assigned to LGA(s) and promoted to Admin!");
+        setIsAssignFacilityModalOpen(false);
         onSuccess?.();
       } catch (error) {
-        console.error("Failed to assign user to facility:", error);
-        toast.error("Failed to assign user to facility. Please try again.");
+        console.error("Failed to assign user:", error);
+        toast.error("Failed to assign user. Please try again.");
       }
     },
     [onSuccess]
@@ -132,12 +139,14 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     isChangeRoleModalOpen,
     isDeactivateModalOpen,
     isSuspendModalOpen,
+    isAssignFacilityModalOpen,
     suspendMode,
     isSuspendLoading,
     openProfileModal,
     openChangeRoleModal,
     openDeactivateModal,
     openSuspendModal,
+    openAssignFacilityModal,
     closeAllModals,
     handleAssignToFacility,
     handleDeactivateUser,
