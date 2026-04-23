@@ -6,8 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAuthStore, User } from "@/features/auth/auth-store";
-import { useMultipleFacilities } from "@/hooks/use-facilities";
+import {
+  useAuthStore,
+  useAssignedLgas,
+  User,
+} from "@/features/auth/auth-store";
+import { RIVERS_STATE_LGAS } from "@/features/super-admin/constants/lga";
 import {
   Mail,
   Shield,
@@ -95,15 +99,12 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { user, logout, facilityIds } = useAuthStore();
-  const facilityQueries = useMultipleFacilities(facilityIds ?? []);
-  const assignedLgas = Array.from(
-    new Set(
-      facilityQueries
-        .map((q) => q.data?.facility?.facility_lga)
-        .filter(Boolean) as string[],
-    ),
-  );
+  const { user, logout } = useAuthStore();
+  const assignedLgaIds = useAssignedLgas();
+  const assignedLgas = assignedLgaIds.map((id) => {
+    const match = RIVERS_STATE_LGAS.find((l) => l.value === String(id));
+    return match?.label ?? String(id);
+  });
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 

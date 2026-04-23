@@ -6,10 +6,10 @@ import { Calendar, Users } from "lucide-react";
 import StaffTableHeader, {
   type FilterState,
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
-import Tabs from "@/features/super-admin/components/ui/Tabs";
 import UserAndRoleList from "../layouts/UserAndRoleList";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { superAdminService } from "../../services/super-admin.service";
+import { useQuery } from "@tanstack/react-query";
 // import UserPermissionTab from "../layouts/User.PermissionTab";
 import { toast } from "sonner";
 
@@ -48,23 +48,26 @@ export default function AllUserPage() {
     selectedStatus: "all",
   });
 
-  // Fetch all users for KPI calculations (using a large limit to get all users)
-  const { data: allUsersData } = useSuperAdminUsers({ page: 1, limit: 100 });
+  // Fetch KPI data from analytics endpoint (more efficient than fetching all users)
+  const { data: analyticsData } = useQuery({
+    queryKey: ["analytics-overview"],
+    queryFn: () => superAdminService.getAnalyticsOverview(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch sample of users for additional KPI insights
+  const { data: usersData } = useSuperAdminUsers({ page: 1, limit: 20 });
 
   // const tabs = [
   //   { label: "User Directory", value: "user-directory" },
   // { label: "Roles & Permissions", value: "roles-permissions" },
   // ];
 
-  // Calculate KPI metrics
-  const totalUsers = allUsersData?.pagination?.total_records ?? 0;
-  const activeUsers =
-    allUsersData?.users?.filter((user) => user.is_active).length ?? 0;
-  const inactiveUsers =
-    allUsersData?.users?.filter((user) => !user.is_active).length ?? 0;
-  const totalSuperAdmins =
-    allUsersData?.users?.filter((user) => user.role === "super_admin").length ??
-    0;
+  // Get KPI metrics from analytics endpoint (server-side)
+  const totalUsers = analyticsData?.total_users ?? usersData?.pagination?.total_records ?? 0;
+  const activeUsers = usersData?.users?.filter((user) => user.is_active).length ?? 0;
+  const inactiveUsers = usersData?.users?.filter((user) => !user.is_active).length ?? 0;
+  const totalSuperAdmins = usersData?.users?.filter((user) => user.role === "super_admin").length ?? 0;
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: FilterState) => {

@@ -105,14 +105,17 @@ export interface UpdateFacilityProfileRequest {
   hfr_id?: string;
   facility_name?: string;
   facility_category?: string;
-  lga_id?: number; // API expects lga_id (number) for LGA lookup
-  town?: string; // Town name - maps to facility_lga display
+  lga_id?: number;
+  town?: string;
   address?: string;
+  services_list?: string[];
+  specialists?: string[];
   contact_info?: {
     phone?: string;
     email?: string;
     [key: string]: any;
   };
+  working_hours?: Record<string, string>;
   lat?: number;
   lon?: number;
 }
@@ -125,6 +128,7 @@ class AdminService {
     FACILITY: "/admin/facility",
     EXPORT_STAFF: "/admin/export/staff",
     PROFILE: "/admin/facility/profile",
+    ACCOUNT: "/delete-account",
   };
 
   constructor() {
@@ -453,6 +457,17 @@ class AdminService {
       `${this.ENDPOINTS.FACILITY}/profile/${facilityId}`,
       data,
     );
+    return response.data;
+  }
+
+  /**
+   * Delete Account
+   * DELETE /delete-account?password_confirmation=...
+   */
+  async deleteAccount({ passwordConfirmation }: { passwordConfirmation: string }): Promise<string> {
+    const response = await apiClient.delete(this.ENDPOINTS.ACCOUNT, {
+      params: { password_confirmation: passwordConfirmation },
+    });
     return response.data;
   }
 }

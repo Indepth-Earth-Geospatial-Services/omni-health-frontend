@@ -1,5 +1,5 @@
 import HeaderProps from "@/features/super-admin/components/layouts/HeaderProps";
-import AnalyticsPage from "@/features/super-admin/components/pages/SuperAnalytics";
+// import AnalyticsPage from "@/features/super-admin/components/pages/SuperAnalytics";
 // import Header from "@/features/admin/components/layout/Header";
 export default function Registry() {
   return (
@@ -11,7 +11,7 @@ export default function Registry() {
             title="Analytics Dashboard"
             description="Manage and monitor Analytics of healthcare facilities"
           />
-          <AnalyticsPage />
+          {/* <AnalyticsPage /> */}
         </main>
       </div>
     </>

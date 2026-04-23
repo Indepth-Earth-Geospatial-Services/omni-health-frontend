@@ -15,7 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
-import ProfileModal from "../modals/ProfileModal";
+import ProfileModal from "../../../profile/pages/ProfileModal";
 
 const adminMenuItems = [
   { label: "Overview", icon: MailOpen, href: "/admin" },
@@ -45,7 +45,6 @@ export default function Sidebar() {
   const { data: facilityData, isLoading: isFacilityLoading } =
     useFacility(facilityId);
   const facility = facilityData?.facility;
-
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white shadow-lg">

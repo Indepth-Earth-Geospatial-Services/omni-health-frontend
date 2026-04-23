@@ -7,8 +7,10 @@ import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
 import FacilityCard from "../ui/FacilityCard";
 import { toast } from "sonner";
-import ResetPasswordModal from "@/features/auth/components/ResetPasswordModal";
+import ResetPasswordModal from "@/features/profile/pages/ResetPasswordModal";
+import DeleteAccountModal from "@/features/profile/pages/DeleteAccountModal";
 import Tabs from "@/features/super-admin/components/ui/Tabs";
+import { adminService } from "@/services/admin.service";
 
 const TABS = [
   { label: "Facilities", value: "facilities" },
@@ -18,12 +20,28 @@ const TABS = [
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("facilities");
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { facilityIds, setCurrentFacilityId, user } = useAuthStore();
+  const { facilityIds, setCurrentFacilityId, user, logout } = useAuthStore();
   const currentFacilityId = useCurrentFacilityId();
   const facilityQueries = useMultipleFacilities(facilityIds ?? []);
 
   const isLoadingFacilities = facilityQueries.some((q) => q.isLoading);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await adminService.deleteAccount({ passwordConfirmation: confirmPassword });
+      toast.success("Account deleted successfully");
+      logout();
+    } catch {
+      toast.error("Failed to delete account. Please check your password and try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleExploreFacility = (facilityId: string) => {
     setCurrentFacilityId(facilityId);
@@ -66,7 +84,7 @@ export default function Settings() {
             </div>
 
             {/* Content */}
-            <div className="max-h-140 overflow-y-auto px-6 py-5 scrollbar-hide">
+            <div className="scrollbar-hide max-h-140 overflow-y-auto px-6 py-5">
               {isLoadingFacilities ? (
                 <div className="flex h-40 items-center justify-center">
                   <Loader2 className="text-primary h-6 w-6 animate-spin" />
@@ -133,6 +151,26 @@ export default function Settings() {
                 </Button>
               </div>
             </div>
+            <div className="px-6 py-5">
+              <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    Delete Account
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Permanently delete your account and all associated data
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-red-400 text-xs text-white"
+                  onClick={() => setIsDeleteAccountOpen(true)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -141,6 +179,20 @@ export default function Settings() {
         isOpen={isResetPasswordOpen}
         onClose={() => setIsResetPasswordOpen(false)}
         userEmail={user?.email ?? ""}
+      />
+
+      <DeleteAccountModal
+        isOpen={isDeleteAccountOpen}
+        onClose={() => {
+          setIsDeleteAccountOpen(false);
+          setConfirmPassword("");
+        }}
+        onConfirm={handleDeleteAccount}
+        UserName={`${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "User"}
+        UserEmail={user?.email ?? ""}
+        ConfirmPassword={confirmPassword}
+        onPasswordChange={setConfirmPassword}
+        isDeleting={isDeleting}
       />
     </>
   );
