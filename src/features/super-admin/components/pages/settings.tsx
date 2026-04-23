@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown, Lock } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 import { useAuthStore } from "@/features/auth/auth-store";
-import ResetPasswordModal from "@/features/auth/components/ResetPasswordModal";
+import ResetPasswordModal from "@/features/profile/pages/ResetPasswordModal";
 
 export default function Settings() {
   const [isSecurityOpen, setIsSecurityOpen] = useState(true);

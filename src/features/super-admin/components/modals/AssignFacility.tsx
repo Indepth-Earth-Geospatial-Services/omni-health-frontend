@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import { User } from "../../services/super-admin.service";
 import { Button } from "@/features/admin/components/ui/button";
-import { RIVERS_STATE_LGAS } from "../../constants/lga";
 import { superAdminService } from "../../services/super-admin.service";
+import { useUnassignedLgas } from "../../hooks/useLgas";
 import { toast } from "sonner";
 
 interface AssignFacilityModalProps {
@@ -73,12 +73,15 @@ export default function AssignFacilityModal({
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [isListOpen]);
 
+  const { data: unassignedLgas = [], isLoading: isLoadingLgas } =
+    useUnassignedLgas(isOpen);
+
   const filteredLgas = useMemo(
     () =>
-      RIVERS_STATE_LGAS.filter((lga) =>
-        lga.label.toLowerCase().includes(searchQuery.toLowerCase()),
+      unassignedLgas.filter((lga) =>
+        lga.lga_name.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [searchQuery],
+    [unassignedLgas, searchQuery],
   );
 
   const toggleLga = (id: number) => {
@@ -91,8 +94,8 @@ export default function AssignFacilityModal({
     setSelectedLgaIds((prev) => prev.filter((x) => x !== id));
   };
 
-  const selectedLgas = RIVERS_STATE_LGAS.filter((lga) =>
-    selectedLgaIds.includes(Number(lga.value)),
+  const selectedLgas = unassignedLgas.filter((lga) =>
+    selectedLgaIds.includes(lga.lga_id),
   );
 
   const handleSubmit = async () => {
@@ -254,19 +257,25 @@ export default function AssignFacilityModal({
 
                   {/* List */}
                   <div className="max-h-52 overflow-y-auto">
-                    {filteredLgas.length === 0 ? (
+                    {isLoadingLgas ? (
+                      <div className="flex items-center justify-center gap-2 py-6 text-xs text-slate-400">
+                        <Loader2 size={14} className="animate-spin" />
+                        Loading available LGAs…
+                      </div>
+                    ) : filteredLgas.length === 0 ? (
                       <p className="py-6 text-center text-xs text-slate-400">
-                        No LGAs match your search
+                        {unassignedLgas.length === 0
+                          ? "All LGAs are already assigned"
+                          : "No LGAs match your search"}
                       </p>
                     ) : (
                       filteredLgas.map((lga) => {
-                        const id = Number(lga.value);
-                        const checked = selectedLgaIds.includes(id);
+                        const checked = selectedLgaIds.includes(lga.lga_id);
                         return (
                           <button
-                            key={lga.value}
+                            key={lga.lga_id}
                             type="button"
-                            onClick={() => toggleLga(id)}
+                            onClick={() => toggleLga(lga.lga_id)}
                             className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${
                               checked ? "bg-primary/5" : ""
                             }`}
@@ -301,7 +310,7 @@ export default function AssignFacilityModal({
                                   : "text-slate-600"
                               }
                             >
-                              {lga.label}
+                              {lga.lga_name}
                             </span>
                           </button>
                         );
@@ -338,14 +347,14 @@ export default function AssignFacilityModal({
               <div className="flex flex-wrap gap-1.5">
                 {selectedLgas.map((lga) => (
                   <span
-                    key={lga.value}
+                    key={lga.lga_id}
                     className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 py-1 pl-2.5 pr-1.5 text-xs font-medium text-teal-700"
                   >
                     <MapPin size={11} />
-                    {lga.label}
+                    {lga.lga_name}
                     <button
                       type="button"
-                      onClick={() => removeLga(Number(lga.value))}
+                      onClick={() => removeLga(lga.lga_id)}
                       className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-teal-500 transition-colors hover:bg-teal-200 hover:text-teal-700"
                     >
                       <X size={10} />

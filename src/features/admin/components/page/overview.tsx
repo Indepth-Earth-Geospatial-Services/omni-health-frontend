@@ -12,8 +12,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  Star,
   Building2,
+  Pencil,
 } from "lucide-react";
 import { formatTimeRange } from "../../utils/formatters";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
@@ -24,6 +24,7 @@ import {
   useFacilityInventory,
 } from "@/features/admin/hooks/useAdminStaff";
 import { useFacility } from "@/hooks/use-facilities";
+import { useRouter } from "next/navigation";
 
 /**
  * Helper function to count all bed-related items in inventory
@@ -49,6 +50,7 @@ const countBedsFromInventory = (
 
 export default function Overview() {
   const facilityId = useCurrentFacilityId();
+  const router = useRouter();
 
   // Fetch facility data (includes specialists)
   const { data: facilityData, isLoading: isFacilityLoading } =
@@ -192,65 +194,69 @@ export default function Overview() {
               </div>
             ) : (
               <div className="flex flex-1 flex-col gap-1">
-                {[
-                  "monday",
-                  "tuesday",
-                  "wednesday",
-                  "thursday",
-                  "friday",
-                  "saturday",
-                  "sunday",
-                ].map((day) => {
-                  const raw = (
-                    facility?.working_hours as
-                      | Record<string, string>
-                      | undefined
-                  )?.[day];
-                  const isClosed = !raw || raw === "Closed" || raw === "closed";
-                  const hours = isClosed ? "Closed" : formatTimeRange(raw!);
-                  const isToday =
-                    new Date()
+                {Object.entries(
+                  (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                ).length === 0 ? (
+                  <p className="py-6 text-center text-sm text-slate-400">
+                    No operating hours set
+                  </p>
+                ) : (
+                  Object.entries(
+                    (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                  ).map(([day, raw]) => {
+                    const isClosed = !raw || raw.toLowerCase() === "closed";
+                    const hours = isClosed ? "Closed" : formatTimeRange(raw);
+                    const todayName = new Date()
                       .toLocaleDateString("en-US", { weekday: "long" })
-                      .toLowerCase() === day;
+                      .toLowerCase();
+                    const isToday = day.toLowerCase() === todayName;
 
-                  return (
-                    <div
-                      key={day}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
-                    >
-                      <span
-                        className={`text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                    return (
+                      <div
+                        key={day}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
                       >
-                        {isToday
-                          ? `${day.slice(0, 3).toUpperCase()} (Today)`
-                          : day.charAt(0).toUpperCase() + day.slice(1)}
-                      </span>
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
-                      >
-                        {hours}
-                      </span>
-                    </div>
-                  );
-                })}
+                        <span
+                          className={`text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                        >
+                          {isToday ? `${day} (Today)` : day}
+                        </span>
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
+                        >
+                          {hours}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>
 
           {/* Facility Overview */}
           <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-white p-6">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
-                <Building2 size={18} className="text-blue-600" />
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
+                  <Building2 size={18} className="text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-800">
+                    Facility Overview
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Key facility information
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-800">
-                  Facility Overview
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Key facility information
-                </p>
-              </div>
+              <button
+                onClick={() => router.push("/admin/facility")}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              >
+                <Pencil size={13} />
+                Edit Profile
+              </button>
             </div>
 
             {isLoading ? (
@@ -353,7 +359,10 @@ export default function Overview() {
                 <h2 className="text-xl font-bold text-slate-700">
                   Healthcare Professionals
                 </h2>
-                <button className="flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-slate-800">
+                <button
+                  onClick={() => router.push("/admin/facility")}
+                  className="flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+                >
                   View all <ChevronRight size={16} className="ml-1" />
                 </button>
               </div>

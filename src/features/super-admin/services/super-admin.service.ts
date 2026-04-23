@@ -9,6 +9,7 @@ import type {
 export interface ManagedFacility {
   facility_id: string;
   facility_name: string;
+  facility_lga?: string;
 }
 
 export interface User {
@@ -159,9 +160,9 @@ export interface UniqueEquipmentItem {
   infrastructure: string[];
 }
 
-export interface GetUniqueEquipmentParams {
-  // No parameters required
-}
+// export interface GetUniqueEquipmentParams {
+// No parameters required
+// }
 
 export interface FacilityInventory {
   equipment: Record<string, any>;
@@ -218,6 +219,11 @@ export interface SearchFacilitiesByInventoryResponse {
     limit: number;
   };
   facilities: Facility[];
+}
+
+export interface UnassignedLga {
+  lga_id: number;
+  lga_name: string;
 }
 
 export interface AnalyticsOverviewResponse {
@@ -277,6 +283,8 @@ class SuperAdminService {
     NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
     EXPORT_FACILITIES: "/admin/export/facilities", // Export facilities to CSV or Excel
     BULK_DELETE_FACILITIES: "/admin/facilities/bulk-delete", // DELETE bulk facilities
+    UNASSIGNED_LGAS: "/admin/lgas/unassigned",
+    UNASSIGN_LGA: "/admin/users",
   };
 
   constructor() {
@@ -716,6 +724,32 @@ class SuperAdminService {
       console.error("Error fetching notifications:", error);
       throw error;
     }
+  }
+
+  /**
+   * Get all LGAs that have no facilities assigned to any user/admin
+   * GET /api/v1/admin/lgas/unassigned
+   */
+  async getUnassignedLgas(): Promise<UnassignedLga[]> {
+    const response = await apiClient.get(this.ENDPOINTS.UNASSIGNED_LGAS);
+    return response.data;
+  }
+
+  /**
+   * Remove all facility assignments for a user within a given LGA
+   * DELETE /api/v1/admin/users/{user_id}/lgas/{lga_id}
+   */
+  async unassignLga({
+    userId,
+    lgaId,
+  }: {
+    userId: number;
+    lgaId: number;
+  }): Promise<string> {
+    const response = await apiClient.delete(
+      `${this.ENDPOINTS.UNASSIGN_LGA}/${userId}/lgas/${lgaId}`,
+    );
+    return response.data;
   }
 }
 

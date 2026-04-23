@@ -45,19 +45,6 @@ export default function FacilityProfile() {
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  const getWeekdayHours = () => {
-    if (!facility?.working_hours) return "Not available";
-    const { monday } = facility.working_hours;
-    if (!monday) return "Not available";
-    return formatTimeRange(monday);
-  };
-
-  const getWeekendHours = () => {
-    if (!facility?.working_hours) return "Not available";
-    const { saturday } = facility.working_hours;
-    if (!saturday || saturday === "Closed") return "Closed";
-    return formatTimeRange(saturday);
-  };
 
   return (
     <div className="w-full">
@@ -110,8 +97,7 @@ export default function FacilityProfile() {
             onToggle={() => sections.toggle("operatingHours")}
           >
             <OperatingHoursContent
-              weekdayHours={getWeekdayHours()}
-              weekendHours={getWeekendHours()}
+              workingHours={facility?.working_hours as Record<string, string> | undefined}
               isLoading={isLoading}
               isError={isError}
             />
@@ -336,51 +322,64 @@ function FieldDisplay({
 }
 
 function OperatingHoursContent({
-  weekdayHours,
-  weekendHours,
+  workingHours,
   isLoading,
   isError,
 }: {
-  weekdayHours: string;
-  weekendHours: string;
+  workingHours: Record<string, string> | undefined;
   isLoading: boolean;
   isError: boolean;
 }) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 pt-4">
-        <LoadingSkeleton className="h-14 w-full rounded-xl" />
-        <LoadingSkeleton className="h-14 w-full rounded-xl" />
+      <div className="space-y-2 pt-4">
+        {[1, 2, 3, 4].map((i) => (
+          <LoadingSkeleton key={i} className="h-9 w-full rounded-lg" />
+        ))}
       </div>
     );
   }
 
   if (isError) {
     return (
-      <p className="pt-4 text-sm text-red-500">
-        Failed to load operating hours
+      <p className="pt-4 text-sm text-red-500">Failed to load operating hours</p>
+    );
+  }
+
+  const entries = workingHours ? Object.entries(workingHours) : [];
+
+  if (entries.length === 0) {
+    return (
+      <p className="pt-4 text-center text-sm text-slate-400">
+        No operating hours set
       </p>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 pt-4">
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-6">
-        <p className="mb-0.5 py-2 text-[16px] text-slate-500">
-          Weekdays (Mon - Fri)
-        </p>
-        <p className="font-giest text-[24px] font-medium text-slate-900">
-          {weekdayHours}
-        </p>
-      </div>
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-6">
-        <p className="mb-0.5 py-2 text-[16px] text-slate-500">
-          Weekends (Sat - Sun)
-        </p>
-        <p className="font-giest text-[24px] font-medium text-slate-900">
-          {weekendHours}
-        </p>
-      </div>
+    <div className="space-y-1.5 pt-4">
+      {entries.map(([day, hours]) => {
+        const isClosed = !hours || hours.toLowerCase() === "closed";
+        return (
+          <div
+            key={day}
+            className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-2.5"
+          >
+            <span className="text-sm font-medium capitalize text-slate-700">
+              {day}
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                isClosed
+                  ? "bg-red-50 text-red-500"
+                  : "bg-green-50 text-green-600"
+              }`}
+            >
+              {isClosed ? "Closed" : formatTimeRange(hours)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }

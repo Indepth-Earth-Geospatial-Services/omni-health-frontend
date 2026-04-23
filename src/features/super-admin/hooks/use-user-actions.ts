@@ -18,6 +18,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
   const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [isAssignFacilityModalOpen, setIsAssignFacilityModalOpen] = useState(false);
+  const [isUnassignLgaModalOpen, setIsUnassignLgaModalOpen] = useState(false);
   const [suspendMode, setSuspendMode] = useState<"suspend" | "unsuspend">("suspend");
   const [isSuspendLoading, setIsSuspendLoading] = useState(false);
 
@@ -47,12 +48,18 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     setIsAssignFacilityModalOpen(true);
   }, []);
 
+  const openUnassignLgaModal = useCallback((user: User) => {
+    setSelectedUser(user);
+    setIsUnassignLgaModalOpen(true);
+  }, []);
+
   const closeAllModals = useCallback(() => {
     setIsProfileModalOpen(false);
     setIsChangeRoleModalOpen(false);
     setIsDeactivateModalOpen(false);
     setIsSuspendModalOpen(false);
     setIsAssignFacilityModalOpen(false);
+    setIsUnassignLgaModalOpen(false);
     setSelectedUser(null);
   }, []);
 
@@ -140,6 +147,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     isDeactivateModalOpen,
     isSuspendModalOpen,
     isAssignFacilityModalOpen,
+    isUnassignLgaModalOpen,
     suspendMode,
     isSuspendLoading,
     openProfileModal,
@@ -147,6 +155,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     openDeactivateModal,
     openSuspendModal,
     openAssignFacilityModal,
+    openUnassignLgaModal,
     closeAllModals,
     handleAssignToFacility,
     handleDeactivateUser,

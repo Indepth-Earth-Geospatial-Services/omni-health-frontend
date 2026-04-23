@@ -13,6 +13,7 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   facility_ids: string[];
+  assigned_lgas: string[] | null; // ✅ New field for assigned LGAs
   full_name: string;
   email: string;
   role: "user" | "admin" | "super_admin";
@@ -41,6 +42,15 @@ export interface ResendOtpResponse {
   message: string;
   email: string;
   expires_in_minutes: number;
+}
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface LogoutResponse {
+  message: string;
 }
 
 // ✅ REMOVED: export interface RegisterResponse extends User {}
@@ -224,6 +234,54 @@ class AuthService {
           otp,
           new_password: newPassword,
         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Refresh the access token using the current token
+   * POST /api/v1/refresh
+   * Backend handles token expiration and issues new access token
+   */
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    try {
+      const response = await axios.post<RefreshTokenResponse>(
+        `${this.baseUrl}/refresh`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Logout user and invalidate session on backend
+   * POST /api/v1/logout
+   * Backend handles token invalidation and cleanup
+   */
+  async logout(): Promise<LogoutResponse> {
+    try {
+      const response = await axios.post<LogoutResponse>(
+        `${this.baseUrl}/logout`,
+        {},
         {
           headers: {
             "Content-Type": "application/json",

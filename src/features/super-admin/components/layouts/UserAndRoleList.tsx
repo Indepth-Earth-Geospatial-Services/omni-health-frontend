@@ -16,6 +16,7 @@ import ChangeUserRoleModal from "../modals/ChangeUserRoleModal";
 import DeactivateUserModal from "../modals/DeactivateUserModal";
 import SuspendUserModal from "../modals/SuspendUserModal";
 import AssignFacilityModal from "../modals/AssignFacility";
+import UnassignLgaModal from "../modals/UnassignLgaModal";
 import {
   formatDate,
   getRoleBadgeColor,
@@ -35,7 +36,6 @@ export default function UserAndRoleList({
   suspensionFilter = "all",
 }: UserAndRoleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [expandedFacilities, setExpandedFacilities] = useState<Set<string>>(
     new Set(),
@@ -53,17 +53,18 @@ export default function UserAndRoleList({
     });
   };
 
-  // Fetch ALL users (large limit for client-side filtering)
+  // Fetch users with proper pagination (limit 50 for reasonable performance)
   const { data, isLoading, isError, error, isFetching, refetch } =
-    useSuperAdminUsers({ page: 1, limit: 100 });
+    useSuperAdminUsers({ page: currentPage, limit: 50 });
 
   const userActions = useUserActions({ onSuccess: refetch });
 
   // Extract data from query response
-  const allUsers = data?.users ?? [];
+  const users = data?.users ?? [];
+  const pagination = data?.pagination ?? { total_records: 0, total_pages: 1, current_page: 1 };
 
-  // Client-side filtering
-  const filteredUsers = allUsers.filter((user) => {
+  // Client-side filtering (on the page's current batch)
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
       !searchQuery ||
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,20 +83,19 @@ export default function UserAndRoleList({
     return matchesSearch && matchesStatus && matchesSuspension;
   });
 
-  // Client-side pagination
-  const totalRecords = filteredUsers.length;
-  const totalPages = Math.max(1, Math.ceil(totalRecords / itemsPerPage));
-  const effectivePage = Math.min(currentPage, totalPages);
-  const startIndex = (effectivePage - 1) * itemsPerPage;
-  const users = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  // Use server-side pagination
+  const totalRecords = pagination.total_records;
+  const totalPages = pagination.total_pages;
+  const effectivePage = currentPage;
+  const startIndex = (effectivePage - 1) * 50;
 
   // Close dropdown when clicking anywhere
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdownId(null);
     if (openDropdownId) {
       document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
-    return () => document.removeEventListener("click", handleClickOutside);
   }, [openDropdownId]);
 
   // Loading state
@@ -169,14 +169,14 @@ export default function UserAndRoleList({
             </thead>
 
             <tbody>
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-500">
                     No users found
                   </td>
                 </tr>
               ) : (
-                users.map((user, idx) => (
+                filteredUsers.map((user, idx) => (
                   <React.Fragment key={user.user_id}>
                     {/* ── Main row ── */}
                     <tr className="group border-b border-slate-100 transition-colors">
@@ -297,6 +297,10 @@ export default function UserAndRoleList({
                               userActions.openAssignFacilityModal(user);
                               setOpenDropdownId(null);
                             }}
+                            onUnassignLga={() => {
+                              userActions.openUnassignLgaModal(user);
+                              setOpenDropdownId(null);
+                            }}
                           />
                         </div>
                       </td>
@@ -356,8 +360,8 @@ export default function UserAndRoleList({
             </p>
             <p className="text-xs text-slate-400">
               {totalRecords > 0
-                ? `Showing ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, totalRecords)} of ${totalRecords} users`
-                : `Showing ${users.length} users`}
+                ? `Showing ${startIndex + 1}-${Math.min(startIndex + 50, totalRecords)} of ${totalRecords} users`
+                : `Showing ${filteredUsers.length} users`}
             </p>
           </div>
           <button
@@ -404,6 +408,13 @@ export default function UserAndRoleList({
       />
       <AssignFacilityModal
         isOpen={userActions.isAssignFacilityModalOpen}
+        onClose={userActions.closeAllModals}
+        user={userActions.selectedUser}
+        onSuccess={refetch}
+      />
+      {/* ✅ UnassignLgaModal — fully wired with onSuccess={refetch} */}
+      <UnassignLgaModal
+        isOpen={userActions.isUnassignLgaModalOpen}
         onClose={userActions.closeAllModals}
         user={userActions.selectedUser}
         onSuccess={refetch}

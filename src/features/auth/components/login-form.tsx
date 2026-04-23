@@ -19,7 +19,7 @@ import {
 
 import { loginSchema, LoginFormData } from "../schemas/login.schema";
 import { authService } from "@/services/auth.service";
-import { useAuthStore } from "@/features/auth/auth-store";
+import { useAuthStore, type User } from "@/features/auth/auth-store";
 import { getRoleDashboard } from "@/lib/auth-constants";
 import { toast } from "sonner";
 import FacilitySelectionModal from "./FacilitySelectionModal";
@@ -124,21 +124,29 @@ export default function LoginForm() {
       const tokenPayload = parseJwt(response.access_token);
 
       // 4. Create user object from API response (NOT from JWT)
-      const user = {
+      const user: User = {
         user_id: tokenPayload.user_id || tokenPayload.sub || 0,
         email: response.email || data.email,
-        first_name: firstName,
-        last_name: lastName,
-        role: response.role, // Use role from API response!
+        first_name: firstName || null,
+        last_name: lastName || null,
+        role: response.role, // ✅ Use role from API response!
         is_active: true,
         created_at: new Date().toISOString(),
       };
+
+      // ✅ Validate required fields before login
+      if (!user.email || !user.role || !response.facility_ids?.length) {
+        throw new Error(
+          "Invalid response from server: missing required fields",
+        );
+      }
 
       // console.log("User object:", user);
 
       // 5. Store auth data with user info
       const facilityIds = response.facility_ids || [];
-      login(response.access_token, facilityIds, user);
+      const assignedLgas = response.assigned_lgas || null;
+      login(response.access_token, facilityIds, user, assignedLgas);
 
       // 6. Admin with multiple facilities: show facility selection modal
       if (user.role === "admin" && facilityIds.length >= 2) {
@@ -152,16 +160,31 @@ export default function LoginForm() {
 
       // 7. Redirect based on role
       router.push(getRoleDashboard(user.role));
-    } catch (error: any) {
+    } catch (error: unknown) {
       // ✅ Better error handling with specific messages
       let errorMessage = "Invalid email or password";
 
-      if (error?.response?.status === 401) {
-        errorMessage = "Invalid email or password";
-      } else if (error?.response?.status === 403) {
-        errorMessage = "Please verify your email before logging in";
-      } else if (error?.message) {
-        errorMessage = error.message;
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "status" in error.response
+      ) {
+        const status = (error.response as { status: number }).status;
+        if (status === 401) {
+          errorMessage = "Invalid email or password";
+        } else if (status === 403) {
+          errorMessage = "Please verify your email before logging in";
+        }
+      } else if (
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        typeof (error as { message: unknown }).message === "string"
+      ) {
+        errorMessage = (error as { message: string }).message;
       }
 
       setLoginError(errorMessage);

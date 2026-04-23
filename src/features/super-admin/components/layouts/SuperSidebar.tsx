@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/features/auth/auth-store";
-import ProfileModal from "../../../admin/components/modals/ProfileModal";
+import ProfileModal from "../../../profile/pages/ProfileModal";
 
 const adminMenuItems = [
   {
@@ -35,11 +35,11 @@ const adminMenuItems = [
     icon: Hospital,
     href: "/super-admin/all-equipments",
   },
-  {
-    label: "Analytics",
-    icon: Hospital,
-    href: "/super-admin/analytics",
-  },
+  // {
+  //   label: "Analytics",
+  //   icon: Hospital,
+  //   href: "/super-admin/analytics",
+  // },
   { label: "Settings", icon: Settings, href: "/super-admin/settings" },
 ];
 

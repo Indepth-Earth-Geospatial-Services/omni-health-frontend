@@ -1,10 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Bell, Check, Search, ChevronDown } from "lucide-react";
-import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
-import { useFacility } from "@/hooks/use-facilities";
-import FacilityImageButton from "@/features/admin/components/ui/proifleImage";
+import { Bell, Check } from "lucide-react";
+import { useAuthStore } from "@/features/auth/auth-store";
 
 interface HeaderProps {
   name?: string;
@@ -22,10 +20,6 @@ interface Notification {
 export default function Header({ name, className }: HeaderProps) {
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role === "super_admin";
-  const facilityId = useCurrentFacilityId();
-  const { data: facilityData } = useFacility(facilityId);
-  const facility = facilityData?.facility;
-
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLGADropdownOpen, setIsLGADropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -207,11 +201,6 @@ export default function Header({ name, className }: HeaderProps) {
             </div>
           )}
         </div>
-        <FacilityImageButton
-          facilityId={facilityId ?? ""}
-          facilityName={facility?.facility_name}
-          imageUrl={facility?.image_urls?.[0] ?? null}
-        />
       </div>
     </header>
   );
