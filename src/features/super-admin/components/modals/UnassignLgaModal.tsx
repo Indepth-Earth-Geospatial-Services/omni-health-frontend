@@ -23,6 +23,16 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+// ✅ Derive LgaOption's lga_name directly from RIVERS_STATE_LGAS so the type
+// stays as the narrow literal union that TypeScript infers from the constant —
+// not the wider `string`. This is what caused the build error: the old type
+// predicate `x is { lga_name: string }` clashed with the narrower inferred
+// literal union on match.label.
+type LgaOption = {
+  lga_id: number;
+  lga_name: (typeof RIVERS_STATE_LGAS)[number]["label"];
+};
+
 export default function UnassignLgaModal({
   isOpen,
   onClose,
@@ -32,41 +42,42 @@ export default function UnassignLgaModal({
   const [selectedLgaId, setSelectedLgaId] = useState<number | null>(null);
 
   const unassignMutation = useUnassignLga(() => {
-    // ✅ Reset local state first, then close the modal, then notify parent to refetch.
-    // Order matters: closing the modal before refetch avoids a flash of stale data
-    // inside the still-open modal if onSuccess triggers a re-render.
     setSelectedLgaId(null);
     onClose();
     onSuccess?.();
   });
 
-  // Derive LGAs the user currently manages from managed_facilities
-  const assignedLgaOptions = useMemo(() => {
+  const assignedLgaOptions = useMemo((): LgaOption[] => {
     if (!user?.managed_facilities?.length) return [];
 
     const lgaNames = Array.from(
       new Set(
         user.managed_facilities
           .map((f: any) => f.facility_lga as string | undefined)
-          .filter(Boolean) as string[],
+          // ✅ Use a proper type guard instead of Boolean cast so TS narrows to string
+          .filter(
+            (name): name is string =>
+              typeof name === "string" && name.length > 0,
+          ),
       ),
     );
 
-    return lgaNames
-      .map((name) => {
-        const match = RIVERS_STATE_LGAS.find(
-          (l) => l.label.toLowerCase() === name.toLowerCase(),
-        );
-        return match
-          ? { lga_id: Number(match.value), lga_name: match.label }
-          : null;
-      })
-      .filter((x): x is { lga_id: number; lga_name: string } => x !== null);
+    // ✅ Build result with a plain for-loop — no type predicate needed at all,
+    // so there's nothing for TypeScript to argue about.
+    const result: LgaOption[] = [];
+    for (const name of lgaNames) {
+      const match = RIVERS_STATE_LGAS.find(
+        (l) => l.label.toLowerCase() === name.toLowerCase(),
+      );
+      if (match) {
+        result.push({ lga_id: Number(match.value), lga_name: match.label });
+      }
+    }
+    return result;
   }, [user]);
 
-  // ✅ Reset state on close so the modal is clean next time it opens
   const handleClose = () => {
-    if (unassignMutation.isPending) return; // prevent accidental close mid-request
+    if (unassignMutation.isPending) return;
     setSelectedLgaId(null);
     onClose();
   };
@@ -74,8 +85,6 @@ export default function UnassignLgaModal({
   const handleConfirm = () => {
     if (!user || selectedLgaId === null) return;
 
-    // ✅ Normalise user_id to number regardless of whether the API returns a
-    // string or number — avoids a silent NaN if parseInt receives undefined.
     const userId =
       typeof user.user_id === "string"
         ? parseInt(user.user_id, 10)
@@ -195,7 +204,7 @@ export default function UnassignLgaModal({
             </div>
           )}
 
-          {/* Warning note — only shown once an LGA is selected */}
+          {/* Warning note */}
           {selectedLgaId !== null && (
             <div className="flex gap-2.5 rounded-xl border border-red-100 bg-red-50 p-3.5">
               <AlertTriangle
@@ -210,7 +219,7 @@ export default function UnassignLgaModal({
             </div>
           )}
 
-          {/* ✅ Show mutation error inline so the user knows what went wrong */}
+          {/* Inline error */}
           {unassignMutation.isError && (
             <div className="flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5">
               <AlertTriangle

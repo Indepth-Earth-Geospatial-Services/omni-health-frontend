@@ -241,7 +241,7 @@ export interface FacilityAnalytics {
   staff_count: number;
 }
 
-export interface FacilitiesAnalyticsResponse extends Array<FacilityAnalytics> {}
+// export interface FacilitiesAnalyticsResponse extends Array<FacilityAnalytics> {}
 
 // Notification Types
 export interface Notification {
@@ -699,15 +699,15 @@ class SuperAdminService {
    * GET /api/v1/admin/analytics/facilities
    * Returns: list of facilities with review_count, average_rating, staff_count
    */
-  async getFacilitiesAnalytics(): Promise<FacilitiesAnalyticsResponse> {
-    try {
-      const response = await apiClient.get(this.ENDPOINTS.ANALYTICS_FACILITIES);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching facilities analytics:", error);
-      throw error;
-    }
-  }
+  // async getFacilitiesAnalytics(): Promise<FacilitiesAnalyticsResponse> {
+  //   try {
+  //     const response = await apiClient.get(this.ENDPOINTS.ANALYTICS_FACILITIES);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("Error fetching facilities analytics:", error);
+  //     throw error;
+  //   }
+  // }
 
   /**
    * Get notifications for a specific user
