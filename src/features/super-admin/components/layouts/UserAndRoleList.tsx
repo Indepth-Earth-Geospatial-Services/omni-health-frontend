@@ -192,7 +192,7 @@ export default function UserAndRoleList({
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-xs font-bold text-white shadow-sm`}
+                            className={`flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-xs font-bold text-white shadow-sm`}
                           >
                             {getInitials(user.full_name)}
                           </div>
@@ -390,7 +390,8 @@ export default function UserAndRoleList({
         isOpen={userActions.isChangeRoleModalOpen}
         onClose={userActions.closeAllModals}
         user={userActions.selectedUser}
-        onSubmit={() => {}}
+        onSubmit={userActions.handleChangeUserRole}
+        isLoading={userActions.isChangeRoleLoading}
       />
       <DeactivateUserModal
         isOpen={userActions.isDeactivateModalOpen}

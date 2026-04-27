@@ -23,14 +23,9 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-// ✅ Derive LgaOption's lga_name directly from RIVERS_STATE_LGAS so the type
-// stays as the narrow literal union that TypeScript infers from the constant —
-// not the wider `string`. This is what caused the build error: the old type
-// predicate `x is { lga_name: string }` clashed with the narrower inferred
-// literal union on match.label.
 type LgaOption = {
   lga_id: number;
-  lga_name: (typeof RIVERS_STATE_LGAS)[number]["label"];
+  lga_name: string;
 };
 
 export default function UnassignLgaModal({
@@ -48,23 +43,32 @@ export default function UnassignLgaModal({
   });
 
   const assignedLgaOptions = useMemo((): LgaOption[] => {
-    if (!user?.managed_facilities?.length) return [];
+    const result: LgaOption[] = [];
 
+    // Primary: managed_lga from API — keys are lga_id strings, values are lga_names.
+    // This is the only source that carries the real backend lga_id needed for DELETE.
+    const managedLga = user?.managed_lga;
+    if (managedLga && Object.keys(managedLga).length > 0) {
+      for (const [lgaIdStr, lgaName] of Object.entries(managedLga)) {
+        const lgaId = parseInt(lgaIdStr, 10);
+        if (!isNaN(lgaId)) {
+          result.push({ lga_id: lgaId, lga_name: String(lgaName) });
+        }
+      }
+      if (result.length > 0) return result;
+    }
+
+    // Fallback: derive from managed_facilities[].facility_lga when managed_lga
+    // is absent. Uses RIVERS_STATE_LGAS sequential index as lga_id — may be
+    // inaccurate if backend IDs differ, but better than showing nothing.
+    if (!user?.managed_facilities?.length) return [];
     const lgaNames = Array.from(
       new Set(
         user.managed_facilities
-          .map((f: any) => f.facility_lga as string | undefined)
-          // ✅ Use a proper type guard instead of Boolean cast so TS narrows to string
-          .filter(
-            (name): name is string =>
-              typeof name === "string" && name.length > 0,
-          ),
+          .map((f) => f.facility_lga)
+          .filter((name): name is string => typeof name === "string" && name.length > 0),
       ),
     );
-
-    // ✅ Build result with a plain for-loop — no type predicate needed at all,
-    // so there's nothing for TypeScript to argue about.
-    const result: LgaOption[] = [];
     for (const name of lgaNames) {
       const match = RIVERS_STATE_LGAS.find(
         (l) => l.label.toLowerCase() === name.toLowerCase(),

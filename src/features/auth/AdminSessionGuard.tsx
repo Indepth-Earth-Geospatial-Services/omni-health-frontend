@@ -55,8 +55,7 @@ export function AdminSessionGuard({
     const { valid, reason } = validate();
     if (!valid) {
       redirecting.current = true;
-      logout();
-      router.replace(`/login?reason=${reason}`);
+      logout().then(() => router.replace(`/login?reason=${reason}`));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated]);

@@ -1,51 +1,93 @@
 import axios, { AxiosInstance } from "axios";
 import config from "./config";
-import { handleApiError, ApiError } from "@/lib/utils";
+import { handleApiError } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/auth-store";
-import { isTokenExpired } from "@/lib/token";
 
 class ApiClient {
   public instance: AxiosInstance;
+  private isRefreshing = false;
+  private refreshQueue: Array<{
+    resolve: (token: string) => void;
+    reject: (err: unknown) => void;
+  }> = [];
 
   constructor() {
     this.instance = axios.create({
       baseURL: config.API_BASE_URL,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
     this.setupInterceptors();
   }
 
+  private drainQueue(token: string | null, error: unknown = null): void {
+    this.refreshQueue.forEach(({ resolve, reject }) => {
+      token ? resolve(token) : reject(error);
+    });
+    this.refreshQueue = [];
+  }
+
   private setupInterceptors(): void {
-    // Request interceptor — attach token, reject if expired before the request
-    this.instance.interceptors.request.use((config) => {
+    // ── Request ──────────────────────────────────────────────────────────────
+    // Attach the current Bearer token to every outgoing request.
+    // Do NOT call logout here — the response interceptor handles expired tokens
+    // via the refresh flow so the user is never kicked out unnecessarily.
+    this.instance.interceptors.request.use((reqConfig) => {
       const token = useAuthStore.getState().token;
-
       if (token) {
-        if (isTokenExpired(token)) {
-          // logout() clears sessionStorage, cookies, Zustand state, and
-          // dispatches the "auth:logout" event — no extra work needed here.
-          useAuthStore.getState().logout();
-          throw new ApiError("Token expired", 401, "TOKEN_EXPIRED");
-        }
-        config.headers.Authorization = `Bearer ${token}`;
+        reqConfig.headers.Authorization = `Bearer ${token}`;
       }
-
-      return config;
+      return reqConfig;
     });
 
-    // Response interceptor — handle 401s from the backend
+    // ── Response ─────────────────────────────────────────────────────────────
+    // On 401: attempt a token refresh and replay the failed request.
+    // Multiple concurrent 401s share a single refresh call via the queue.
     this.instance.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // logout() handles everything: storage, cookies, state, and the
-          // "auth:logout" event — no need to dispatch it separately.
-          useAuthStore.getState().logout();
+      async (error) => {
+        const original = error.config;
+
+        // Skip refresh for: non-401 errors, the refresh endpoint itself,
+        // and requests that have already been retried once.
+        const shouldRefresh =
+          error.response?.status === 401 &&
+          !original._retry &&
+          !original.url?.includes("/refresh");
+
+        if (!shouldRefresh) {
+          return Promise.reject(handleApiError(error));
         }
-        return Promise.reject(handleApiError(error));
+
+        // A refresh is already running — queue this request until it finishes
+        if (this.isRefreshing) {
+          return new Promise<string>((resolve, reject) => {
+            this.refreshQueue.push({ resolve, reject });
+          }).then((newToken) => {
+            original.headers.Authorization = `Bearer ${newToken}`;
+            return this.instance(original);
+          });
+        }
+
+        // First 401 — kick off the refresh
+        original._retry = true;
+        this.isRefreshing = true;
+
+        try {
+          await useAuthStore.getState().refreshToken();
+          const newToken = useAuthStore.getState().token!;
+
+          this.isRefreshing = false;
+          this.drainQueue(newToken);
+
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return this.instance(original);
+        } catch (refreshError) {
+          this.isRefreshing = false;
+          this.drainQueue(null, refreshError);
+          // Refresh failed — session is unrecoverable, clear everything
+          useAuthStore.getState().logout();
+          return Promise.reject(handleApiError(refreshError));
+        }
       },
     );
   }

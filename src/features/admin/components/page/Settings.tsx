@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Lock, Hospital, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
+import { useRouter } from "next/navigation";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
 import FacilityCard from "../ui/FacilityCard";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ export default function Settings() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { facilityIds, setCurrentFacilityId, user, logout } = useAuthStore();
+  const router = useRouter();
   const currentFacilityId = useCurrentFacilityId();
   const facilityQueries = useMultipleFacilities(facilityIds ?? []);
 
@@ -35,7 +37,8 @@ export default function Settings() {
     try {
       await adminService.deleteAccount({ passwordConfirmation: confirmPassword });
       toast.success("Account deleted successfully");
-      logout();
+      await logout();
+      router.push("/login");
     } catch {
       toast.error("Failed to delete account. Please check your password and try again.");
     } finally {

@@ -249,17 +249,19 @@ class AuthService {
   }
 
   /**
-   * Refresh the access token using the current token
+   * Refresh the access token.
    * POST /api/v1/refresh
-   * Backend handles token expiration and issues new access token
+   * Sends the current (possibly expired) Bearer token so the backend can
+   * identify the session and issue a fresh access token.
    */
-  async refreshToken(): Promise<RefreshTokenResponse> {
+  async refreshToken(currentToken: string): Promise<RefreshTokenResponse> {
     try {
       const response = await axios.post<RefreshTokenResponse>(
         `${this.baseUrl}/refresh`,
         {},
         {
           headers: {
+            Authorization: `Bearer ${currentToken}`,
             "Content-Type": "application/json",
             Accept: "application/json",
           },
@@ -277,19 +279,20 @@ class AuthService {
    * POST /api/v1/logout
    * Backend handles token invalidation and cleanup
    */
-  async logout(): Promise<LogoutResponse> {
+  async logout(token?: string): Promise<LogoutResponse> {
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await axios.post<LogoutResponse>(
         `${this.baseUrl}/logout`,
         {},
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        },
+        { headers },
       );
-
       return response.data;
     } catch (error) {
       throw handleApiError(error);
