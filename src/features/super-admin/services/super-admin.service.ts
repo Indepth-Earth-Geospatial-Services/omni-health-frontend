@@ -398,7 +398,7 @@ class SuperAdminService {
 
   /**
    * Deactivate a user account
-   * POST /api/v1/deactivate-account?password_confirmation=xxx
+   * POST /api/v1/deactivate-account
    * Requires authentication
    */
   async deactivateAccount(
@@ -408,9 +408,7 @@ class SuperAdminService {
       const response = await apiClient.post(
         this.ENDPOINTS.DEACTIVATE_ACCOUNT,
         null,
-        {
-          params: { password_confirmation: passwordConfirmation },
-        },
+        { params: { password_confirmation: passwordConfirmation } },
       );
       return response.data;
     } catch (error) {
