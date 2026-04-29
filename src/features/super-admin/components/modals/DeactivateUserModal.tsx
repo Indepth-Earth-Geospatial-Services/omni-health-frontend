@@ -122,6 +122,8 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
                   if (error) setError("");
                 }}
                 placeholder="Enter your password"
+                autoComplete="new-password"
+                name="deactivate-password"
                 className={`w-full rounded-lg border ${
                   error ? "border-red-500" : "border-slate-300"
                 } bg-white py-3 pl-10 pr-12 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20`}
