@@ -67,18 +67,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   ...initialState,
 
   login: (token: string, facilityIds: string[], user: User, assigned_lgas?: string[] | null) => {
-    // ✅ Validate inputs
-    if (!token || !user || !facilityIds?.length) {
+    if (!token || !user) {
       console.error("Invalid login parameters", { token, user, facilityIds });
       return;
     }
 
-    // ✅ If Admin has multiple facilities, flag for modal selection
-    const isMultiFacilityAdmin =
-      user.role === "admin" && facilityIds.length > 1;
+    const isMultiFacilityAdmin = user.role === "admin" && facilityIds.length > 1;
 
-    // ✅ Default to first facility unless admin must choose
-    const currentFacilityId = isMultiFacilityAdmin ? null : facilityIds[0];
+    const currentFacilityId = isMultiFacilityAdmin ? null : (facilityIds[0] ?? null);
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
@@ -164,11 +160,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   logout: async () => {
+    const { token } = get();
     try {
-      // ✅ Call backend logout endpoint to invalidate session
-      await authService.logout();
+      await authService.logout(token ?? undefined);
     } catch (error) {
-      // ✅ Still clear local state even if API call fails
       console.error("Logout API error:", error);
     } finally {
       // ✅ Clear local storage and cookies
@@ -190,36 +185,30 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   refreshToken: async () => {
-    try {
-      // ✅ Call backend refresh endpoint to get new access token
-      const { access_token } = await authService.refreshToken();
-      
-      // ✅ Update token in store and storage
-      const { facilityIds, assigned_lgas, user, currentFacilityId, pendingFacilitySelection } = get();
+    const { token } = get();
+    if (!token) throw new Error("No token available to refresh");
 
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(
-          AUTH_STORAGE_KEY,
-          JSON.stringify({
-            token: access_token,
-            facilityIds,
-            assigned_lgas,
-            user,
-            currentFacilityId,
-            pendingFacilitySelection,
-          }),
-        );
+    // Throws on failure — callers (e.g. the apiClient interceptor) handle logout
+    const { access_token } = await authService.refreshToken(token);
 
-        // ✅ Update cookie with new token
-        document.cookie = `${AUTH_COOKIE_NAME}=${access_token};path=/;SameSite=Strict`;
-      }
+    const { facilityIds, assigned_lgas, user, currentFacilityId, pendingFacilitySelection } = get();
 
-      set({ token: access_token });
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      // ✅ If refresh fails, logout user
-      get().logout();
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          token: access_token,
+          facilityIds,
+          assigned_lgas,
+          user,
+          currentFacilityId,
+          pendingFacilitySelection,
+        }),
+      );
+      document.cookie = `${AUTH_COOKIE_NAME}=${access_token};path=/;SameSite=Strict`;
     }
+
+    set({ token: access_token });
   },
 
   updateToken: (newToken: string) => {

@@ -21,6 +21,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
   const [isUnassignLgaModalOpen, setIsUnassignLgaModalOpen] = useState(false);
   const [suspendMode, setSuspendMode] = useState<"suspend" | "unsuspend">("suspend");
   const [isSuspendLoading, setIsSuspendLoading] = useState(false);
+  const [isChangeRoleLoading, setIsChangeRoleLoading] = useState(false);
 
   const openProfileModal = useCallback((user: User) => {
     setSelectedUser(user);
@@ -79,6 +80,40 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
       }
     },
     [onSuccess]
+  );
+
+  const handleChangeUserRole = useCallback(
+    async (userId: string, role: string) => {
+      setIsChangeRoleLoading(true);
+      try {
+        await superAdminService.changeUserRole(userId, role);
+        toast.success("User role updated successfully!");
+        setIsChangeRoleModalOpen(false);
+        await onSuccess?.();
+        queryClient.setQueriesData<GetUsersResponse>(
+          { queryKey: ["super-admin-users"] },
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              users: old.users.map((u) =>
+                u.user_id === userId ? { ...u, role } : u,
+              ),
+            };
+          },
+        );
+      } catch (error) {
+        console.error("Failed to change user role:", error);
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to change role. Please try again.";
+        toast.error(message);
+      } finally {
+        setIsChangeRoleLoading(false);
+      }
+    },
+    [onSuccess, queryClient],
   );
 
   const handleDeactivateUser = useCallback(
@@ -150,6 +185,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     isUnassignLgaModalOpen,
     suspendMode,
     isSuspendLoading,
+    isChangeRoleLoading,
     openProfileModal,
     openChangeRoleModal,
     openDeactivateModal,
@@ -158,6 +194,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     openUnassignLgaModal,
     closeAllModals,
     handleAssignToFacility,
+    handleChangeUserRole,
     handleDeactivateUser,
     handleSuspendUser,
   };

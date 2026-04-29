@@ -52,7 +52,6 @@ export function handleApiError(error: unknown): ApiError {
       message = error.message;
     }
 
-    console.warn("ERROR MESSAGE", message);
     const statusCode = error.response?.status;
     const code = error.response?.data?.code;
 

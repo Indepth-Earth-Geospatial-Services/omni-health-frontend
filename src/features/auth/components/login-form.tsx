@@ -134,14 +134,19 @@ export default function LoginForm() {
         created_at: new Date().toISOString(),
       };
 
-      // ✅ Validate required fields before login
-      if (!user.email || !user.role || !response.facility_ids?.length) {
-        throw new Error(
-          "Invalid response from server: missing required fields",
-        );
+      // Validate required fields
+      if (!user.email || !user.role) {
+        throw new Error("Invalid response from server: missing required fields");
       }
 
-      // console.log("User object:", user);
+      // Block non-admin roles — this portal is for admins only
+      if (user.role === "user") {
+        setLoginError(
+          "Access restricted — this portal is for facility administrators only. Contact your system administrator for help.",
+        );
+        setIsLoading(false);
+        return;
+      }
 
       // 5. Store auth data with user info
       const facilityIds = response.facility_ids || [];

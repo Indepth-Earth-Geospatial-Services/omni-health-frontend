@@ -18,6 +18,7 @@ export interface User {
   email: string;
   role: string;
   managed_facilities: ManagedFacility[];
+  managed_lga: Record<string, string> | null; // API: { lga_id_str: lga_name }
   created_at: string;
   is_active: boolean;
   is_suspended: boolean;
@@ -267,8 +268,9 @@ class SuperAdminService {
     USERS: "/admin/users",
     ASSIGN_MANAGER: "/admin/assign-manager",
     DEACTIVATE_ACCOUNT: "/deactivate-account",
-    SUSPEND_USER: "/admin/users", // PATCH /admin/users/{user_id}/suspend
-    UNSUSPEND_USER: "/admin/users", // PATCH /admin/users/{user_id}/unsuspend
+    SUSPEND_USER: "/admin/users",   // POST /admin/users/{user_id}/suspend
+    UNSUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/unsuspend
+    CHANGE_ROLE: "/admin/users",    // PATCH /admin/users/{user_id}/role
     STAFF: "/admin/staff/all",
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
@@ -305,6 +307,7 @@ class SuperAdminService {
     this.getUniqueInventory = this.getUniqueInventory.bind(this);
     this.suspendUser = this.suspendUser.bind(this);
     this.unsuspendUser = this.unsuspendUser.bind(this);
+    this.changeUserRole = this.changeUserRole.bind(this);
     this.getAnalyticsOverview = this.getAnalyticsOverview.bind(this);
     this.getNotifications = this.getNotifications.bind(this);
   }
@@ -652,7 +655,7 @@ class SuperAdminService {
    */
   async suspendUser(userId: string, reason: string): Promise<any> {
     try {
-      const response = await apiClient.patch(
+      const response = await apiClient.post(
         `${this.ENDPOINTS.SUSPEND_USER}/${userId}/suspend`,
         { reason },
       );
@@ -678,6 +681,20 @@ class SuperAdminService {
       console.error("Error lifting suspension for user:", error);
       throw error;
     }
+  }
+
+  /**
+   * Change a user's role
+   * PATCH /api/v1/admin/users/{user_id}/role
+   * @param userId - The ID of the user
+   * @param role - New role: "user" | "admin" | "super_admin"
+   */
+  async changeUserRole(userId: string, role: string): Promise<{ message: string }> {
+    const response = await apiClient.patch(
+      `${this.ENDPOINTS.CHANGE_ROLE}/${userId}/role`,
+      { role },
+    );
+    return response.data;
   }
 
   /**

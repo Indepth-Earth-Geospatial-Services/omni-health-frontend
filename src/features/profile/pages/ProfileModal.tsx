@@ -119,8 +119,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     onClose();
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onClose();
     router.push("/login");
   };
