@@ -50,27 +50,21 @@ export default function FacilityRegistry() {
     },
   });
 
-  // When sorting is active, we need to fetch ALL data to sort properly
-  const isSorting = !!filters.sortBy;
+  // Fetch all + paginate client-side when sorting OR filtering by category.
+  // Category filtering is done client-side using partial matching (mirrors the Map)
+  // so all facility_category variants ("Model Primary Health Care", "Primary Health
+  // Centre", etc.) are handled correctly regardless of what the API stores.
+  const isClientMode = !!filters.sortBy || filters.selectedCategory !== "all";
 
   const searchParams = useMemo(
     () => ({
-      page: isSorting ? 1 : currentPage,
-      limit: isSorting ? 1000 : itemsPerPage,
+      page: isClientMode ? 1 : currentPage,
+      limit: isClientMode ? 1000 : itemsPerPage,
       name: filters.searchQuery || undefined,
-      category:
-        filters.selectedCategory !== "all"
-          ? filters.selectedCategory
-          : undefined,
+      // Category is intentionally omitted — handled client-side below
       lga_name: filters.selectedLGA !== "all" ? filters.selectedLGA : undefined,
     }),
-    [
-      currentPage,
-      filters.searchQuery,
-      filters.selectedCategory,
-      filters.selectedLGA,
-      isSorting,
-    ],
+    [currentPage, filters.searchQuery, filters.selectedLGA, isClientMode],
   );
 
   const { data, isLoading, isError, error, isFetching } =
@@ -83,9 +77,24 @@ export default function FacilityRegistry() {
   const pagination = data?.pagination;
 
   const sortedFacilities = useMemo(() => {
-    if (!filters.sortBy) return rawFacilities;
+    // Client-side category filter — mirrors Map's partial matching so all
+    // facility_category variants are handled regardless of API stored value.
+    let result = rawFacilities;
+    if (filters.selectedCategory !== "all") {
+      const sc = filters.selectedCategory.toLowerCase();
+      result = result.filter((f) => {
+        const fc = (f.facility_category || "").toLowerCase();
+        if (sc.includes("post")) return fc.includes("post");
+        if (sc.includes("clinic")) return fc.includes("clinic") || fc.includes("cottage");
+        if (sc.includes("model") || sc.includes("primary"))
+          return fc.includes("model") || fc.includes("primary");
+        return fc.includes(sc);
+      });
+    }
 
-    const sorted = [...rawFacilities];
+    if (!filters.sortBy) return result;
+
+    const sorted = [...result];
     sorted.sort((a, b) => {
       switch (filters.sortBy) {
         case "name_asc":
@@ -113,19 +122,19 @@ export default function FacilityRegistry() {
       }
     });
     return sorted;
-  }, [rawFacilities, filters.sortBy]);
+  }, [rawFacilities, filters.sortBy, filters.selectedCategory]);
 
-  // When sorting, handle pagination client-side
+  // When in client mode (sorting or category filter), paginate client-side
   const facilities = useMemo(() => {
-    if (!isSorting) return sortedFacilities;
+    if (!isClientMode) return sortedFacilities;
     const startIndex = (currentPage - 1) * itemsPerPage;
     return sortedFacilities.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedFacilities, isSorting, currentPage]);
+  }, [sortedFacilities, isClientMode, currentPage]);
 
-  const totalRecords = isSorting
+  const totalRecords = isClientMode
     ? sortedFacilities.length
     : pagination?.total_records || 0;
-  const totalPages = isSorting
+  const totalPages = isClientMode
     ? Math.ceil(sortedFacilities.length / itemsPerPage)
     : pagination?.total_pages || 1;
 

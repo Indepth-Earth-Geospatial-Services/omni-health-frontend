@@ -1,4 +1,4 @@
-import QuickStatsHeader from "../layout/QuickStatsHeader";
+// import QuickStatsHeader from "../layout/QuickStatsHeader";
 import KPIStatsCards from "../layout/KPICards";
 import AnalyticsCharts from "../charts/AnalyticsCharts";
 import { Users } from "lucide-react";
@@ -6,8 +6,9 @@ import { Users } from "lucide-react";
 export default function Analytics() {
   return (
     <>
-      <QuickStatsHeader />
       <div className="mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* <QuickStatsHeader /> */}
+
         <KPIStatsCards
           title="Today's Patient"
           value={127}

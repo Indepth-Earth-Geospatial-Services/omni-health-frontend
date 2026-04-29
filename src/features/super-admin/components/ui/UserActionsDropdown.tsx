@@ -1,6 +1,15 @@
 "use client";
 
-import { Eye, ShieldOff, ShieldCheck, ArrowLeftRight, Ban, Pen, MapPin, MapPinOff } from "lucide-react";
+import {
+  Eye,
+  ShieldOff,
+  ShieldCheck,
+  ArrowLeftRight,
+  Ban,
+  Pen,
+  MapPin,
+  MapPinOff,
+} from "lucide-react";
 import type { User } from "../../services/super-admin.service";
 
 interface UserActionsDropdownProps {
@@ -113,7 +122,7 @@ export function UserActionsDropdown({
             Change Role
           </button>
 
-          <button
+          {/* <button
             onClick={(e) => {
               e.stopPropagation();
               onDeactivate();
@@ -122,7 +131,7 @@ export function UserActionsDropdown({
           >
             <Ban size={16} className="text-slate-400" />
             Deactivate
-          </button>
+          </button> */}
         </div>
       )}
     </div>

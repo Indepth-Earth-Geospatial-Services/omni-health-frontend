@@ -1,7 +1,7 @@
 "use client";
 import { useMemo } from "react";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
-import QuickStatsHeader from "@/features/admin/components/layout/QuickStatsHeader";
+// import QuickStatsHeader from "@/features/admin/components/layout/QuickStatsHeader";
 import {
   Users,
   ChevronRight,
@@ -126,8 +126,8 @@ export default function Overview() {
   return (
     <>
       <main className="flex min-h-screen flex-col">
-        <QuickStatsHeader />
         <div className="mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* <QuickStatsHeader /> */}
           <KPIStatsCards
             title="Total Staff"
             value={isLoading ? "-" : kpiMetrics.totalStaff}
@@ -195,14 +195,18 @@ export default function Overview() {
             ) : (
               <div className="flex flex-1 flex-col gap-1">
                 {Object.entries(
-                  (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                  (facility?.working_hours as
+                    | Record<string, string>
+                    | undefined) ?? {},
                 ).length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate-400">
                     No operating hours set
                   </p>
                 ) : (
                   Object.entries(
-                    (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                    (facility?.working_hours as
+                      | Record<string, string>
+                      | undefined) ?? {},
                   ).map(([day, raw]) => {
                     const isClosed = !raw || raw.toLowerCase() === "closed";
                     const hours = isClosed ? "Closed" : formatTimeRange(raw);
