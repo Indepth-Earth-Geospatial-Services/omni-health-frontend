@@ -64,10 +64,14 @@ export default function AllUserPage() {
   // ];
 
   // Get KPI metrics from analytics endpoint (server-side)
-  const totalUsers = analyticsData?.total_users ?? usersData?.pagination?.total_records ?? 0;
-  const activeUsers = usersData?.users?.filter((user) => user.is_active).length ?? 0;
-  const inactiveUsers = usersData?.users?.filter((user) => !user.is_active).length ?? 0;
-  const totalSuperAdmins = usersData?.users?.filter((user) => user.role === "super_admin").length ?? 0;
+  const totalUsers =
+    analyticsData?.total_users ?? usersData?.pagination?.total_records ?? 0;
+  const activeUsers =
+    usersData?.users?.filter((user) => user.is_active).length ?? 0;
+  const inactiveUsers =
+    usersData?.users?.filter((user) => !user.is_active).length ?? 0;
+  const totalSuperAdmins =
+    usersData?.users?.filter((user) => user.role === "super_admin").length ?? 0;
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
@@ -120,31 +124,31 @@ export default function AllUserPage() {
             value={totalUsers}
             subtitle=""
             icon={<Users size={24} />}
-            trend={{ value: "20%", isPositive: true }}
+            //trend={{ value: "20%", isPositive: true }}
           />
           <KPIStatsCards
             title="Active Users"
             value={activeUsers}
             subtitle=""
             icon={<Users size={24} />}
-            trend={{ value: "2% Decrease", isPositive: false }}
+            // trend={{ value: "2% Decrease", isPositive: false }}
           />
           <KPIStatsCards
             title="Inactive Users"
             value={inactiveUsers}
             subtitle=""
             icon={<Calendar size={24} />}
-            trend={{
-              value: inactiveUsers > 0 ? "Needs attention" : "All active",
-              isPositive: inactiveUsers === 0,
-            }}
+            // trend={{
+            //   value: inactiveUsers > 0 ? "Needs attention" : "All active",
+            //   isPositive: inactiveUsers === 0,
+            // }}
           />
           <KPIStatsCards
             title="Super Admins"
             value={totalSuperAdmins}
             subtitle=""
             icon={<Calendar size={24} />}
-            trend={{ value: "80%", isPositive: true }}
+            //trend={{ value: "80%", isPositive: true }}
           />
         </div>
 

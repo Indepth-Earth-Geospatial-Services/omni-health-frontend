@@ -272,6 +272,7 @@ class SuperAdminService {
     UNSUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/unsuspend
     CHANGE_ROLE: "/admin/users",    // PATCH /admin/users/{user_id}/role
     STAFF: "/admin/staff/all",
+    FACILITY_STAFF: "/admin/staff", // GET /admin/staff/{facility_id}
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
     DELETE_STAFF: "/admin/staff", // DELETE /admin/staff/{staff_id}
@@ -310,6 +311,7 @@ class SuperAdminService {
     this.changeUserRole = this.changeUserRole.bind(this);
     this.getAnalyticsOverview = this.getAnalyticsOverview.bind(this);
     this.getNotifications = this.getNotifications.bind(this);
+    this.getStaffByFacility = this.getStaffByFacility.bind(this);
   }
 
   /**
@@ -327,6 +329,22 @@ class SuperAdminService {
     const response = await apiClient.get(this.ENDPOINTS.STAFF, {
       params: { page, limit },
     });
+    return response.data;
+  }
+
+  /**
+   * Get all staff members for a specific facility
+   * GET /api/v1/admin/staff/{facility_id}
+   * Returns a plain array of StaffMember
+   */
+  async getStaffByFacility(
+    facilityId: string,
+    { skip = 0, limit = 100 }: { skip?: number; limit?: number } = {},
+  ): Promise<StaffMember[]> {
+    const response = await apiClient.get(
+      `${this.ENDPOINTS.FACILITY_STAFF}/${facilityId}`,
+      { params: { skip, limit } },
+    );
     return response.data;
   }
 
@@ -407,8 +425,7 @@ class SuperAdminService {
     try {
       const response = await apiClient.post(
         this.ENDPOINTS.DEACTIVATE_ACCOUNT,
-        null,
-        { params: { password_confirmation: passwordConfirmation } },
+        { password_confirmation: passwordConfirmation },
       );
       return response.data;
     } catch (error) {

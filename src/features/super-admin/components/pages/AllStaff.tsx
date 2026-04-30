@@ -66,10 +66,10 @@ export default function StaffPage() {
             value={isLoading ? "-" : kpiMetrics.totalStaff}
             subtitle={`${kpiMetrics.staffGrowthPercentage}% This month`}
             icon={<Users size={24} />}
-            trend={{
+            /*trend={{
               value: `${kpiMetrics.staffGrowthPercentage}%`,
               isPositive: kpiMetrics.staffGrowthPercentage > 0,
-            }}
+            }}*/
           />
           <KPIStatsCards
             title="Avg. Staff Per Facility"
@@ -80,21 +80,21 @@ export default function StaffPage() {
                 : ""
             }
             icon={<UserCheck size={24} />}
-            trend={{ value: "Stable", isPositive: true }}
+            //trend={{ value: "Stable", isPositive: true }}
           />
           <KPIStatsCards
             title="Total Facilities"
             value={isLoading ? "-" : kpiMetrics.totalFacilities}
             subtitle=""
             icon={<Building2 size={24} />}
-            trend={{ value: "80%", isPositive: true }}
+            //trend={{ value: "80%", isPositive: true }}
           />
           <KPIStatsCards
             title="Staff Distribution"
             value={isLoading ? "-" : kpiMetrics.staffDistribution}
             subtitle={`Avg: ${kpiMetrics.avgStaffPerFacility} per facility`}
             icon={<TrendingUp size={24} />}
-            trend={{ value: "Stable", isPositive: true }}
+            //trend={{ value: "Stable", isPositive: true }}
           />
         </div>
         <StaffTable />

@@ -22,6 +22,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
   const [suspendMode, setSuspendMode] = useState<"suspend" | "unsuspend">("suspend");
   const [isSuspendLoading, setIsSuspendLoading] = useState(false);
   const [isChangeRoleLoading, setIsChangeRoleLoading] = useState(false);
+  const [isDeactivateLoading, setIsDeactivateLoading] = useState(false);
 
   const openProfileModal = useCallback((user: User) => {
     setSelectedUser(user);
@@ -118,6 +119,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
 
   const handleDeactivateUser = useCallback(
     async (_userId: string, password: string) => {
+      setIsDeactivateLoading(true);
       try {
         await superAdminService.deactivateAccount(password);
         toast.success("User deactivated successfully!");
@@ -125,6 +127,8 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
       } catch (error) {
         console.error("Failed to deactivate user:", error);
         toast.error("Failed to deactivate user. Please try again.");
+      } finally {
+        setIsDeactivateLoading(false);
       }
     },
     []
@@ -186,6 +190,7 @@ export function useUserActions({ onSuccess }: UseUserActionsOptions = {}) {
     suspendMode,
     isSuspendLoading,
     isChangeRoleLoading,
+    isDeactivateLoading,
     openProfileModal,
     openChangeRoleModal,
     openDeactivateModal,

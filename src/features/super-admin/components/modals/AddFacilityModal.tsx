@@ -9,6 +9,8 @@ import {
 import {
   BasicDetailsSection,
   LocationDetailsSection,
+  ServicesSection,
+  WorkingHoursSection,
 } from "@/features/super-admin/components/forms/FacilityFormSections";
 
 interface AddFacilityModalProps {
@@ -28,6 +30,7 @@ export default function AddFacilityModal({
     isSubmitting,
     isEditing,
     handleInputChange,
+    handleWorkingHoursChange,
     handleSubmit,
     handleClose,
   } = useFacilityForm({ facility, isOpen, onClose });
@@ -39,10 +42,10 @@ export default function AddFacilityModal({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
-      {/* Modal */}
-      <div className="relative mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      {/* Modal — fixed height, scrollable body */}
+      <div className="relative mx-4 flex h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
           <h2 className="text-xl font-semibold text-slate-900">
             {isEditing ? "Edit Facility" : "Add New Facility"}
           </h2>
@@ -57,12 +60,14 @@ export default function AddFacilityModal({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="space-y-6 p-6">
+          <div className="space-y-8 p-6">
             <BasicDetailsSection
               formData={formData}
               errors={errors}
               onInputChange={handleInputChange}
             />
+
+            <div className="border-t border-slate-100" />
 
             <LocationDetailsSection
               formData={formData}
@@ -70,17 +75,31 @@ export default function AddFacilityModal({
               onInputChange={handleInputChange}
             />
 
+            <div className="border-t border-slate-100" />
+
+            <ServicesSection
+              formData={formData}
+              errors={errors}
+              onInputChange={handleInputChange}
+            />
+
+            <div className="border-t border-slate-100" />
+
+            <WorkingHoursSection
+              formData={formData}
+              onWorkingHoursChange={handleWorkingHoursChange}
+            />
           </div>
         </div>
 
-        {/* Footer with Submit Button */}
-        <div className="flex justify-end border-t border-slate-200 px-6 py-4">
+        {/* Footer */}
+        <div className="flex shrink-0 justify-end border-t border-slate-200 px-6 py-4">
           <Button
             type="button"
             size="lg"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-primary flex items-center gap-2 px-2"
+            className="bg-primary flex items-center gap-2 px-6"
           >
             {isSubmitting ? (
               <>
@@ -89,7 +108,7 @@ export default function AddFacilityModal({
               </>
             ) : (
               <>
-                Submit
+                {isEditing ? "Save Changes" : "Submit"}
                 <ArrowRight size={18} />
               </>
             )}

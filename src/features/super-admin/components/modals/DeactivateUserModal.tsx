@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, ArrowRight, AlertTriangle, Eye, EyeOff, Lock } from "lucide-react";
 import { User } from "../../services/super-admin.service";
 import { Button } from "@/features/admin/components/ui/button";
@@ -12,7 +13,6 @@ interface DeactivateUserModalProps {
   isLoading?: boolean;
 }
 
-// Helper function to get role badge color
 const getRoleBadgeColor = (role: string) => {
   switch (role.toLowerCase()) {
     case "super_admin":
@@ -38,12 +38,10 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
   if (!isOpen || !user) return null;
 
   const handleSubmit = () => {
-    // Validate password
     if (!password.trim()) {
       setError("Password is required to deactivate this account");
       return;
     }
-
     setError("");
     onSubmit(user.user_id, password);
   };
@@ -55,7 +53,7 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -64,7 +62,7 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white shadow-2xl">
+      <div className="fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 p-6">
           <h2 className="text-lg font-semibold text-slate-800">
@@ -108,10 +106,20 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
           {/* Password Input */}
           <div className="mb-6">
             <label className="mb-2 block text-sm font-medium text-slate-700">
-              Enter your password to confirm <span className="text-red-500">*</span>
+              Enter your password to confirm{" "}
+              <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+              {/* Honeypot: absorbs browser autofill email so the search bar is never targeted */}
+              <input
+                type="text"
+                autoComplete="username"
+                tabIndex={-1}
+                aria-hidden="true"
+                readOnly
+                style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none", border: "none", padding: 0 }}
+              />
+              <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
                 <Lock size={18} className="text-slate-400" />
               </div>
               <input
@@ -122,28 +130,29 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
                   if (error) setError("");
                 }}
                 placeholder="Enter your password"
-                autoComplete="new-password"
+                autoComplete="current-password"
                 name="deactivate-password"
                 className={`w-full rounded-lg border ${
                   error ? "border-red-500" : "border-slate-300"
-                } bg-white py-3 pl-10 pr-12 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20`}
+                } focus:border-primary focus:ring-primary/20 bg-white py-3 pr-12 pl-10 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            {error && (
-              <p className="mt-2 text-xs text-red-500">{error}</p>
-            )}
+            {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
           </div>
 
           {/* Warning Message */}
           <div className="mb-6 flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <AlertTriangle size={20} className="mt-0.5 shrink-0 text-amber-600" />
+            <AlertTriangle
+              size={20}
+              className="mt-0.5 shrink-0 text-amber-600"
+            />
             <div>
               <p className="text-sm font-medium text-amber-900">
                 This action can be reversed
@@ -176,7 +185,8 @@ const DeactivateUserModal: React.FC<DeactivateUserModalProps> = ({
           </Button>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 };
 

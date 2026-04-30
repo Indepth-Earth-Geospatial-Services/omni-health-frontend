@@ -398,6 +398,7 @@ export default function UserAndRoleList({
         onClose={userActions.closeAllModals}
         user={userActions.selectedUser}
         onSubmit={userActions.handleDeactivateUser}
+        isLoading={userActions.isDeactivateLoading}
       />
       <SuspendUserModal
         isOpen={userActions.isSuspendModalOpen}

@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { isTokenExpired } from "@/lib/token";
+import { isTokenExpired, decodeJWT } from "@/lib/token";
 import {
   AUTH_STORAGE_KEY,
   AUTH_COOKIE_NAME,
@@ -12,6 +12,31 @@ import { authService } from "@/services/auth.service";
 function deleteCookie(name: string): void {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+}
+
+// Proactive token refresh — fires 60 s before the access token expires so users
+// are never logged out mid-session due to token age during idle periods.
+let _refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearRefreshTimer() {
+  if (_refreshTimer !== null) {
+    clearTimeout(_refreshTimer);
+    _refreshTimer = null;
+  }
+}
+
+function scheduleTokenRefresh(token: string, refreshFn: () => Promise<void>) {
+  clearRefreshTimer();
+  if (typeof window === "undefined") return;
+  const payload = decodeJWT(token);
+  if (!payload?.exp) return;
+  const msUntilRefresh = payload.exp * 1000 - Date.now() - 60_000;
+  if (msUntilRefresh <= 0) return;
+  _refreshTimer = setTimeout(() => {
+    refreshFn().catch(() => {
+      // Refresh failure is handled by the 401 interceptor in apiClient
+    });
+  }, msUntilRefresh);
 }
 
 export type UserRole = "admin" | "super_admin" | "user";
@@ -107,6 +132,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isHydrated: true,
       pendingFacilitySelection: isMultiFacilityAdmin,
     });
+
+    scheduleTokenRefresh(token, get().refreshToken);
   },
 
   setPendingFacilitySelection: (pending: boolean) => {
@@ -160,6 +187,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   logout: async () => {
+    clearRefreshTimer();
     const { token } = get();
     try {
       await authService.logout(token ?? undefined);
@@ -209,6 +237,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     set({ token: access_token });
+    scheduleTokenRefresh(access_token, get().refreshToken);
   },
 
   updateToken: (newToken: string) => {
@@ -280,6 +309,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isAuthenticated: !!data.token,
           isHydrated: true,
         });
+
+        if (data.token) {
+          scheduleTokenRefresh(data.token, get().refreshToken);
+        }
       } else {
         set({ ...initialState, isHydrated: true });
       }
