@@ -268,9 +268,9 @@ class SuperAdminService {
     USERS: "/admin/users",
     ASSIGN_MANAGER: "/admin/assign-manager",
     DEACTIVATE_ACCOUNT: "/deactivate-account",
-    SUSPEND_USER: "/admin/users",   // POST /admin/users/{user_id}/suspend
+    SUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/suspend
     UNSUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/unsuspend
-    CHANGE_ROLE: "/admin/users",    // PATCH /admin/users/{user_id}/role
+    CHANGE_ROLE: "/admin/users", // PATCH /admin/users/{user_id}/role
     STAFF: "/admin/staff/all",
     FACILITY_STAFF: "/admin/staff", // GET /admin/staff/{facility_id}
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
@@ -423,10 +423,9 @@ class SuperAdminService {
     passwordConfirmation: string,
   ): Promise<DeactivateUserResponse> {
     try {
-      const response = await apiClient.post(
-        this.ENDPOINTS.DEACTIVATE_ACCOUNT,
-        { password_confirmation: passwordConfirmation },
-      );
+      const response = await apiClient.post(this.ENDPOINTS.DEACTIVATE_ACCOUNT, {
+        password_confirmation: passwordConfirmation,
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -704,7 +703,10 @@ class SuperAdminService {
    * @param userId - The ID of the user
    * @param role - New role: "user" | "admin" | "super_admin"
    */
-  async changeUserRole(userId: string, role: string): Promise<{ message: string }> {
+  async changeUserRole(
+    userId: string,
+    role: string,
+  ): Promise<{ message: string }> {
     const response = await apiClient.patch(
       `${this.ENDPOINTS.CHANGE_ROLE}/${userId}/role`,
       { role },

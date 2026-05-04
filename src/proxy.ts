@@ -18,7 +18,7 @@ const PROTECTED_ROUTES = {
   },
 };
 
-// Only truly public pages — /user and /profile require authentication
+// Public pages — accessible without authentication
 const PUBLIC_ROUTES = [
   "/login",
   "/register",
@@ -27,6 +27,7 @@ const PUBLIC_ROUTES = [
   "/verify-otp",
   "/verify-email",
   "/",
+  "/user",
   "/help",
   "/facilities",
   "/compare-facilities",
