@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUp } from "lucide-react";
-import { FaTelegram, FaWhatsapp } from "react-icons/fa";
+// import { FaTelegram, FaWhatsapp } from "react-icons/fa";
 
 const FOOTER_INFO = {
-  phone: "+234 803 123 4567,\n+234 805 987 6543",
+  phone: "+234 803 123 4567,\n +234 805 987 6543",
   email: "info@rsphcmb.gov.ng",
   address:
     "323 Port Harcourt - Aba Expy, Rumueme, Port Harcourt 500101, Rivers State, Nigeria",
@@ -19,13 +19,6 @@ const MAPS_EMBED_URL =
 
 const MAPS_LINK_URL =
   `https://www.google.com/maps?q=${FOOTER_INFO.lat},${FOOTER_INFO.lng}` as const;
-
-// const NAV_LINKS = [
-//   { label: "Services", href: "#services" },
-//   { label: "About us", href: "#about" },
-//   { label: "Blog", href: "#blog" },
-//   { label: "Contacts", href: "#contacts" },
-// ] as const;
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -98,7 +91,7 @@ export default function Footer() {
               </div> */}
 
               {/* Social Media */}
-              <div className="flex flex-row items-center gap-2">
+              {/* <div className="flex flex-row items-center gap-2">
                 <a
                   href="https://t.me"
                   target="_blank"
@@ -117,7 +110,7 @@ export default function Footer() {
                 >
                   <FaWhatsapp className="h-5 w-5 text-[#FCFCFD]" />
                 </a>
-              </div>
+              </div> */}
             </div>
 
             {/* Bottom */}

@@ -464,7 +464,11 @@ class AdminService {
    * Delete Account
    * DELETE /delete-account
    */
-  async deleteAccount({ passwordConfirmation }: { passwordConfirmation: string }): Promise<string> {
+  async deleteAccount({
+    passwordConfirmation,
+  }: {
+    passwordConfirmation: string;
+  }): Promise<string> {
     const response = await apiClient.delete(this.ENDPOINTS.ACCOUNT, {
       data: { password_confirmation: passwordConfirmation },
     });

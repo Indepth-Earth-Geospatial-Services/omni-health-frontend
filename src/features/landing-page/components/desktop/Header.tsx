@@ -1,12 +1,12 @@
 "use client";
 
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, LogIn } from "lucide-react";
+import Link from "next/link";
 
-// Contact information - centralized for easy updates
 const CONTACT_INFO = {
-  location: "Rivers State, 50001",
+  location: "Rivers State, 500101",
   email: "rvs-healthcare@gmail.com",
-  phone: "+234 XXX XXX XXXX", // Replace with actual phone number
+  phone: "+234 803 123 4567",
 } as const;
 
 interface ContactItemProps {
@@ -17,35 +17,58 @@ interface ContactItemProps {
 
 function ContactItem({ icon, text, ariaLabel }: ContactItemProps) {
   return (
-    <div className="flex items-center gap-1.5 text-white/95" aria-label={ariaLabel}>
+    <div
+      className="flex items-center gap-1.5 text-white/95"
+      aria-label={ariaLabel}
+    >
       <span className="flex-shrink-0" aria-hidden="true">
         {icon}
       </span>
-      <small className="text-[13px] font-normal">{text}</small>
+      {/* whitespace-nowrap prevents the label from breaking mid-word */}
+      <small className="text-[13px] font-normal whitespace-nowrap">
+        {text}
+      </small>
     </div>
   );
 }
 
 function Divider() {
   return (
-    <div className="text-white/40 text-[18px] select-none" aria-hidden="true">
+    <div className="text-[18px] text-white/40 select-none" aria-hidden="true">
       |
     </div>
+  );
+}
+
+function AdminLoginButton() {
+  return (
+    <Link
+      href="/login"
+      className="flex items-center gap-1.5 bg-transparent px-4 py-1 text-[13px] font-normal text-white/95 transition hover:scale-105"
+      aria-label="Administrator login"
+    >
+      <LogIn size={14} strokeWidth={2} aria-hidden="true" />
+      Admin Login
+    </Link>
   );
 }
 
 export default function Header() {
   return (
     <header className="bg-primary">
-      {/* Top Bar - Contact Info */}
-      <div className="block">
-        <div className="container mx-auto px-4 py-5 md:py-2.5">
-          {/* Desktop Layout - All info in one row */}
-          <div className="hidden md:flex items-center justify-center gap-4 lg:gap-6">
+      {/* ── Utility Bar ── */}
+      <div className="container mx-auto px-4 py-5 md:py-2.5">
+        {/* Desktop: cols shrink to content — contact info gets all remaining space in the middle */}
+        <div className="hidden md:grid md:grid-cols-[auto_1fr_auto] md:items-center">
+          {/* Col 1 — shrinks to zero, pure optical spacer */}
+          <div aria-hidden="true" />
+
+          {/* Col 2 — contact info, centred, never wraps */}
+          <div className="flex items-center justify-center gap-4 lg:gap-6">
             <ContactItem
               icon={<MapPin size={16} strokeWidth={2} />}
               text={CONTACT_INFO.location}
-              ariaLabel="Location"
+              ariaLabel="Office location"
             />
             <Divider />
             <ContactItem
@@ -60,8 +83,25 @@ export default function Header() {
               ariaLabel="Phone number"
             />
           </div>
+
+          {/* Col 3 — shrinks to button width, pinned right */}
+          <div className="flex justify-end">
+            <AdminLoginButton />
+          </div>
+        </div>
+
+        {/* Mobile: admin icon only, pinned right */}
+        <div className="flex items-center justify-end md:hidden">
+          <Link
+            href="/login"
+            className="rounded-full p-1.5 text-white/90 transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+            aria-label="Administrator login"
+          >
+            <LogIn size={18} strokeWidth={2} />
+          </Link>
         </div>
       </div>
+      {/* ── End Utility Bar ── */}
     </header>
   );
 }
