@@ -1,15 +1,30 @@
 "use client";
 import { useMemo } from "react";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
-import QuickStatsHeader from "@/features/admin/components/layout/QuickStatsHeader";
-import AdmissionsRateChart from "../charts/AdmissionsRateChartProps";
-import { Users, ChevronRight, Bed, Package, UserCog } from "lucide-react";
+// import QuickStatsHeader from "@/features/admin/components/layout/QuickStatsHeader";
+import {
+  Users,
+  ChevronRight,
+  Bed,
+  Package,
+  UserCog,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  Building2,
+  Pencil,
+} from "lucide-react";
+import { formatTimeRange } from "../../utils/formatters";
+import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
+import { MAPBOX_TOKEN } from "@/constants";
 import { useCurrentFacilityId } from "@/features/auth/auth-store";
 import {
   useAdminStaff,
   useFacilityInventory,
 } from "@/features/admin/hooks/useAdminStaff";
 import { useFacility } from "@/hooks/use-facilities";
+import { useRouter } from "next/navigation";
 
 /**
  * Helper function to count all bed-related items in inventory
@@ -35,6 +50,7 @@ const countBedsFromInventory = (
 
 export default function Overview() {
   const facilityId = useCurrentFacilityId();
+  const router = useRouter();
 
   // Fetch facility data (includes specialists)
   const { data: facilityData, isLoading: isFacilityLoading } =
@@ -110,27 +126,21 @@ export default function Overview() {
   return (
     <>
       <main className="flex min-h-screen flex-col">
-        <QuickStatsHeader />
         <div className="mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* <QuickStatsHeader /> */}
           <KPIStatsCards
             title="Total Staff"
             value={isLoading ? "-" : kpiMetrics.totalStaff}
             subtitle={`${kpiMetrics.activeStaff} Active, ${kpiMetrics.inactiveStaff} Inactive`}
             icon={<Users size={24} />}
-            trend={{
-              value: `${kpiMetrics.activeStaff > 0 ? Math.round((kpiMetrics.activeStaff / kpiMetrics.totalStaff) * 100) : 0}%`,
-              isPositive: true,
-            }}
+            detailsHref="/admin/staff"
           />
           <KPIStatsCards
             title="Available Beds"
             value={isLoading ? "-" : kpiMetrics.totalBeds}
             subtitle="From equipment inventory"
             icon={<Bed size={24} />}
-            trend={{
-              value: kpiMetrics.totalBeds > 0 ? "Available" : "None",
-              isPositive: kpiMetrics.totalBeds > 0,
-            }}
+            detailsHref="/admin/facility"
           />
           <KPIStatsCards
             title="Inventory"
@@ -139,20 +149,211 @@ export default function Overview() {
                 ? "-"
                 : kpiMetrics.equipmentItems + kpiMetrics.equipmentCount
             }
-            subtitle={`${kpiMetrics.equipmentItems} Equipment (${kpiMetrics.equipmentCount}), ${kpiMetrics.infrastructureItems} Infrastructure (${kpiMetrics.infrastructureCount})`}
+            subtitle={`${kpiMetrics.equipmentItems} Equipment, ${kpiMetrics.infrastructureItems} Infrastructure`}
             icon={<Package size={24} />}
-            trend={{ value: "In Stock", isPositive: true }}
+            detailsHref="/admin/equipments"
           />
           <KPIStatsCards
             title="Specialist"
             value={isLoading ? "-" : kpiMetrics.specialists}
             subtitle="Healthcare professionals"
             icon={<UserCog size={24} />}
-            trend={{ value: "Active", isPositive: true }}
+            detailsHref="/admin/facility"
           />
         </div>
 
-        <AdmissionsRateChart />
+        {/* Working Hours + Facility Overview */}
+        <div className="mb-6 flex gap-6">
+          {/* Working Hours */}
+          <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-white p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
+                <Clock size={18} className="text-teal-600" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-800">
+                  Working Hours
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Current facility schedule
+                </p>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="flex flex-1 flex-col gap-2">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between rounded-lg px-3 py-2"
+                  >
+                    <div className="h-4 w-20 animate-pulse rounded bg-slate-100" />
+                    <div className="h-4 w-28 animate-pulse rounded bg-slate-100" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col gap-1">
+                {Object.entries(
+                  (facility?.working_hours as
+                    | Record<string, string>
+                    | undefined) ?? {},
+                ).length === 0 ? (
+                  <p className="py-6 text-center text-sm text-slate-400">
+                    No operating hours set
+                  </p>
+                ) : (
+                  Object.entries(
+                    (facility?.working_hours as
+                      | Record<string, string>
+                      | undefined) ?? {},
+                  ).map(([day, raw]) => {
+                    const isClosed = !raw || raw.toLowerCase() === "closed";
+                    const hours = isClosed ? "Closed" : formatTimeRange(raw);
+                    const todayName = new Date()
+                      .toLocaleDateString("en-US", { weekday: "long" })
+                      .toLowerCase();
+                    const isToday = day.toLowerCase() === todayName;
+
+                    return (
+                      <div
+                        key={day}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
+                      >
+                        <span
+                          className={`text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                        >
+                          {isToday ? `${day} (Today)` : day}
+                        </span>
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
+                        >
+                          {hours}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Facility Overview */}
+          <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-white p-6">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
+                  <Building2 size={18} className="text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-800">
+                    Facility Overview
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Key facility information
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push("/admin/facility")}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+              >
+                <Pencil size={13} />
+                Edit Profile
+              </button>
+            </div>
+
+            {isLoading ? (
+              <div className="flex flex-1 flex-col gap-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-12 w-full animate-pulse rounded-lg bg-slate-100"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col gap-3">
+                {/* Name + category */}
+                <div className="rounded-lg bg-slate-50 px-4 py-3">
+                  <p className="mb-0.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                    Facility Name
+                  </p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {facility?.facility_name || "—"}
+                  </p>
+                  {facility?.facility_category && (
+                    <span className="mt-1 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                      {facility.facility_category}
+                    </span>
+                  )}
+                </div>
+
+                {/* Location */}
+                <div className="flex items-start gap-3 rounded-lg bg-slate-50 px-4 py-3">
+                  <MapPin
+                    size={15}
+                    className="mt-0.5 shrink-0 text-slate-400"
+                  />
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                      Location
+                    </p>
+                    <p className="text-sm text-slate-700">
+                      {[
+                        facility?.address,
+                        facility?.town,
+                        facility?.facility_lga,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Contact */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-3">
+                    <Phone size={14} className="shrink-0 text-slate-400" />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                        Phone
+                      </p>
+                      <p className="truncate text-xs text-slate-700">
+                        {facility?.contact_info?.phone || "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-3">
+                    <Mail size={14} className="shrink-0 text-slate-400" />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                        Email
+                      </p>
+                      <p className="truncate text-xs text-slate-700">
+                        {facility?.contact_info?.email || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rating */}
+                {/* <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Star size={15} className="fill-amber-400 text-amber-400" />
+                    <span className="text-sm font-bold text-slate-800">
+                      {facility?.average_rating?.toFixed(1) ?? "0.0"}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      ({facility?.total_reviews ?? 0}{" "}
+                      {facility?.total_reviews === 1 ? "review" : "reviews"})
+                    </span>
+                  </div>
+                </div> */}
+              </div>
+            )}
+          </div>
+        </div>
 
         <section>
           <div className="mt-6 flex w-full flex-col justify-between gap-4 md:flex-row">
@@ -162,7 +363,10 @@ export default function Overview() {
                 <h2 className="text-xl font-bold text-slate-700">
                   Healthcare Professionals
                 </h2>
-                <button className="flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-slate-800">
+                <button
+                  onClick={() => router.push("/admin/facility")}
+                  className="flex items-center text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+                >
                   View all <ChevronRight size={16} className="ml-1" />
                 </button>
               </div>
@@ -221,115 +425,69 @@ export default function Overview() {
               </div>
             </div>
 
-            {/* --- Card 2: Teaching Sessions --- */}
-            <div className="flex flex-[1.2] flex-col items-center justify-between gap-8 rounded-xl border border-gray-200 bg-white p-8 xl:flex-row">
-              <div className="relative flex h-80 w-80 items-center justify-center">
-                <svg
-                  viewBox="0 0 256 256"
-                  className="h-full w-full -rotate-90 transform"
-                >
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="110"
-                    stroke="#f1f5f9"
-                    strokeWidth="14"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="88"
-                    stroke="#f1f5f9"
-                    strokeWidth="14"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="66"
-                    stroke="#f1f5f9"
-                    strokeWidth="14"
-                    fill="transparent"
-                  />
-
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="110"
-                    stroke="#2D5A5A"
-                    strokeWidth="14"
-                    fill="transparent"
-                    strokeDasharray="691"
-                    strokeDashoffset="318"
-                    strokeLinecap="round"
-                  />
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="88"
-                    stroke="#14B8A6"
-                    strokeWidth="14"
-                    fill="transparent"
-                    strokeDasharray="553"
-                    strokeDashoffset="177"
-                    strokeLinecap="round"
-                  />
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="66"
-                    stroke="#5EEAD4"
-                    strokeWidth="14"
-                    fill="transparent"
-                    strokeDasharray="414"
-                    strokeDashoffset="58"
-                    strokeLinecap="round"
-                  />
-                </svg>
-
-                <div className="absolute text-center">
-                  <p className="text-base text-slate-400">Ongoing</p>
-                  <p className="text-2xl leading-tight font-bold text-slate-800">
-                    Teaching
-                    <br />
-                    Sessions
-                  </p>
+            {/* --- Card 2: Facility Location Map --- */}
+            <div className="relative flex-[1.2] overflow-hidden rounded-xl border border-gray-200 bg-white">
+              {/* Header overlay */}
+              <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/90 px-5 py-3 backdrop-blur-sm">
+                <div className="flex items-center gap-2">
+                  <MapPin size={15} className="text-teal-600" />
+                  <h2 className="text-sm font-bold text-slate-800">
+                    Facility Location
+                  </h2>
                 </div>
+                {facility?.facility_lga && (
+                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                    {facility.facility_lga}
+                  </span>
+                )}
               </div>
 
-              <div className="flex min-w-40 flex-col justify-center space-y-5">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <span className="h-4 w-4 rounded-full bg-teal-300"></span>
-                    <span className="text-base font-medium text-slate-500">
-                      <b className="font-bold text-slate-800">14%</b> Available
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="h-4 w-4 rounded-full bg-teal-500"></span>
-                    <span className="text-base font-medium text-slate-500">
-                      <b className="font-bold text-slate-800">32%</b> Occupied
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="h-4 w-4 rounded-full bg-[#2D5A5A]"></span>
-                    <span className="text-base font-medium text-slate-500">
-                      <b className="font-bold text-slate-800">54%</b>{" "}
-                      Utilization
-                    </span>
-                  </div>
+              {facility?.lat && facility?.lon ? (
+                <FacilityMap lat={facility.lat} lon={facility.lon} />
+              ) : (
+                <div className="flex h-full min-h-94 flex-col items-center justify-center gap-2 bg-slate-50 text-slate-400">
+                  <MapPin size={32} className="opacity-40" />
+                  <p className="text-sm">No location data available</p>
                 </div>
-
-                <button className="mt-4 flex w-fit items-center rounded-xl border border-gray-200 px-6 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-gray-50">
-                  View all{" "}
-                  <ChevronRight size={16} className="ml-2 text-slate-400" />
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </section>
       </main>
     </>
+  );
+}
+
+// ── Facility Map sub-component ────────────────────────────────────────────────
+function FacilityMap({ lat, lon }: { lat: number; lon: number }) {
+  return (
+    <div className="h-full min-h-64 pt-11">
+      <Map
+        initialViewState={{ longitude: lon, latitude: lat, zoom: 15 }}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
+        mapboxAccessToken={MAPBOX_TOKEN}
+      >
+        <NavigationControl position="top-right" />
+        <Marker longitude={lon} latitude={lat} anchor="center">
+          <div className="relative flex items-center justify-center">
+            {/* Ripple rings */}
+            <span className="absolute h-20 w-20 animate-ping rounded-full bg-teal-400 opacity-20" />
+            <span
+              className="absolute h-12 w-12 animate-ping rounded-full bg-teal-500 opacity-30"
+              style={{ animationDelay: "0.4s" }}
+            />
+            <span
+              className="absolute h-7 w-7 animate-ping rounded-full bg-teal-600 opacity-40"
+              style={{ animationDelay: "0.8s" }}
+            />
+            {/* Pin dot */}
+            <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-teal-600 shadow-lg">
+              <span className="h-2 w-2 rounded-full bg-white" />
+            </span>
+          </div>
+        </Marker>
+      </Map>
+    </div>
   );
 }

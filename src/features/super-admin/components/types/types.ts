@@ -37,10 +37,9 @@ export const SORT_OPTIONS = [
 ];
 
 export const CATEGORY_OPTIONS = [
-  { value: "hospital", label: "Hospital" },
-  { value: "hospital post", label: "Hospital Post" },
-  { value: "model healthcare", label: "Model Healthcare" },
-  { value: "Health clinic", label: "Health Clinic" },
+  { value: "Health Post", label: "Health Post" },
+  { value: "Health Clinic", label: "Health Clinic" },
+  { value: "Model Primary Health Care", label: "Model Primary Health Care" },
 ];
 
 export const LGA_OPTIONS = [

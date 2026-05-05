@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Bell, Check, Search, ChevronDown } from "lucide-react";
+import { Bell, Check } from "lucide-react";
 import { useAuthStore } from "@/features/auth/auth-store";
 
 interface HeaderProps {
@@ -17,41 +17,11 @@ interface Notification {
   read: boolean;
 }
 
-// LGA data for super admin filter
-const LGAs = [
-  { value: "all", label: "All LGAs" },
-  { value: "port-harcourt", label: "Port Harcourt" },
-  { value: "obio-akpor", label: "Obio/Akpor" },
-  { value: "eleme", label: "Eleme" },
-  { value: "ikwerre", label: "Ikwerre" },
-  { value: "emohua", label: "Emohua" },
-  { value: "ahoada-east", label: "Ahoada East" },
-  { value: "ahoada-west", label: "Ahoada West" },
-  { value: "ogba-egbema-ndoni", label: "Ogba/Egbema/Ndoni" },
-  { value: "okrika", label: "Okrika" },
-  { value: "ogu-bolo", label: "Ogu/Bolo" },
-  { value: "tai", label: "Tai" },
-  { value: "gokana", label: "Gokana" },
-  { value: "khana", label: "Khana" },
-  { value: "oyigbo", label: "Oyigbo" },
-  { value: "etche", label: "Etche" },
-  { value: "omuma", label: "Omuma" },
-  { value: "abua-odual", label: "Abua/Odual" },
-  { value: "akuku-toru", label: "Akuku-Toru" },
-  { value: "asari-toru", label: "Asari-Toru" },
-  { value: "degema", label: "Degema" },
-  { value: "bonny", label: "Bonny" },
-  { value: "andoni", label: "Andoni" },
-];
-
 export default function Header({ name, className }: HeaderProps) {
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role === "super_admin";
-
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLGADropdownOpen, setIsLGADropdownOpen] = useState(false);
-  const [selectedLGA, setSelectedLGA] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: 1,
@@ -140,74 +110,6 @@ export default function Header({ name, className }: HeaderProps) {
         className,
       )}
     >
-      {/* Left Section: Title (Admin only) */}
-      {/* {!isSuperAdmin && name && (
-                <div className="flex items-center ">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        {name}
-                    </h2>
-                </div>)} */}
-
-      {/* Center Section: Search & LGA Filter (Super Admin only) */}
-      {/* {isSuperAdmin && ( */}
-      {/* <div className="flex items-center justify-start gap-4"> */}
-      {/* Search Bar */}
-      {/* <div className="relative w-96">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search facilities, staff, or analytics..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-4 pl-10 text-sm transition-all outline-none focus:bg-white focus:ring-2"
-            />
-          </div> */}
-
-      {/* LGA Filter Dropdown */}
-      {/* <div className="relative" ref={lgaDropdownRef}>
-            <button
-              onClick={() => setIsLGADropdownOpen(!isLGADropdownOpen)}
-              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
-            >
-              {LGAs.find((lga) => lga.value === selectedLGA)?.label}
-              <ChevronDown size={16} className="text-gray-400" />
-            </button> */}
-
-      {/* LGA Dropdown Menu */}
-      {/* {isLGADropdownOpen && (
-              <div className="absolute right-0 z-100 mt-2 w-56 rounded-xl border-2 border-slate-200 bg-white shadow-lg">
-                <div className="border-b border-slate-200 px-4 py-3">
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    Filter by LGA
-                  </h3>
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {LGAs.map((lga) => (
-                    <button
-                      key={lga.value}
-                      onClick={() => {
-                        setSelectedLGA(lga.value);
-                        setIsLGADropdownOpen(false);
-                      }}
-                      className={cn(
-                        "w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50",
-                        selectedLGA === lga.value &&
-                          "bg-primary/5 text-primary font-medium",
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{lga.label}</span>
-                        {selectedLGA === lga.value && <Check size={16} />}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div> */}
-      {/* )} */}
-      {/* </div> */}
-      {/* </div> */}
-      {/* )} */}
-
       {/* Right Section: Notifications */}
       <div className="flex items-center gap-4">
         {/* Notification Bell */}

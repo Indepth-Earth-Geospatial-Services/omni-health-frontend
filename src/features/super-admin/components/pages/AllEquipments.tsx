@@ -153,14 +153,14 @@ export default function EquipmentPage() {
             value={totalEquipment}
             subtitle="Unique across all facilities"
             icon={<Package size={24} />}
-            trend={{ value: "20%", isPositive: true }}
+            //trend={{ value: "20%", isPositive: true }}
           />
           <KPIStatsCards
             title="Total Infrastructure Items"
             value={totalInfrastructure}
             subtitle="Unique across all facilities"
             icon={<Building2 size={24} />}
-            trend={{ value: "2% Decrease", isPositive: false }}
+            // trend={{ value: "2% Decrease", isPositive: false }}
           />
         </div>
 

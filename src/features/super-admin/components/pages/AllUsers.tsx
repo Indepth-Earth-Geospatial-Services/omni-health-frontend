@@ -6,10 +6,10 @@ import { Calendar, Users } from "lucide-react";
 import StaffTableHeader, {
   type FilterState,
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
-import Tabs from "@/features/super-admin/components/ui/Tabs";
 import UserAndRoleList from "../layouts/UserAndRoleList";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { superAdminService } from "../../services/super-admin.service";
+import { useQuery } from "@tanstack/react-query";
 // import UserPermissionTab from "../layouts/User.PermissionTab";
 import { toast } from "sonner";
 
@@ -26,8 +26,8 @@ export default function AllUserPage() {
         add: "Click 'Add New User' button to create a new account",
         changeRole:
           "Select a user from the list and click the edit icon, then 'Change Role'",
-        suspend:
-          "Select a user from the list and click the edit icon, then 'Suspend Account'",
+        unsuspend:
+          "Select a user from the list and click the edit icon, then 'Unsuspend'",
         deactivate:
           "Select a user from the list and click the edit icon, then 'Deactivate'",
       };
@@ -48,23 +48,30 @@ export default function AllUserPage() {
     selectedStatus: "all",
   });
 
-  // Fetch all users for KPI calculations (using a large limit to get all users)
-  const { data: allUsersData } = useSuperAdminUsers({ page: 1, limit: 100 });
+  // Fetch KPI data from analytics endpoint (more efficient than fetching all users)
+  const { data: analyticsData } = useQuery({
+    queryKey: ["analytics-overview"],
+    queryFn: () => superAdminService.getAnalyticsOverview(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch sample of users for additional KPI insights
+  const { data: usersData } = useSuperAdminUsers({ page: 1, limit: 20 });
 
   // const tabs = [
   //   { label: "User Directory", value: "user-directory" },
   // { label: "Roles & Permissions", value: "roles-permissions" },
   // ];
 
-  // Calculate KPI metrics
-  const totalUsers = allUsersData?.pagination?.total_records ?? 0;
+  // Get KPI metrics from analytics endpoint (server-side)
+  const totalUsers =
+    analyticsData?.total_users ?? usersData?.pagination?.total_records ?? 0;
   const activeUsers =
-    allUsersData?.users?.filter((user) => user.is_active).length ?? 0;
+    usersData?.users?.filter((user) => user.is_active).length ?? 0;
   const inactiveUsers =
-    allUsersData?.users?.filter((user) => !user.is_active).length ?? 0;
+    usersData?.users?.filter((user) => !user.is_active).length ?? 0;
   const totalSuperAdmins =
-    allUsersData?.users?.filter((user) => user.role === "super_admin").length ??
-    0;
+    usersData?.users?.filter((user) => user.role === "super_admin").length ?? 0;
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: FilterState) => {
@@ -117,31 +124,31 @@ export default function AllUserPage() {
             value={totalUsers}
             subtitle=""
             icon={<Users size={24} />}
-            trend={{ value: "20%", isPositive: true }}
+            //trend={{ value: "20%", isPositive: true }}
           />
           <KPIStatsCards
             title="Active Users"
             value={activeUsers}
             subtitle=""
             icon={<Users size={24} />}
-            trend={{ value: "2% Decrease", isPositive: false }}
+            // trend={{ value: "2% Decrease", isPositive: false }}
           />
           <KPIStatsCards
             title="Inactive Users"
             value={inactiveUsers}
             subtitle=""
             icon={<Calendar size={24} />}
-            trend={{
-              value: inactiveUsers > 0 ? "Needs attention" : "All active",
-              isPositive: inactiveUsers === 0,
-            }}
+            // trend={{
+            //   value: inactiveUsers > 0 ? "Needs attention" : "All active",
+            //   isPositive: inactiveUsers === 0,
+            // }}
           />
           <KPIStatsCards
             title="Super Admins"
             value={totalSuperAdmins}
             subtitle=""
             icon={<Calendar size={24} />}
-            trend={{ value: "80%", isPositive: true }}
+            //trend={{ value: "80%", isPositive: true }}
           />
         </div>
 

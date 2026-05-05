@@ -1,10 +1,15 @@
 import { apiClient } from "@/lib/client";
-import type { StaffMember, StaffPagination, StaffQualification } from "@/services/admin.service";
+import type {
+  StaffMember,
+  StaffPagination,
+  StaffQualification,
+} from "@/services/admin.service";
 
 // User API Response Types
 export interface ManagedFacility {
   facility_id: string;
   facility_name: string;
+  facility_lga?: string;
 }
 
 export interface User {
@@ -13,9 +18,10 @@ export interface User {
   email: string;
   role: string;
   managed_facilities: ManagedFacility[];
+  managed_lga: Record<string, string> | null; // API: { lga_id_str: lga_name }
   created_at: string;
   is_active: boolean;
-  is_suspended?: boolean;
+  is_suspended: boolean;
 }
 
 export interface UserPagination {
@@ -33,7 +39,7 @@ export interface GetUsersResponse {
 
 export interface AssignManagerRequest {
   user_id: number;
-  facility_id: string;
+  lga_ids: number[];
 }
 
 export interface AssignManagerResponse {
@@ -216,6 +222,11 @@ export interface SearchFacilitiesByInventoryResponse {
   facilities: Facility[];
 }
 
+export interface UnassignedLga {
+  lga_id: number;
+  lga_name: string;
+}
+
 export interface AnalyticsOverviewResponse {
   total_facilities: number;
   total_users: number;
@@ -231,7 +242,8 @@ export interface FacilityAnalytics {
   staff_count: number;
 }
 
-export interface FacilitiesAnalyticsResponse extends Array<FacilityAnalytics> {}
+// export interface FacilitiesAnalyticsResponse extends Array<FacilityAnalytics> {}
+export type FacilitiesAnalyticsResponse = FacilityAnalytics[];
 
 // Notification Types
 export interface Notification {
@@ -256,9 +268,11 @@ class SuperAdminService {
     USERS: "/admin/users",
     ASSIGN_MANAGER: "/admin/assign-manager",
     DEACTIVATE_ACCOUNT: "/deactivate-account",
-    SUSPEND_USER: "/admin/users", // PATCH /admin/users/{user_id}/suspend
-    UNSUSPEND_USER: "/admin/users", // PATCH /admin/users/{user_id}/unsuspend
+    SUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/suspend
+    UNSUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/unsuspend
+    CHANGE_ROLE: "/admin/users", // PATCH /admin/users/{user_id}/role
     STAFF: "/admin/staff/all",
+    FACILITY_STAFF: "/admin/staff", // GET /admin/staff/{facility_id}
     CREATE_STAFF: "/admin/facility", // Base endpoint, facility_id will be appended
     SEARCH_STAFF: "/admin/staff", // Base endpoint for search
     DELETE_STAFF: "/admin/staff", // DELETE /admin/staff/{staff_id}
@@ -272,6 +286,9 @@ class SuperAdminService {
     ANALYTICS_FACILITIES: "/admin/analytics/facilities", // GET facilities analytics with rating and reviews
     NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
     EXPORT_FACILITIES: "/admin/export/facilities", // Export facilities to CSV or Excel
+    BULK_DELETE_FACILITIES: "/admin/facilities/bulk-delete", // DELETE bulk facilities
+    UNASSIGNED_LGAS: "/admin/lgas/unassigned",
+    UNASSIGN_LGA: "/admin/users",
   };
 
   constructor() {
@@ -285,13 +302,16 @@ class SuperAdminService {
     this.exportStaff = this.exportStaff.bind(this);
     this.exportUsers = this.exportUsers.bind(this);
     this.exportFacilities = this.exportFacilities.bind(this);
+    this.bulkDeleteFacilities = this.bulkDeleteFacilities.bind(this);
     this.searchFacilities = this.searchFacilities.bind(this);
     this.getFacilitiesByInventory = this.getFacilitiesByInventory.bind(this);
     this.getUniqueInventory = this.getUniqueInventory.bind(this);
     this.suspendUser = this.suspendUser.bind(this);
     this.unsuspendUser = this.unsuspendUser.bind(this);
+    this.changeUserRole = this.changeUserRole.bind(this);
     this.getAnalyticsOverview = this.getAnalyticsOverview.bind(this);
     this.getNotifications = this.getNotifications.bind(this);
+    this.getStaffByFacility = this.getStaffByFacility.bind(this);
   }
 
   /**
@@ -309,6 +329,22 @@ class SuperAdminService {
     const response = await apiClient.get(this.ENDPOINTS.STAFF, {
       params: { page, limit },
     });
+    return response.data;
+  }
+
+  /**
+   * Get all staff members for a specific facility
+   * GET /api/v1/admin/staff/{facility_id}
+   * Returns a plain array of StaffMember
+   */
+  async getStaffByFacility(
+    facilityId: string,
+    { skip = 0, limit = 100 }: { skip?: number; limit?: number } = {},
+  ): Promise<StaffMember[]> {
+    const response = await apiClient.get(
+      `${this.ENDPOINTS.FACILITY_STAFF}/${facilityId}`,
+      { params: { skip, limit } },
+    );
     return response.data;
   }
 
@@ -380,20 +416,16 @@ class SuperAdminService {
 
   /**
    * Deactivate a user account
-   * POST /api/v1/deactivate-account?password_confirmation=xxx
+   * POST /api/v1/deactivate-account
    * Requires authentication
    */
   async deactivateAccount(
     passwordConfirmation: string,
   ): Promise<DeactivateUserResponse> {
     try {
-      const response = await apiClient.post(
-        this.ENDPOINTS.DEACTIVATE_ACCOUNT,
-        null,
-        {
-          params: { password_confirmation: passwordConfirmation },
-        },
-      );
+      const response = await apiClient.post(this.ENDPOINTS.DEACTIVATE_ACCOUNT, {
+        password_confirmation: passwordConfirmation,
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -550,6 +582,17 @@ class SuperAdminService {
     }
   }
 
+  /**
+   * Bulk delete facilities
+   * DELETE /api/v1/admin/facilities/bulk-delete
+   * Body: { ids: string[] }
+   */
+  async bulkDeleteFacilities(ids: string[]): Promise<void> {
+    await apiClient.delete(this.ENDPOINTS.BULK_DELETE_FACILITIES, {
+      data: { ids },
+    });
+  }
+
   async searchFacilities(
     params: SearchFacilityParams,
   ): Promise<SearchFacilityResponse> {
@@ -639,7 +682,7 @@ class SuperAdminService {
 
   /**
    * Unsuspend a user account
-   * POST /api/v1/admin/users/{user_id}/unsuspend
+   * PATCH /api/v1/admin/users/{user_id}/unsuspend
    * @param userId - The ID of the user to unsuspend
    */
   async unsuspendUser(userId: string): Promise<any> {
@@ -649,9 +692,26 @@ class SuperAdminService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error unsuspending user:", error);
+      console.error("Error lifting suspension for user:", error);
       throw error;
     }
+  }
+
+  /**
+   * Change a user's role
+   * PATCH /api/v1/admin/users/{user_id}/role
+   * @param userId - The ID of the user
+   * @param role - New role: "user" | "admin" | "super_admin"
+   */
+  async changeUserRole(
+    userId: string,
+    role: string,
+  ): Promise<{ message: string }> {
+    const response = await apiClient.patch(
+      `${this.ENDPOINTS.CHANGE_ROLE}/${userId}/role`,
+      { role },
+    );
+    return response.data;
   }
 
   /**
@@ -699,6 +759,32 @@ class SuperAdminService {
       console.error("Error fetching notifications:", error);
       throw error;
     }
+  }
+
+  /**
+   * Get all LGAs that have no facilities assigned to any user/admin
+   * GET /api/v1/admin/lgas/unassigned
+   */
+  async getUnassignedLgas(): Promise<UnassignedLga[]> {
+    const response = await apiClient.get(this.ENDPOINTS.UNASSIGNED_LGAS);
+    return response.data;
+  }
+
+  /**
+   * Remove all facility assignments for a user within a given LGA
+   * DELETE /api/v1/admin/users/{user_id}/lgas/{lga_id}
+   */
+  async unassignLga({
+    userId,
+    lgaId,
+  }: {
+    userId: number;
+    lgaId: number;
+  }): Promise<string> {
+    const response = await apiClient.delete(
+      `${this.ENDPOINTS.UNASSIGN_LGA}/${userId}/lgas/${lgaId}`,
+    );
+    return response.data;
   }
 }
 

@@ -73,7 +73,7 @@ export default function Navbar() {
               size="lg"
               className="text-primary rounded-full bg-white px-6 py-4 text-base font-semibold transition-all hover:scale-105 hover:bg-white/90 lg:px-8 lg:py-6 lg:text-lg"
             >
-              <Link href="/user">Get Started</Link>
+              <Link href="/user">Find Facility</Link>
             </Button>
           </div>
         </div>

@@ -1,33 +1,55 @@
 "use client";
 
 import { create } from "zustand";
-
-const AUTH_STORAGE_KEY = "omni_health_auth";
-const AUTH_COOKIE_NAME = "omni_health_token";
-const AUTH_DATA_COOKIE_NAME = "omni_health_auth_data";
-
-// Cookie helper functions for middleware access
-function setCookie(name: string, value: string, days: number = 7): void {
-  if (typeof document === "undefined") return;
-  const expires = new Date();
-  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
-}
+import { isTokenExpired, decodeJWT } from "@/lib/token";
+import {
+  AUTH_STORAGE_KEY,
+  AUTH_COOKIE_NAME,
+  AUTH_DATA_COOKIE_NAME,
+} from "@/lib/auth-constants";
+import { authService } from "@/services/auth.service";
 
 function deleteCookie(name: string): void {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
 }
 
+// Proactive token refresh — fires 60 s before the access token expires so users
+// are never logged out mid-session due to token age during idle periods.
+let _refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearRefreshTimer() {
+  if (_refreshTimer !== null) {
+    clearTimeout(_refreshTimer);
+    _refreshTimer = null;
+  }
+}
+
+function scheduleTokenRefresh(token: string, refreshFn: () => Promise<void>) {
+  clearRefreshTimer();
+  if (typeof window === "undefined") return;
+  const payload = decodeJWT(token);
+  if (!payload?.exp) return;
+  const msUntilRefresh = payload.exp * 1000 - Date.now() - 60_000;
+  if (msUntilRefresh <= 0) return;
+  _refreshTimer = setTimeout(() => {
+    refreshFn().catch(() => {
+      // Refresh failure is handled by the 401 interceptor in apiClient
+    });
+  }, msUntilRefresh);
+}
+
+export type UserRole = "admin" | "super_admin" | "user";
+
 export interface User {
   user_id: number;
   email: string;
   first_name: string | null;
   last_name: string | null;
-  role: "admin" | "super_admin" | "user";
+  role: UserRole;
   is_active: boolean;
   created_at: string;
-  phone?: string | number;
+  phone?: string; // ✅ Fixed: use string only (backend returns string)
   image?: string;
 }
 
@@ -35,6 +57,7 @@ interface AuthState {
   token: string | null;
   user: User | null;
   facilityIds: string[] | null;
+  assigned_lgas: string[] | null;
   currentFacilityId: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
@@ -42,8 +65,10 @@ interface AuthState {
 }
 
 interface AuthActions {
-  login: (token: string, facilityIds: string[], user?: User) => void;
-  logout: () => void;
+  login: (token: string, facilityIds: string[], user: User, assigned_lgas?: string[] | null) => void; // ✅ user is now required, assigned_lgas optional
+  logout: () => Promise<void>;
+  refreshToken: () => Promise<void>;
+  updateToken: (newToken: string) => void;
   setUser: (user: User) => void;
   setCurrentFacilityId: (id: string) => void;
   setPendingFacilitySelection: (pending: boolean) => void;
@@ -56,6 +81,7 @@ const initialState: AuthState = {
   token: null,
   user: null,
   facilityIds: null,
+  assigned_lgas: null,
   currentFacilityId: null,
   isAuthenticated: false,
   isHydrated: false,
@@ -65,15 +91,15 @@ const initialState: AuthState = {
 export const useAuthStore = create<AuthStore>((set, get) => ({
   ...initialState,
 
-  login: (token: string, facilityIds: string[], user?: User) => {
-    // If Admin has multiple facilities, we flag it as pending so the modal shows
-    const isMultiFacilityAdmin =
-      user?.role === "admin" && facilityIds && facilityIds.length > 1;
+  login: (token: string, facilityIds: string[], user: User, assigned_lgas?: string[] | null) => {
+    if (!token || !user) {
+      console.error("Invalid login parameters", { token, user, facilityIds });
+      return;
+    }
 
-    // Default to the first facility only if they aren't forced to choose via modal
-    const currentFacilityId = isMultiFacilityAdmin
-      ? null
-      : facilityIds?.[0] || null;
+    const isMultiFacilityAdmin = user.role === "admin" && facilityIds.length > 1;
+
+    const currentFacilityId = isMultiFacilityAdmin ? null : (facilityIds[0] ?? null);
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
@@ -81,33 +107,37 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         JSON.stringify({
           token,
           facilityIds,
+          assigned_lgas: assigned_lgas || null,
           user,
           currentFacilityId,
           pendingFacilitySelection: isMultiFacilityAdmin,
         }),
       );
 
-      setCookie(AUTH_COOKIE_NAME, token, 7);
-      setCookie(
-        AUTH_DATA_COOKIE_NAME,
-        JSON.stringify({ role: user?.role, facilityIds }),
-        7,
-      );
+      // Write cookies so the proxy (middleware) can enforce route protection.
+      // No expiry = session cookies — cleared when the browser closes.
+      document.cookie = `${AUTH_COOKIE_NAME}=${token};path=/;SameSite=Strict`;
+      // Role is taken from the API response body (not the JWT), so we store it
+      // in a separate cookie for the proxy to read.
+      document.cookie = `${AUTH_DATA_COOKIE_NAME}=${encodeURIComponent(JSON.stringify({ role: user?.role }))};path=/;SameSite=Strict`;
     }
 
     set({
       token,
       facilityIds,
       currentFacilityId,
+      assigned_lgas: assigned_lgas || null,
       user: user || null,
       isAuthenticated: true,
       isHydrated: true,
       pendingFacilitySelection: isMultiFacilityAdmin,
     });
+
+    scheduleTokenRefresh(token, get().refreshToken);
   },
 
   setPendingFacilitySelection: (pending: boolean) => {
-    const { token, facilityIds, user, currentFacilityId } = get();
+    const { token, facilityIds, assigned_lgas, user, currentFacilityId } = get();
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
@@ -115,6 +145,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         JSON.stringify({
           token,
           facilityIds,
+          assigned_lgas,
           user,
           currentFacilityId,
           pendingFacilitySelection: pending,
@@ -125,9 +156,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   setCurrentFacilityId: (id: string) => {
-    const { facilityIds, token, user } = get();
+    const { facilityIds, assigned_lgas, token, user } = get();
 
-    if (!facilityIds?.includes(id)) return;
+    // ✅ Validate facility ID exists in user's facilities
+    if (!facilityIds?.includes(id)) {
+      console.warn(
+        `Attempted to set invalid facility ID: ${id}. Available: ${facilityIds?.join(", ")}`,
+      );
+      return;
+    }
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
@@ -135,6 +172,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         JSON.stringify({
           token,
           facilityIds,
+          assigned_lgas,
           user,
           currentFacilityId: id,
           pendingFacilitySelection: false, // Crucial: clear pending state here
@@ -148,25 +186,85 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     });
   },
 
-  logout: () => {
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      deleteCookie(AUTH_COOKIE_NAME);
-      deleteCookie(AUTH_DATA_COOKIE_NAME);
-    }
+  logout: async () => {
+    clearRefreshTimer();
+    const { token } = get();
+    try {
+      await authService.logout(token ?? undefined);
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      // ✅ Clear local storage and cookies
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        deleteCookie(AUTH_COOKIE_NAME);
+        deleteCookie(AUTH_DATA_COOKIE_NAME);
+      }
 
-    set({
-      ...initialState,
-      isHydrated: true,
-    });
+      set({
+        ...initialState,
+        isHydrated: true,
+      });
 
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("auth:logout"));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth:logout"));
+      }
     }
   },
 
+  refreshToken: async () => {
+    const { token } = get();
+    if (!token) throw new Error("No token available to refresh");
+
+    // Throws on failure — callers (e.g. the apiClient interceptor) handle logout
+    const { access_token } = await authService.refreshToken(token);
+
+    const { facilityIds, assigned_lgas, user, currentFacilityId, pendingFacilitySelection } = get();
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          token: access_token,
+          facilityIds,
+          assigned_lgas,
+          user,
+          currentFacilityId,
+          pendingFacilitySelection,
+        }),
+      );
+      document.cookie = `${AUTH_COOKIE_NAME}=${access_token};path=/;SameSite=Strict`;
+    }
+
+    set({ token: access_token });
+    scheduleTokenRefresh(access_token, get().refreshToken);
+  },
+
+  updateToken: (newToken: string) => {
+    const { facilityIds, assigned_lgas, user, currentFacilityId, pendingFacilitySelection } = get();
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify({
+          token: newToken,
+          facilityIds,
+          assigned_lgas,
+          user,
+          currentFacilityId,
+          pendingFacilitySelection,
+        }),
+      );
+
+      // ✅ Update token cookie
+      document.cookie = `${AUTH_COOKIE_NAME}=${newToken};path=/;SameSite=Strict`;
+    }
+
+    set({ token: newToken });
+  },
+
   setUser: (user: User) => {
-    const { token, facilityIds, currentFacilityId, pendingFacilitySelection } =
+    const { token, facilityIds, assigned_lgas, currentFacilityId, pendingFacilitySelection } =
       get();
 
     if (typeof window !== "undefined" && token) {
@@ -175,16 +273,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         JSON.stringify({
           token,
           facilityIds,
+          assigned_lgas,
           user,
           currentFacilityId,
           pendingFacilitySelection,
         }),
-      );
-
-      setCookie(
-        AUTH_DATA_COOKIE_NAME,
-        JSON.stringify({ role: user.role, facilityIds }),
-        7,
       );
     }
 
@@ -216,6 +309,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isAuthenticated: !!data.token,
           isHydrated: true,
         });
+
+        if (data.token) {
+          scheduleTokenRefresh(data.token, get().refreshToken);
+        }
       } else {
         set({ ...initialState, isHydrated: true });
       }
@@ -225,18 +322,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 }));
 
-// Helper to check if JWT token is expired
-function isTokenExpired(token: string): boolean {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(base64));
-    return Date.now() >= payload.exp * 1000 - 5000;
-  } catch {
-    return true;
-  }
-}
-
 export const useCurrentFacilityId = (): string => {
   const { currentFacilityId, facilityIds } = useAuthStore();
   return (
@@ -245,12 +330,11 @@ export const useCurrentFacilityId = (): string => {
   );
 };
 
-export function getRedirectPath(
-  facilityIds: string[] | null,
-  userRole?: string,
-): string {
-  if (userRole === "super_admin") return "/super-admin/dashboard";
-  if (userRole === "admin" && facilityIds && facilityIds.length > 0)
-    return "/admin";
-  return "/user";
-}
+/**
+ * Hook to access user's assigned LGAs
+ * Primarily used for ADMIN role to know which Local Government Areas they manage
+ */
+export const useAssignedLgas = (): string[] => {
+  const { assigned_lgas } = useAuthStore();
+  return assigned_lgas || [];
+};

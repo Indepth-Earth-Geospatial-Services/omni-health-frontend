@@ -5,8 +5,6 @@ import {
   UserCog,
   Hospital,
   Settings,
-  Search,
-  Loader2,
   Map,
   ChevronRight,
   MailOpen,
@@ -17,7 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
-import ProfileModal from "../modals/ProfileModal";
+import ProfileModal from "../../../profile/pages/ProfileModal";
 
 const adminMenuItems = [
   { label: "Overview", icon: MailOpen, href: "/admin" },
@@ -48,9 +46,6 @@ export default function Sidebar() {
     useFacility(facilityId);
   const facility = facilityData?.facility;
 
-  // Get Facility Image (if available)
-  const facilityImage = facility?.image_urls?.[0];
-
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white shadow-lg">
       {/* Brand */}
@@ -69,15 +64,36 @@ export default function Sidebar() {
           </h1>
         </div>
       </Link>
-      {/* Search Bar */}
-      <div className="px-4 py-4">
-        <div className="focus-within:border-primary flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 transition-all duration-200 focus-within:bg-white">
-          <Search size={16} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+      {/* Active Facility Badge */}
+      <div className="my-4 px-4 py-3">
+        <div className="relative overflow-hidden rounded-xl p-0.5">
+          {/* Spinning conic-gradient — forms the animated rotating border */}
+          <div
+            className="absolute -inset-[50%] animate-spin"
+            style={{
+              background:
+                "conic-gradient(rgba(81,161,153,0.12) 0deg, rgba(81,161,153,0.85) 90deg, rgba(10,161,80,0.95) 180deg, rgba(81,161,153,0.85) 270deg, rgba(81,161,153,0.12) 360deg)",
+              animationDuration: "4s",
+            }}
           />
+          {/* Inner card */}
+          <div className="relative rounded-[10px] bg-white px-3 py-2.5">
+            <p className="text-primary/70 text-[9px] font-semibold tracking-widest uppercase">
+              Active Facility
+            </p>
+            {isFacilityLoading ? (
+              <div className="mt-1 h-4 w-32 animate-pulse rounded bg-gray-100" />
+            ) : (
+              <div>
+                <p className="mt-0.5 truncate text-sm font-bold text-gray-800">
+                  {facility?.facility_name || "No Facility"}
+                </p>
+                <p className="truncate text-[9px] text-gray-500">
+                  {facility?.facility_category || "Unknown Category"}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -179,54 +195,28 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* Facility Profile - Clickable */}
-      <div className="p-4">
+      {/* User Profile - Clickable */}
+      <div className="border-t border-gray-100 p-4">
         <button
           onClick={() => setIsProfileModalOpen(true)}
           className="group flex w-full items-center gap-3 rounded-lg p-2 transition-all duration-200 hover:bg-gray-100"
         >
-          <div className="flex-shrink-0">
-            {isFacilityLoading ? (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                <Loader2 size={16} className="animate-spin text-gray-400" />
-              </div>
-            ) : facilityImage ? (
-              /* --- NEW: Display Image if available --- */
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-200">
-                <Image
-                  src={facilityImage}
-                  alt={facility?.facility_name || "Facility"}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : (
-              /* Fallback to Initials */
-              <div className="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold">
-                {facility?.facility_name
-                  ?.split(" ")
-                  .slice(0, 2)
-                  .map((n: string) => n[0])
-                  .join("") || "F"}
-              </div>
-            )}
+          {/* User avatar — initials from name, falls back to email initial */}
+          <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
+            {user?.first_name && user?.last_name
+              ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+              : user?.email?.[0]?.toUpperCase() || "U"}
           </div>
+
           <div className="flex-1 overflow-hidden text-left">
-            {isFacilityLoading ? (
-              <>
-                <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                <div className="mt-1 h-3 w-16 animate-pulse rounded bg-gray-100" />
-              </>
-            ) : (
-              <>
-                <p className="truncate text-sm font-medium text-gray-900">
-                  {facility?.facility_name || "No Facility"}
-                </p>
-                <p className="truncate text-xs text-gray-500">
-                  {facility?.facility_category || "Unknown Category"}
-                </p>
-              </>
-            )}
+            <p className="truncate text-sm font-semibold text-gray-900">
+              {user?.first_name || user?.last_name
+                ? `${user?.first_name || ""} ${user?.last_name || ""}`.trim()
+                : "My Account"}
+            </p>
+            <p className="truncate text-xs text-gray-500">
+              {user?.email || ""}
+            </p>
           </div>
           <ChevronRight
             size={16}

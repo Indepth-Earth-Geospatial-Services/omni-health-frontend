@@ -15,6 +15,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+// Import the hook
+import { useAssignedLgas } from "@/features/auth/auth-store";
+
+// Use in your component
+//const assignedLgas = useAssignedLgas(); // Returns string[]
+// Example: ["LGA1", "LGA2", "LGA3"]
 import { toast } from "sonner";
 
 const PRIMARY_COLOR = "#51a199";

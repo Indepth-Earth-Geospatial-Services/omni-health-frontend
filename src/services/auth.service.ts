@@ -13,6 +13,7 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   facility_ids: string[];
+  assigned_lgas: string[] | null; // ✅ New field for assigned LGAs
   full_name: string;
   email: string;
   role: "user" | "admin" | "super_admin";
@@ -41,6 +42,15 @@ export interface ResendOtpResponse {
   message: string;
   email: string;
   expires_in_minutes: number;
+}
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export interface LogoutResponse {
+  message: string;
 }
 
 // ✅ REMOVED: export interface RegisterResponse extends User {}
@@ -232,6 +242,57 @@ class AuthService {
         },
       );
 
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Refresh the access token.
+   * POST /api/v1/refresh
+   * Sends the current (possibly expired) Bearer token so the backend can
+   * identify the session and issue a fresh access token.
+   */
+  async refreshToken(currentToken: string): Promise<RefreshTokenResponse> {
+    try {
+      const response = await axios.post<RefreshTokenResponse>(
+        `${this.baseUrl}/refresh`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  }
+
+  /**
+   * Logout user and invalidate session on backend
+   * POST /api/v1/logout
+   * Backend handles token invalidation and cleanup
+   */
+  async logout(token?: string): Promise<LogoutResponse> {
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await axios.post<LogoutResponse>(
+        `${this.baseUrl}/logout`,
+        {},
+        { headers },
+      );
       return response.data;
     } catch (error) {
       throw handleApiError(error);

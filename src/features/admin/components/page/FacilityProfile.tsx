@@ -29,7 +29,6 @@ import {
 const SECTIONS = [
   { id: "facilityOverview", label: "Facility Overview", defaultOpen: true },
   { id: "operatingHours", label: "Operating Hours", defaultOpen: true },
-  { id: "staffInventory", label: "Staff Inventory", defaultOpen: true },
   { id: "services", label: "Services", defaultOpen: true },
   { id: "specialists", label: "Specialists", defaultOpen: true },
   { id: "activity", label: "Activity", defaultOpen: true },
@@ -46,44 +45,29 @@ export default function FacilityProfile() {
 
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  const getWeekdayHours = () => {
-    if (!facility?.working_hours) return "Not available";
-    const { monday } = facility.working_hours;
-    if (!monday) return "Not available";
-    return formatTimeRange(monday);
-  };
-
-  const getWeekendHours = () => {
-    if (!facility?.working_hours) return "Not available";
-    const { saturday } = facility.working_hours;
-    if (!saturday || saturday === "Closed") return "Closed";
-    return formatTimeRange(saturday);
-  };
 
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="w-full">
-        <div className="mb-6 flex justify-end">
-          <Button
-            type="button"
-            variant="default"
-            size="xl"
-            className="text-lg"
-            onClick={() => setIsEditModalOpen(true)}
-          >
-            <Calendar size={18} />
-            Edit Profile
-          </Button>
-        </div>
-
-        <EditFacilityProfileModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          facilityId={facilityId}
-          currentData={facility}
-        />
+      <div className="mb-6 flex items-center justify-end">
+        <Button
+          type="button"
+          variant="default"
+          size="xl"
+          className="text-lg"
+          onClick={() => setIsEditModalOpen(true)}
+        >
+          <Calendar size={18} />
+          Edit Profile
+        </Button>
       </div>
+
+      <EditFacilityProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        facilityId={facilityId}
+        currentData={facility}
+      />
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -113,15 +97,14 @@ export default function FacilityProfile() {
             onToggle={() => sections.toggle("operatingHours")}
           >
             <OperatingHoursContent
-              weekdayHours={getWeekdayHours()}
-              weekendHours={getWeekendHours()}
+              workingHours={facility?.working_hours as Record<string, string> | undefined}
               isLoading={isLoading}
               isError={isError}
             />
           </CollapsibleSection>
 
           {/* Staff Inventory */}
-          <CollapsibleSection
+          {/* <CollapsibleSection
             title="Staff Inventory"
             description="Number of Staff"
             icon={<Users size={20} className="text-slate-600" />}
@@ -130,7 +113,7 @@ export default function FacilityProfile() {
             maxHeight="360px"
           >
             <StaffInventoryContent />
-          </CollapsibleSection>
+          </CollapsibleSection> */}
 
           {/* Services */}
           <CollapsibleSection
@@ -139,7 +122,7 @@ export default function FacilityProfile() {
             icon={<Stethoscope size={20} className="text-slate-600" />}
             isOpen={sections.isOpen("services")}
             onToggle={() => sections.toggle("services")}
-            maxHeight="342px"
+            maxHeight="600px"
           >
             <ServicesContent
               services={facility?.services_list}
@@ -197,8 +180,8 @@ interface FacilityData {
   address?: string;
   lat?: number;
   lon?: number;
-  average_rating?: number;
-  total_reviews?: number;
+  // average_rating?: number;
+  // total_reviews?: number;
   last_updated?: string | Date;
   working_hours?: {
     monday?: string;
@@ -281,7 +264,7 @@ function FacilityOverviewContent({
               </span>
             </div>
           </div>
-          <div>
+          {/* <div>
             <label className="mb-1 block text-sm text-slate-500">
               Average Rating
             </label>
@@ -294,7 +277,7 @@ function FacilityOverviewContent({
                 ({facility?.total_reviews || 0} reviews)
               </span>
             </div>
-          </div>
+          </div> */}
           <FieldDisplay
             label="Last Updated"
             value={formatDate(String(facility?.last_updated || ""))}
@@ -339,71 +322,84 @@ function FieldDisplay({
 }
 
 function OperatingHoursContent({
-  weekdayHours,
-  weekendHours,
+  workingHours,
   isLoading,
   isError,
 }: {
-  weekdayHours: string;
-  weekendHours: string;
+  workingHours: Record<string, string> | undefined;
   isLoading: boolean;
   isError: boolean;
 }) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-3 pt-4">
-        <LoadingSkeleton className="h-14 w-full rounded-xl" />
-        <LoadingSkeleton className="h-14 w-full rounded-xl" />
+      <div className="space-y-2 pt-4">
+        {[1, 2, 3, 4].map((i) => (
+          <LoadingSkeleton key={i} className="h-9 w-full rounded-lg" />
+        ))}
       </div>
     );
   }
 
   if (isError) {
     return (
-      <p className="pt-4 text-sm text-red-500">
-        Failed to load operating hours
+      <p className="pt-4 text-sm text-red-500">Failed to load operating hours</p>
+    );
+  }
+
+  const entries = workingHours ? Object.entries(workingHours) : [];
+
+  if (entries.length === 0) {
+    return (
+      <p className="pt-4 text-center text-sm text-slate-400">
+        No operating hours set
       </p>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 pt-4">
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-6">
-        <p className="mb-0.5 py-2 text-[16px] text-slate-500">
-          Weekdays (Mon - Fri)
-        </p>
-        <p className="font-giest text-[24px] font-medium text-slate-900">
-          {weekdayHours}
-        </p>
-      </div>
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-6">
-        <p className="mb-0.5 py-2 text-[16px] text-slate-500">
-          Weekends (Sat - Sun)
-        </p>
-        <p className="font-giest text-[24px] font-medium text-slate-900">
-          {weekendHours}
-        </p>
-      </div>
+    <div className="space-y-1.5 pt-4">
+      {entries.map(([day, hours]) => {
+        const isClosed = !hours || hours.toLowerCase() === "closed";
+        return (
+          <div
+            key={day}
+            className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-2.5"
+          >
+            <span className="text-sm font-medium capitalize text-slate-700">
+              {day}
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                isClosed
+                  ? "bg-red-50 text-red-500"
+                  : "bg-green-50 text-green-600"
+              }`}
+            >
+              {isClosed ? "Closed" : formatTimeRange(hours)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function StaffInventoryContent() {
-  return (
-    <div className="py-8 text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-        <Users size={28} className="text-[#868C98]" />
-      </div>
-      <p className="font-geist mb-1 text-[15px] font-normal text-[#868C98]">
-        Staff inventory data is not available
-      </p>
-      <p className="font-geist text-[13px] font-normal text-[#868C98]/70">
-        Staff category counts will appear here once the data is provided by the
-        backend.
-      </p>
-    </div>
-  );
-}
+// function StaffInventoryContent() {
+//   return (
+//     <div className="py-8 text-center">
+//       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+//         <Users size={28} className="text-[#868C98]" />
+//       </div>
+//       <p className="font-geist mb-1 text-[15px] font-normal text-[#868C98]">
+//         Staff inventory data is not available
+//       </p>
+//       <p className="font-geist text-[13px] font-normal text-[#868C98]/70">
+//         Staff category counts will appear here once the data is provided by the
+//         backend.
+//       </p>
+//     </div>
+//   );
+// }
 
 function ServicesContent({
   services,

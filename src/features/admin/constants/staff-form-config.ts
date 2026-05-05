@@ -22,12 +22,11 @@ export const FIELD_LABEL_MAP: Record<string, string> = {
   rank_cadre: "Rank/Cadre",
   grade_level: "Grade Level (G/L)",
   qualifications: "Qualifications",
-  qualification_date: "Qualification Date",
   date_first_appointment: "Date of First Appointment",
-  confirmation_of_appointment: "Confirmation of Appointment",
-  date_of_present_appointment: "Date of Present Appointment",
+  date_confirmation: "Confirmation of Appointment",
+  date_present_appointment: "Date of Present Appointment",
   date_of_birth: "Date of Birth",
-  lga_of_origin: "LGA of Origin",
+  lga_origin: "LGA of Origin",
   years_in_present_station: "Years in Present Station",
   phone_number: "Phone Number",
   email: "Email Address",
@@ -42,13 +41,12 @@ export const FIELD_TYPE_MAP: Record<string, FieldConfig["type"]> = {
   rank_cadre: "text",
   grade_level: "text",
   qualifications: "text",
-  qualification_date: "date",
   date_first_appointment: "date",
-  confirmation_of_appointment: "date",
-  date_of_present_appointment: "date",
+  date_confirmation: "date",
+  date_present_appointment: "date",
   date_of_birth: "date",
-  lga_of_origin: "text",
-  years_in_present_station: "number",
+  lga_origin: "text",
+  years_in_present_station: "text",
   phone_number: "tel",
   email: "email",
   is_active: "select",
@@ -90,12 +88,11 @@ export const FIELD_ORDER = [
   "rank_cadre",
   "grade_level",
   "qualifications",
-  "qualification_date",
   "date_first_appointment",
-  "confirmation_of_appointment",
-  "date_of_present_appointment",
+  "date_confirmation",
+  "date_present_appointment",
   "date_of_birth",
-  "lga_of_origin",
+  "lga_origin",
   "years_in_present_station",
   "phone_number",
   "email",
@@ -103,15 +100,19 @@ export const FIELD_ORDER = [
   "remark",
 ];
 
+const FIELD_PLACEHOLDER_MAP: Record<string, string> = {
+  qualifications: "e.g. MBBS:2010, BSc:2015 (name:year, comma separated)",
+  phone_number: "e.g. 08012345678",
+};
+
 // Generate a single field config from a schema key
 export function generateFieldConfig(key: string): FieldConfig {
+  const label = FIELD_LABEL_MAP[key] || key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
   return {
     name: key,
-    label:
-      FIELD_LABEL_MAP[key] ||
-      key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+    label,
     type: FIELD_TYPE_MAP[key] || "text",
-    placeholder: `Enter ${(FIELD_LABEL_MAP[key] || key.replace(/_/g, " ")).toLowerCase()}`,
+    placeholder: FIELD_PLACEHOLDER_MAP[key] ?? `Enter ${label.toLowerCase()}`,
     required: REQUIRED_FIELDS.includes(key),
     options: FIELD_OPTIONS_MAP[key],
     fullWidth: FULL_WIDTH_FIELDS.includes(key),
@@ -135,30 +136,24 @@ export function transformFormDataForApi(
   return Object.entries(formData).reduce(
     (acc, [key, value]) => {
       if (value !== "" && value !== null && value !== undefined) {
-        if (
-          key === "qualifications" &&
-          typeof value === "string" &&
-          value.trim()
-        ) {
-          // Convert comma-separated string to object: { "BSc": {}, "RN": {} }
-          const qualArray = value
+        if (key === "qualifications" && typeof value === "string" && value.trim()) {
+          // Convert "name:year" comma-separated string to [{qualification, year}]
+          acc[key] = value
             .split(",")
             .map((q) => q.trim())
-            .filter(Boolean);
-          acc[key] = qualArray.reduce(
-            (obj, qual) => {
-              obj[qual] = {};
-              return obj;
-            },
-            {} as Record<string, unknown>,
-          );
+            .filter(Boolean)
+            .map((q) => {
+              const [qualification, yearStr] = q.split(":").map((s) => s.trim());
+              const year = yearStr ? parseInt(yearStr, 10) : 0;
+              return { qualification, year };
+            });
+        } else if (key === "phone_number" && typeof value === "string" && value.trim()) {
+          // Send phone_number as string[]
+          acc[key] = value.split(",").map((p) => p.trim()).filter(Boolean);
         } else if (key === "gender") {
           acc[key] = value === "Male" ? "M" : value === "Female" ? "F" : value;
         } else if (key === "is_active") {
           acc[key] = value === "Active";
-        } else if (key === "years_in_present_station") {
-          const numVal = Number(value);
-          if (!isNaN(numVal)) acc[key] = numVal;
         } else {
           acc[key] = value;
         }

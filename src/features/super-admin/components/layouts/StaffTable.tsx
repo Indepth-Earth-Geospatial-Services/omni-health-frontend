@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpDown, Loader2 } from "lucide-react";
+import { ArrowUpDown, Loader2, MinusSquare } from "lucide-react";
 import { toast } from "sonner";
 import TableHeaders, { FilterState } from "./StaffTableHeader";
 import AddStaffModal from "../modals/AddStaffModal";
@@ -92,8 +92,13 @@ const StaffTables = () => {
   });
 
   const updateStaffMutation = useMutation({
-    mutationFn: ({ staffId, data }: { staffId: string; data: Record<string, unknown> }) =>
-      superAdminService.updateStaff(staffId, data),
+    mutationFn: ({
+      staffId,
+      data,
+    }: {
+      staffId: string;
+      data: Record<string, unknown>;
+    }) => superAdminService.updateStaff(staffId, data),
     onSuccess: () => {
       toast.success("Staff member updated successfully");
       queryClient.invalidateQueries({ queryKey: ["all-staff"] });
@@ -199,13 +204,16 @@ const StaffTables = () => {
         onFiltersChange={handleFiltersChange}
       />
       <div className="w-full rounded-xl border border-slate-200 bg-white">
-        <div
-          className="relative overflow-auto"
-          style={{ maxHeight: "720px" }}
-        >
+        <div className="relative overflow-auto" style={{ maxHeight: "720px" }}>
           <table className="w-full border-collapse text-left">
             <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
+                <th className="w-12 p-4">
+                  <MinusSquare
+                    size={18}
+                    className="rounded bg-teal-50 text-teal-500"
+                  />
+                </th>
                 <th className="w-12 p-4 text-[11.38px] font-medium text-[#475467]">
                   S/NO
                 </th>
@@ -259,10 +267,7 @@ const StaffTables = () => {
             <tbody>
               {staff.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={15}
-                    className="p-8 text-center text-slate-500"
-                  >
+                  <td colSpan={15} className="p-8 text-center text-slate-500">
                     <div className="flex h-64 flex-col items-center justify-center">
                       <p>No staff members found</p>
                     </div>
