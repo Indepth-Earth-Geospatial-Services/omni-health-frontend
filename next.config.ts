@@ -1,18 +1,23 @@
 import type { NextConfig } from "next";
 
+// Read from env so the backend URL is never hardcoded — change BACKEND_URL in
+// .env to point to a different deployment without touching this file.
+const BACKEND_URL =
+  process.env.BACKEND_URL ??
+  "https://omni-health-backend-85732036737.africa-south1.run.app";
+
 const nextConfig: NextConfig = {
-  /* config options here */
   reactStrictMode: true,
 
   async rewrites() {
     return [
       {
         source: "/api/v1/:path*",
-        destination: "https://omni-health-backend.onrender.com/api/v1/:path*",
+        destination: `${BACKEND_URL}/api/v1/:path*`,
       },
       {
         source: "/api/backend/:path*",
-        destination: "https://omni-health-backend.onrender.com/api/v1/:path*",
+        destination: `${BACKEND_URL}/api/v1/:path*`,
       },
     ];
   },

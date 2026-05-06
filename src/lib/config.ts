@@ -3,9 +3,9 @@ export interface Config {
 }
 
 const config: Config = {
-  // Always use the Next.js rewrite proxy path so browser requests never hit
-  // the backend directly (avoids CORS). The rewrite in next.config.ts forwards
-  // /api/v1/* → https://omni-health-backend.onrender.com/api/v1/* server-side.
+  // NEXT_PUBLIC_API_URL is set to "/api/v1" in .env.
+  // Next.js rewrites /api/v1/* → real backend URL server-side (see next.config.ts).
+  // This keeps all browser requests same-origin and eliminates CORS entirely.
   API_BASE_URL: process.env.NEXT_PUBLIC_API_URL ?? "/api/v1",
 };
 

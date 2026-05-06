@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import {
   superAdminService,
   type GetUsersResponse,
@@ -59,18 +59,21 @@ export const useSuperAdminStaff = (page: number = 1, limit: number = 10) => {
  * Custom hook to search and filter facilities
  * connect to /api/v1/facilities/search via superAdminService
  */
-export const useFacilities = (params: SearchFacilityParams) => {
+export const useFacilities = (
+  params: SearchFacilityParams,
+  options?: Partial<UseQueryOptions<SearchFacilityResponse>>,
+) => {
   return useQuery<SearchFacilityResponse>({
     // IMPORTANT: 'params' must be in the queryKey so the hook refetches when filters change
     queryKey: ["facilities", params],
 
     queryFn: async () => {
-      // Calls the search method in superAdminService
       return superAdminService.searchFacilities(params);
     },
 
     staleTime: 1000 * 60 * 5, // 5 minutes
-    placeholderData: (previousData) => previousData, // Keeps table stable while loading new filter results
+    placeholderData: (previousData) => previousData,
+    ...options,
   });
 };
 

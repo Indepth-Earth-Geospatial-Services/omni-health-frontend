@@ -1,6 +1,7 @@
 import axios from "axios";
 import { handleApiError } from "@/lib/utils";
 import type { User } from "@/features/auth/auth-store";
+import config from "@/lib/config";
 
 // Types for API requests/responses
 export interface LoginRequest {
@@ -60,7 +61,7 @@ class AuthService {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = "/api/v1";
+    this.baseUrl = config.API_BASE_URL;
   }
 
   /**
@@ -148,16 +149,17 @@ class AuthService {
 
   /**
    * Resend OTP verification code
-   * Uses query parameter as required by the API
+   * Sends email in both query param and body to support either API contract.
    */
   async resendOtp(email: string): Promise<ResendOtpResponse> {
     try {
       const response = await axios.post<ResendOtpResponse>(
         `${this.baseUrl}/resend-otp`,
-        null,
+        { email },
         {
           params: { email },
           headers: {
+            "Content-Type": "application/json",
             Accept: "application/json",
           },
         },

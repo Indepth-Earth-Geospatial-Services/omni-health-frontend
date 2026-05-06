@@ -112,7 +112,7 @@ export default function Sidebar() {
             const isActive = pathname === item.href;
 
             return (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
                 className={cn(
@@ -124,7 +124,7 @@ export default function Sidebar() {
               >
                 <Icon size={18} />
                 <span className="truncate">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -143,7 +143,7 @@ export default function Sidebar() {
             const isActive = pathname === item.href;
 
             return (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
                 className={cn(
@@ -155,7 +155,7 @@ export default function Sidebar() {
               >
                 <Icon size={18} />
                 <span className="truncate">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -175,7 +175,7 @@ export default function Sidebar() {
                 const isActive = pathname === item.href;
 
                 return (
-                  <a
+                  <Link
                     key={item.label}
                     href={item.href}
                     className={cn(
@@ -187,7 +187,7 @@ export default function Sidebar() {
                   >
                     <Icon size={18} />
                     <span className="truncate">{item.label}</span>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
