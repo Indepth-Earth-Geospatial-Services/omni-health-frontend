@@ -6,7 +6,7 @@ import { ArrowUp } from "lucide-react";
 // import { FaTelegram, FaWhatsapp } from "react-icons/fa";
 
 const FOOTER_INFO = {
-  phone: "+234 803 123 4567,\n +234 805 987 6543",
+  phones: ["+234 803 123 4567", "+234 805 987 6543"],
   email: "support@geohealth.ng",
   address:
     "323 Port Harcourt - Aba Expy, Rumueme, Port Harcourt 500101, Rivers State, Nigeria",
@@ -38,18 +38,17 @@ export default function Footer() {
             {/* Logo */}
             <Link
               href="/"
-              className="flex w-full flex-row items-center gap-3 py-3 md:justify-start"
+              className="flex w-full flex-row items-center gap-4 py-3 md:justify-start"
             >
-              <div className="relative h-8 w-9 flex-shrink-0">
-                <Image
-                  src="/img/icons/svg/logo.svg"
-                  alt="RVS Healthcare Logo"
-                  fill
-                  className="object-contain"
-                />
-              </div>
+              <Image
+                src="/img/image.png"
+                alt="RSPHCMB Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 flex-shrink-0"
+              />
               <span className="text-primary font-geist text-base font-normal sm:text-lg">
-                RVS-HealthCare
+                RSPHCMB-GeoHealth
               </span>
             </Link>
 
@@ -82,7 +81,7 @@ export default function Footer() {
                     <Link
                       key={link.label}
                       href={link.href}
-                      className="hover:text-primary font-inter text-sm leading-[20px] font-medium text-[#14181F] transition-colors"
+                      className="hover:text-primary font-inter text-sm leading-5 font-medium text-[#14181F] transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -120,12 +119,15 @@ export default function Footer() {
                 <h3 className="font-inter text-[10px] leading-[15px] font-medium tracking-[0.04em] text-[#14181F] uppercase opacity-40">
                   CONTACT US
                 </h3>
-                <a
-                  href={`tel:${FOOTER_INFO.phone}`}
-                  className="hover:text-primary font-inter text-sm leading-[20px] font-medium text-[#14181F] transition-colors"
-                >
-                  {FOOTER_INFO.phone}
-                </a>
+                {FOOTER_INFO.phones.map((number) => (
+                  <a
+                    key={number}
+                    href={`tel:${number.replace(/\s/g, "")}`}
+                    className="hover:text-primary font-inter text-sm leading-5 font-medium text-[#14181F] transition-colors"
+                  >
+                    {number}
+                  </a>
+                ))}
               </div>
 
               {/* Location and Email Group */}
@@ -152,7 +154,7 @@ export default function Footer() {
                   </h3>
                   <a
                     href={`mailto:${FOOTER_INFO.email}`}
-                    className="hover:text-primary font-inter text-sm leading-[20px] font-medium break-words text-[#14181F] transition-colors"
+                    className="hover:text-primary font-inter text-sm leading-5 font-medium wrap-break-word text-[#14181F] transition-colors"
                   >
                     {FOOTER_INFO.email}
                   </a>

@@ -255,15 +255,6 @@ const EquipmentList: React.FC<EquipmentListProps> = ({
                                     </div>
                                   </div>
                                 </div>
-                                {/* Rating Card */}
-                                <div className="ml-4 flex-shrink-0 text-right">
-                                  <div className="mb-1 text-xs text-gray-500">
-                                    Rating
-                                  </div>
-                                  <div className="text-lg font-semibold text-yellow-600">
-                                    {facility.average_rating.toFixed(1)} ⭐
-                                  </div>
-                                </div>
                               </div>
                             </div>
                           ))}

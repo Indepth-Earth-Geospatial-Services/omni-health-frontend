@@ -19,7 +19,7 @@ export default function Trust() {
         {
             id: "03",
             title: "Privacy & Compliance",
-            description: "HIPAA-compliant data protection with end-to-end encryption",
+            description: "NDPR-compliant data protection with end-to-end encryption, aligned with Nigeria's data protection standards",
             theme: "#EEF6F5",
         },
         {
