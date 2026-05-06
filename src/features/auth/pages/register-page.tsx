@@ -91,9 +91,9 @@ export default function RegisterPage() {
             className="max-w-md rounded-2xl bg-white/60 p-6 backdrop-blur-sm"
           >
             <p className="mb-4 text-gray-700 italic">
-              &ldquo;OmniHealth made it so easy to find a quality hospital near
-              me. The performance metrics helped me make an informed
-              decision.&rdquo;
+              &ldquo;RSPHCMB-GeoHealth made it so easy to find a quality
+              hospital near me. The performance metrics helped me make an
+              informed decision.&rdquo;
             </p>
             <div className="flex items-center gap-3">
               <div className="bg-primary/20 flex h-10 w-10 items-center justify-center rounded-full">
@@ -145,7 +145,7 @@ export default function RegisterPage() {
               Create your account
             </h2>
             <p className="mt-2 text-gray-600">
-              Get started with OmniHealth today
+              Get started with RSPHCMB-GeoHealth today
             </p>
           </motion.div>
 

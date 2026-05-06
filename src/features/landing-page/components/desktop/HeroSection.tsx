@@ -63,7 +63,7 @@ export default function HeroSection() {
               size="lg"
               className="hover:text-primary w-52 rounded-full border-2 border-white bg-transparent px-6 py-5 text-sm font-semibold text-white transition-all hover:scale-105 hover:bg-white sm:px-8 sm:text-base md:w-76 md:px-10 md:py-6 md:text-lg"
             >
-              <Link href="/compare-facilities">Compare Facility</Link>
+              <Link href="/compare-facilities">Compare Facilities</Link>
             </Button>
           </div>
         </div>

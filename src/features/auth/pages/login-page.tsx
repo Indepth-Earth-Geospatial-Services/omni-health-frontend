@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { MapPin, Shield, BarChart3 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react"; // ✅ Add this
+import { useState, useEffect, Suspense } from "react";
+import { facilityService } from "@/services/facility.service";
 
 // Dynamically import map to avoid SSR issues
 const AnimatedMapBackground = dynamic(
@@ -47,6 +48,15 @@ const features = [
 ];
 
 export default function LoginPage() {
+  const [facilityCount, setFacilityCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    facilityService
+      .getAllFacilities({ limit: 1, page: 1 })
+      .then((res) => setFacilityCount(res.pagination.total_records))
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="relative flex min-h-screen">
       {/* Left Side - Map Background with Info */}
@@ -121,7 +131,9 @@ export default function LoginPage() {
             className="flex gap-8"
           >
             <div>
-              <p className="text-primary text-3xl font-bold"> 347+</p>
+              <p className="text-primary text-3xl font-bold">
+                {facilityCount !== null ? `${facilityCount}+` : "—"}
+              </p>
               <p className="text-sm text-gray-600">Healthcare Facilities</p>
             </div>
             {/* <div>
