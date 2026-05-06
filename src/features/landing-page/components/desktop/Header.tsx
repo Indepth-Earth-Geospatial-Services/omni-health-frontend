@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const CONTACT_INFO = {
   location: "Rivers State, 500101",
-  email: "rvs-healthcare@gmail.com",
+  email: "support@geohealth.ng",
   phone: "+234 803 123 4567",
 } as const;
 
