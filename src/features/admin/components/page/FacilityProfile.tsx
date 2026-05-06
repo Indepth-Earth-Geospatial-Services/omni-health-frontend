@@ -343,7 +343,14 @@ function OperatingHoursContent({
     );
   }
 
-  const entries = workingHours ? Object.entries(workingHours) : [];
+  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  const entries = workingHours
+    ? Object.entries(workingHours).sort(([a], [b]) => {
+        const ai = DAY_ORDER.indexOf(a.toLowerCase());
+        const bi = DAY_ORDER.indexOf(b.toLowerCase());
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      })
+    : [];
 
   if (entries.length === 0) {
     return (
