@@ -32,12 +32,19 @@ export default function Map() {
   // Track if we've already auto-selected from URL to prevent re-selection
   const hasAutoSelected = useRef(false);
 
-  // Fetch all facilities with a large limit to show on map
-  // Note: API maximum limit is 100
-  const { data, isLoading, isError } = useFacilities({
-    page: 1,
-    limit: 1000,
-  });
+  // Fetch all facilities for the map.
+  // gcTime: 30 min — data stays in memory across navigations so revisiting the
+  //   map page shows instantly from cache instead of re-fetching.
+  // refetchInterval: 5 min — background poll keeps pins up-to-date silently.
+  // refetchIntervalInBackground: false — stops polling when the tab is hidden.
+  const { data, isLoading, isError } = useFacilities(
+    { page: 1, limit: 1000 },
+    {
+      gcTime: 1000 * 60 * 30,
+      refetchInterval: 1000 * 60 * 5,
+      refetchIntervalInBackground: false,
+    },
+  );
 
   // Auto-select facility from URL query param when data loads
   // Using queueMicrotask to defer state update and avoid cascading render warning
