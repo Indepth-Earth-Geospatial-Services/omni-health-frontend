@@ -63,6 +63,26 @@ export default function VerifyOtpPage() {
 
   const cooldown = useResendCooldown({ defaultCooldownTime: 30 });
 
+  // Send a fresh OTP the moment the page loads.
+  // This covers two cases: backend failed to send on registration, and users
+  // who bookmarked or refreshed the page. The cooldown starts after this send
+  // so the Resend button is locked for 30 s as usual.
+  useEffect(() => {
+    if (!email) return;
+    authService
+      .resendOtp(email)
+      .then((res) => {
+        cooldown.startCooldown(30);
+        toast.info("Verification code sent!", {
+          description: `Check your inbox — code expires in ${res.expires_in_minutes} minutes.`,
+        });
+      })
+      .catch(() => {
+        // Non-fatal: user can still click Resend manually
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Focus first input on mount
   useEffect(() => {
     otpInput.focusFirst();
