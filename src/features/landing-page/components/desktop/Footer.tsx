@@ -7,7 +7,7 @@ import { ArrowUp } from "lucide-react";
 
 const FOOTER_INFO = {
   phone: "+234 803 123 4567,\n +234 805 987 6543",
-  email: "info@rsphcmb.gov.ng",
+  email: "support@geohealth.ng",
   address:
     "323 Port Harcourt - Aba Expy, Rumueme, Port Harcourt 500101, Rivers State, Nigeria",
   lat: 4.817228782038779,
