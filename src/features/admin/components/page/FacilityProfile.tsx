@@ -22,8 +22,9 @@ import {
   formatDate,
   formatSpecialistName,
   formatServiceName,
-  getStaticMapUrl,
 } from "../../utils/formatters";
+import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
+import { MAPBOX_TOKEN } from "@/constants";
 
 // Section configuration
 const SECTIONS = [
@@ -42,9 +43,6 @@ export default function FacilityProfile() {
   const facilityId = useCurrentFacilityId();
   const { data: facilityData, isLoading, isError } = useFacility(facilityId);
   const facility = facilityData?.facility;
-
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
 
   return (
     <div className="w-full">
@@ -158,7 +156,6 @@ export default function FacilityProfile() {
         >
           <ActivityContent
             facility={facility}
-            mapUrl={getStaticMapUrl(facility?.lat, facility?.lon, mapboxToken)}
             isLoading={isLoading}
             isError={isError}
           />
@@ -346,7 +343,14 @@ function OperatingHoursContent({
     );
   }
 
-  const entries = workingHours ? Object.entries(workingHours) : [];
+  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  const entries = workingHours
+    ? Object.entries(workingHours).sort(([a], [b]) => {
+        const ai = DAY_ORDER.indexOf(a.toLowerCase());
+        const bi = DAY_ORDER.indexOf(b.toLowerCase());
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      })
+    : [];
 
   if (entries.length === 0) {
     return (
@@ -520,12 +524,10 @@ function SpecialistsContent({
 
 function ActivityContent({
   facility,
-  mapUrl,
   isLoading,
   isError,
 }: {
   facility: FacilityData | undefined;
-  mapUrl: string | null;
   isLoading: boolean;
   isError: boolean;
 }) {
@@ -564,23 +566,40 @@ function ActivityContent({
       />
 
       <div className="mt-4">
-        <div className="h-48 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-          {mapUrl ? (
-            <img
-              src={mapUrl}
-              alt="Facility Location Map"
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-                if (e.currentTarget.parentElement) {
-                  e.currentTarget.parentElement.innerHTML =
-                    '<div class="w-full h-full flex items-center justify-center text-slate-400"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>';
-                }
+        <div className="h-56 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+          {facility?.lat && facility?.lon ? (
+            <Map
+              initialViewState={{
+                longitude: facility.lon,
+                latitude: facility.lat,
+                zoom: 15,
               }}
-            />
+              style={{ width: "100%", height: "100%" }}
+              mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
+              mapboxAccessToken={MAPBOX_TOKEN}
+            >
+              <NavigationControl position="top-right" />
+              <Marker
+                longitude={facility.lon}
+                latitude={facility.lat}
+                anchor="center"
+              >
+                <div className="relative flex items-center justify-center">
+                  <span className="absolute h-16 w-16 animate-ping rounded-full bg-teal-400 opacity-20" />
+                  <span
+                    className="absolute h-9 w-9 animate-ping rounded-full bg-teal-500 opacity-30"
+                    style={{ animationDelay: "0.4s" }}
+                  />
+                  <div className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-teal-600 shadow-lg ring-2 ring-white">
+                    <MapPin size={14} className="text-white" />
+                  </div>
+                </div>
+              </Marker>
+            </Map>
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-slate-400">
-              <MapPin size={48} />
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-400">
+              <MapPin size={32} className="opacity-40" />
+              <p className="text-sm">No location data available</p>
             </div>
           )}
         </div>

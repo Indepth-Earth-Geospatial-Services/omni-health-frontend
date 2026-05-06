@@ -13,9 +13,9 @@ const STATS_DATA = [
     decimals: 0,
   },
   {
-    end: 62,
-    suffix: "+",
-    description: "Facility Searches",
+    end: 23,
+    suffix: "",
+    description: "LGAs Covered",
     decimals: 0,
   },
   {

@@ -7,7 +7,7 @@ import Image from "next/image";
 const TESTIMONIALS_DATA = [
   {
     id: 1,
-    name: "Samantha Elizabeth",
+    name: "Samantha Samuel",
     location: "Port Harcourt",
     image: "/img/testimonials/image1.jpg",
     testimonial:
@@ -20,7 +20,7 @@ const TESTIMONIALS_DATA = [
     location: "Port Harcourt",
     image: "/img/testimonials/image2.jpg",
     testimonial:
-      "RVS-Healthcare has been my go-to for health consultations, and I am always impressed by the professionalism and genuine care from the doctors. They take the time to listen and explain things, making every visit feel personal.",
+      "RSPHCMB-GeoHealth helped me locate a primary health centre just minutes from my home in Port Harcourt. I never knew there were so many facilities nearby until I used the platform it made finding the right care so much easier.",
     rating: 5,
   },
   {
@@ -29,7 +29,7 @@ const TESTIMONIALS_DATA = [
     location: "Port Harcourt",
     image: "/img/testimonials/image3.jpg",
     testimonial:
-      "The specialists at RVS-Healthcare provided me with the guidance I needed to manage my health condition. Their expertise and timely support made a huge difference in my recovery, and I'm grateful for the comprehensive care I received.",
+      "As a community health worker, I recommend RSPHCMB-GeoHealth to everyone I meet. It gives residents a clear picture of what facilities are available around them from clinics to specialist centres so they can make informed decisions about where to go.",
     rating: 5,
   },
 ];
@@ -107,15 +107,15 @@ export default function Testimonials() {
         {/* Section Header */}
         <ScrollReveal direction="up">
           <h2 className="mb-3 text-center text-2xl font-medium text-white sm:text-3xl md:text-4xl lg:text-4xl">
-            Hear from Those Who Trust Care Link
+            What the Community Is Saying
           </h2>
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={200}>
           <p className="mx-auto mb-8 max-w-3xl px-4 text-center text-sm text-white/90 sm:mb-12 md:mb-16 md:text-base">
-            Our patients experiences speak volumes. Hear how CareLink has
-            provided compassionate, expert care and made a difference in their
-            lives.
+            Real residents, real experiences. See how RSPHCMB-GeoHealth is
+            helping communities across Rivers State discover and access the
+            healthcare facilities closest to them.
           </p>
         </ScrollReveal>
 

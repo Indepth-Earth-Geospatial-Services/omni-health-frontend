@@ -194,20 +194,21 @@ export default function Overview() {
               </div>
             ) : (
               <div className="flex flex-1 flex-col gap-1">
-                {Object.entries(
-                  (facility?.working_hours as
-                    | Record<string, string>
-                    | undefined) ?? {},
-                ).length === 0 ? (
+                {(() => {
+                  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+                  const hours = Object.entries(
+                    (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                  ).sort(([a], [b]) => {
+                    const ai = DAY_ORDER.indexOf(a.toLowerCase());
+                    const bi = DAY_ORDER.indexOf(b.toLowerCase());
+                    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+                  });
+                  return hours.length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate-400">
                     No operating hours set
                   </p>
                 ) : (
-                  Object.entries(
-                    (facility?.working_hours as
-                      | Record<string, string>
-                      | undefined) ?? {},
-                  ).map(([day, raw]) => {
+                  hours.map(([day, raw]) => {
                     const isClosed = !raw || raw.toLowerCase() === "closed";
                     const hours = isClosed ? "Closed" : formatTimeRange(raw);
                     const todayName = new Date()
@@ -233,7 +234,8 @@ export default function Overview() {
                       </div>
                     );
                   })
-                )}
+                );
+                })()}
               </div>
             )}
           </div>

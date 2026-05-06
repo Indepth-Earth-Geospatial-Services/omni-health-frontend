@@ -18,7 +18,7 @@ export default function FacilityCard({
 
   return (
     <div
-      className={`relative rounded-2xl border-2 bg-white px-6 py-5 transition-all ${
+      className={`relative flex flex-col rounded-2xl border-2 bg-white px-6 py-5 transition-all ${
         isActive
           ? "border-primary/50 bg-primary/5 shadow-md"
           : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
@@ -79,7 +79,7 @@ export default function FacilityCard({
       </div> */}
 
       {/* Explore button */}
-      <div className="mt-4 border-t border-slate-100 pt-4">
+      <div className="mt-auto border-t border-slate-100 pt-4">
         <Button
           onClick={() => onExplore(facility.facility_id)}
           variant={isActive ? "outline" : "default"}
