@@ -33,7 +33,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      new URL("https://res.cloudinary.com/dhnrr0ny3/image/upload/**"),
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/dw9sbvvab/image/upload/**",
+      },
     ],
   },
 };
