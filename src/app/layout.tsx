@@ -43,7 +43,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-  manifest: "/favicons/site.webmanifest",
 };
 
 export const viewport: Viewport = {

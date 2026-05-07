@@ -2,7 +2,6 @@
 
 import "../globals.css";
 import SuperSidebar from "@/features/super-admin/components/layouts/SuperSidebar";
-import { UnregisterServiceWorker } from "@/features/auth/UnregisterServiceWorker";
 import QueryProvider from "@/providers/query.provider";
 import { AuthHydration } from "@/./features/auth/AuthHydration";
 import MainHeader from "@/features/super-admin/components/layouts/mainHeader";
@@ -18,7 +17,6 @@ export default function SuperAdminLayout({
   return (
     <QueryProvider>
       <AuthHydration>
-        <UnregisterServiceWorker />
         <>
           <div className="flex h-screen overflow-hidden">
             {/* ✅ Super Admin Sidebar */}
