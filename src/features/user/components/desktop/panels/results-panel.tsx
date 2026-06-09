@@ -13,6 +13,7 @@ import {
 } from "../../molecules/result-drawer-parts";
 import FacilityListItemErrorCard from "../../facility-list-item-error-card";
 import { ArrowUpDown } from "lucide-react";
+import { DesktopMobileNav } from "../desktop-mobile-nav";
 
 interface ResultsPanelProps {
   className?: string;
@@ -48,18 +49,25 @@ export function ResultsPanel({
   return (
     <aside
       className={cn(
-        "flex h-dvh w-[380px] shrink-0 flex-col border-r border-[#E2E4E9] bg-white xl:w-[420px]",
+        "flex h-dvh w-[380px] shrink-0 flex-col border-r border-[#E2E4E9] bg-white pb-6 xl:w-[420px]",
         className,
       )}
     >
       {/* Header */}
       <div className="shrink-0 border-b border-[#E2E4E9] px-5 py-4">
-        <h1 className="text-[17px] font-medium">
-          Healthcare Facilities near you
-        </h1>
-        <p className="mt-0.5 text-[13px] text-[#868C98]">
-          Medical Facilities within your LGA
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="lg:hidden">
+            <DesktopMobileNav />
+          </div>
+          <div>
+            <h1 className="text-[17px] font-medium">
+              Healthcare Facilities near you
+            </h1>
+            <p className="mt-0.5 text-[13px] text-[#868C98]">
+              Medical Facilities within your LGA
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Search + Sort */}
@@ -81,7 +89,7 @@ export function ResultsPanel({
             }
             className={cn(
               "flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] transition-colors",
-              "border border-[#E2E4E9] hover:border-primary/30 hover:text-primary",
+              "hover:border-primary/30 hover:text-primary border border-[#E2E4E9]",
             )}
           >
             <ArrowUpDown size={12} />

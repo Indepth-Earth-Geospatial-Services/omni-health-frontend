@@ -3,39 +3,11 @@
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/auth-store";
 import logo from "@assets/img/image.png";
-import {
-  GitCompareArrows,
-  Info,
-  List,
-  MapIcon,
-  Menu,
-} from "lucide-react";
+import { MapIcon, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const navLinks = [
-  {
-    icon: List,
-    label: "Facilities",
-    href: "/facilities",
-  },
-  {
-    icon: GitCompareArrows,
-    label: "Compare",
-    href: "/compare-facilities",
-  },
-  {
-    icon: MapIcon,
-    label: "Explore",
-    href: "/explore-facilities",
-  },
-  {
-    icon: Info,
-    label: "Help",
-    href: "/help",
-  },
-] as const;
+import { navLinks } from "./nav-links";
 
 export function DesktopSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
