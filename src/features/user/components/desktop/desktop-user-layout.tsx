@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
 import { Facility } from "@/types";
 import { DesktopShell } from "./desktop-shell";
 import { DesktopSidebar } from "./desktop-sidebar";
 import { ResultsPanel } from "./panels/results-panel";
+import { FacilityDetailsPanel } from "./panels/facility-details-panel";
 import { UserMapContainer } from "../organisms/user-map-container";
+
 import RequestLocationCard from "../request-location-card";
+import { useFacilityStore } from "../../store/facility-store";
 
 interface DesktopUserLayoutProps {
   userLocation: { longitude: number; latitude: number } | null;
@@ -30,14 +32,21 @@ export function DesktopUserLayout({
   nearYouFacilities,
   otherFacilities,
 }: DesktopUserLayoutProps) {
-  const router = useRouter();
+  const [detailsFacility, setDetailsFacility] = useState<Facility | null>(null);
+  const setSelectedFacility = useFacilityStore((s) => s.setSelectedFacility);
 
   const handleViewDetails = useCallback(
     (facility: Facility) => {
-      router.push(`/facilities/${facility.facility_id}`);
+      setDetailsFacility(facility);
+      setSelectedFacility(facility);
     },
-    [router],
+    [setSelectedFacility],
   );
+
+  const handleCloseDetails = useCallback(() => {
+    setDetailsFacility(null);
+    setSelectedFacility(null);
+  }, [setSelectedFacility]);
 
   return (
     <>
@@ -50,16 +59,23 @@ export function DesktopUserLayout({
       <DesktopShell>
         <DesktopSidebar />
 
-        <ResultsPanel
-          isGettingLocation={isLoadingPosition}
-          onViewDetails={handleViewDetails}
-        />
+        {detailsFacility ? (
+          <FacilityDetailsPanel
+            facility={detailsFacility}
+            onClose={handleCloseDetails}
+          />
+        ) : (
+          <ResultsPanel
+            isGettingLocation={isLoadingPosition}
+            onViewDetails={handleViewDetails}
+          />
+        )}
 
         <main className="relative flex-1">
           <UserMapContainer
             activeDrawer={activeDrawer}
             userLocation={userLocation}
-            selectedFacility={selectedFacility}
+            selectedFacility={detailsFacility ?? selectedFacility}
             nearYouFacilities={nearYouFacilities}
             allFacilities={otherFacilities}
           />

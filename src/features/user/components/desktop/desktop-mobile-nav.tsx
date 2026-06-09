@@ -5,6 +5,7 @@ import { Menu, MapIcon } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { navLinks } from "./nav-links";
@@ -36,6 +37,8 @@ export function DesktopMobileNav() {
         side="left"
         className="flex w-[260px] flex-col p-0"
       >
+        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+
         {/* Logo */}
         <Link
           href="/"
