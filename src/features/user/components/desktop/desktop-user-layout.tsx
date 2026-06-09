@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Facility } from "@/types";
 import { DesktopShell } from "./desktop-shell";
 import { DesktopSidebar } from "./desktop-sidebar";
@@ -47,6 +47,13 @@ export function DesktopUserLayout({
     setDetailsFacility(null);
     setSelectedFacility(null);
   }, [setSelectedFacility]);
+
+  useEffect(() => {
+    if (selectedFacility && selectedFacility !== detailsFacility) {
+      // eslint-disable-next-line
+      setDetailsFacility(selectedFacility);
+    }
+  }, [selectedFacility, detailsFacility]);
 
   return (
     <>
