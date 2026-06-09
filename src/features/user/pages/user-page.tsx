@@ -14,8 +14,12 @@ import { useFacilityData } from "../hooks/use-facility-data";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
 import { useUserLocation } from "../hooks/use-user-location";
+import { useIsDesktop } from "../hooks/use-is-desktop";
+import { DesktopUserLayout } from "../components/desktop/desktop-user-layout";
 
 function UserPage() {
+  const isDesktop = useIsDesktop();
+
   // 1. Global State
   const userLocation = useUserStore((state) => state.userLocation);
   const isLoadingPosition = useUserStore((state) => state.isLoadingPosition);
@@ -29,10 +33,27 @@ function UserPage() {
   // 2. Derived Data & Actions
   const { nearYouFacilities, otherFacilities } = useFacilityData();
   const drawerActions = useDrawerActions();
-  // 3. Cleanup Effect
+
+  // 3. Cleanup Effect (must be before conditional return for hook ordering)
   useEffect(() => {
     return () => clearAllFilters();
   }, [clearAllFilters]);
+
+  // 4. Desktop branch
+  if (isDesktop) {
+    return (
+      <DesktopUserLayout
+        userLocation={userLocation}
+        isLoadingPosition={isLoadingPosition}
+        permissionState={permissionState}
+        requestLocation={requestLocation}
+        activeDrawer={activeDrawer}
+        selectedFacility={selectedFacility}
+        nearYouFacilities={nearYouFacilities}
+        otherFacilities={otherFacilities}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto h-full max-h-dvh w-full">
