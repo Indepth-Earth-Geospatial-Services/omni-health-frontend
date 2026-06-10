@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarContentNav } from "./sidebar-content";
 import { ResultsPanel } from "./panels/results-panel";
 import { FacilityDetailsPanel } from "./panels/facility-details-panel";
+import { DirectionsPanel } from "./panels/directions-panel";
 import { UserMapContainer } from "../organisms/user-map-container";
 
 import RequestLocationCard from "../request-location-card";
@@ -33,11 +34,15 @@ export function DesktopUserLayout({
   otherFacilities,
 }: DesktopUserLayoutProps) {
   const [detailsFacility, setDetailsFacility] = useState<Facility | null>(null);
+  const [directionsFacility, setDirectionsFacility] = useState<Facility | null>(
+    null,
+  );
   const setSelectedFacility = useFacilityStore((s) => s.setSelectedFacility);
 
   const handleViewDetails = useCallback(
     (facility: Facility) => {
       setDetailsFacility(facility);
+      setDirectionsFacility(null);
       setSelectedFacility(facility);
     },
     [setSelectedFacility],
@@ -45,8 +50,23 @@ export function DesktopUserLayout({
 
   const handleCloseDetails = useCallback(() => {
     setDetailsFacility(null);
+    setDirectionsFacility(null);
     setSelectedFacility(null);
   }, [setSelectedFacility]);
+
+  const handleShowDirections = useCallback(() => {
+    if (detailsFacility) {
+      setDirectionsFacility(detailsFacility);
+    }
+  }, [detailsFacility]);
+
+  const handleBackToDetails = useCallback(() => {
+    setDirectionsFacility(null);
+  }, []);
+
+  const effectiveUserLocation = userLocation
+    ? { latitude: userLocation.latitude, longitude: userLocation.longitude }
+    : null;
 
   useEffect(() => {
     if (selectedFacility && selectedFacility !== detailsFacility) {
@@ -63,14 +83,25 @@ export function DesktopUserLayout({
         requestLocation={requestLocation}
       />
 
-      <SidebarProvider defaultOpen={false} className="!mx-0 !max-w-full h-dvh overflow-hidden">
+      <SidebarProvider
+        defaultOpen={false}
+        className="!mx-0 !max-w-full h-dvh overflow-hidden"
+      >
         <SidebarContentNav />
 
         <div className="flex flex-1">
-          {detailsFacility ? (
+          {directionsFacility ? (
+            <DirectionsPanel
+              facility={directionsFacility}
+              userLocation={effectiveUserLocation}
+              onBackToDetails={handleBackToDetails}
+              onClose={handleCloseDetails}
+            />
+          ) : detailsFacility ? (
             <FacilityDetailsPanel
               facility={detailsFacility}
               onClose={handleCloseDetails}
+              onShowDirections={handleShowDirections}
             />
           ) : (
             <ResultsPanel
@@ -81,9 +112,11 @@ export function DesktopUserLayout({
 
           <main className="relative flex-1">
             <UserMapContainer
-              activeDrawer={activeDrawer}
+              activeDrawer={directionsFacility ? "directions" : activeDrawer}
               userLocation={userLocation}
-              selectedFacility={detailsFacility ?? selectedFacility}
+              selectedFacility={
+                directionsFacility ?? detailsFacility ?? selectedFacility
+              }
               nearYouFacilities={nearYouFacilities}
               allFacilities={otherFacilities}
             />
