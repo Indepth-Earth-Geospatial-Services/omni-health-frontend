@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Facility } from "@/types";
-import { DesktopShell } from "./desktop-shell";
-import { DesktopSidebar } from "./desktop-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarContentNav } from "./sidebar-content";
 import { ResultsPanel } from "./panels/results-panel";
 import { FacilityDetailsPanel } from "./panels/facility-details-panel";
 import { UserMapContainer } from "../organisms/user-map-container";
@@ -63,31 +63,33 @@ export function DesktopUserLayout({
         requestLocation={requestLocation}
       />
 
-      <DesktopShell>
-        <DesktopSidebar />
+      <SidebarProvider defaultOpen={false} className="!mx-0 !max-w-full h-dvh overflow-hidden">
+        <SidebarContentNav />
 
-        {detailsFacility ? (
-          <FacilityDetailsPanel
-            facility={detailsFacility}
-            onClose={handleCloseDetails}
-          />
-        ) : (
-          <ResultsPanel
-            isGettingLocation={isLoadingPosition}
-            onViewDetails={handleViewDetails}
-          />
-        )}
+        <div className="flex flex-1">
+          {detailsFacility ? (
+            <FacilityDetailsPanel
+              facility={detailsFacility}
+              onClose={handleCloseDetails}
+            />
+          ) : (
+            <ResultsPanel
+              isGettingLocation={isLoadingPosition}
+              onViewDetails={handleViewDetails}
+            />
+          )}
 
-        <main className="relative flex-1">
-          <UserMapContainer
-            activeDrawer={activeDrawer}
-            userLocation={userLocation}
-            selectedFacility={detailsFacility ?? selectedFacility}
-            nearYouFacilities={nearYouFacilities}
-            allFacilities={otherFacilities}
-          />
-        </main>
-      </DesktopShell>
+          <main className="relative flex-1">
+            <UserMapContainer
+              activeDrawer={activeDrawer}
+              userLocation={userLocation}
+              selectedFacility={detailsFacility ?? selectedFacility}
+              nearYouFacilities={nearYouFacilities}
+              allFacilities={otherFacilities}
+            />
+          </main>
+        </div>
+      </SidebarProvider>
     </>
   );
 }

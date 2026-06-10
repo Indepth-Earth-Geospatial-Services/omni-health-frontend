@@ -16,8 +16,8 @@ import {
   NoFacilitiesView,
 } from "../../molecules/result-drawer-parts";
 import FacilityListItemErrorCard from "../../facility-list-item-error-card";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Loader2 } from "lucide-react";
-import { DesktopMobileNav } from "../desktop-mobile-nav";
 
 interface ResultsPanelProps {
   className?: string;
@@ -96,9 +96,7 @@ export function ResultsPanel({
       {/* Header */}
       <div className="shrink-0 border-b border-[#E2E4E9] px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="lg:hidden">
-            <DesktopMobileNav />
-          </div>
+          <SidebarTrigger className="size-9 rounded-lg border border-[#E2E4E9] bg-white text-[#5A5F6B] shadow-sm hover:bg-gray-100 [&_svg]:size-[18px]" />
           <div>
             <h1 className="text-[17px] font-medium">
               Healthcare Facilities near you
