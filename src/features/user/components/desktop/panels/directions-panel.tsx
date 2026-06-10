@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import { useNativeNavigation } from "@/hooks/use-native-navigation";
 import { Facility } from "@/types";
@@ -37,16 +38,40 @@ export function DirectionsPanel({
     enabled: !!userLocation && !!destination,
   });
 
-  const { routeInfo, openNativeNavigation, platformInfo } =
-    useNativeNavigation({
+  const { routeInfo, openNativeNavigation, platformInfo } = useNativeNavigation(
+    {
       origin: userLocation,
       destination,
       destinationName: facility?.facility_name || "Destination",
-    });
+    },
+  );
 
   const distance = routeData?.distanceFormatted || routeInfo?.formattedDistance;
   const duration = routeData?.durationFormatted || routeInfo?.formattedDuration;
-  const arrivalTime = routeInfo?.arrivalTime;
+  const [arrivalTime, setArrivalTime] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!routeData?.duration) {
+      // eslint-disable-next-line
+      setArrivalTime(routeInfo?.arrivalTime);
+
+      return;
+    }
+
+    const update = () => {
+      setArrivalTime(
+        new Date(Date.now() + routeData.duration * 1000).toLocaleTimeString(
+          [],
+          { hour: "2-digit", minute: "2-digit" },
+        ),
+      );
+    };
+
+    update();
+    const interval = setInterval(update, 60_000);
+
+    return () => clearInterval(interval);
+  }, [routeData?.duration, routeInfo?.arrivalTime]);
 
   const isLoading = isRouteLoading && !!userLocation;
 
@@ -122,9 +147,7 @@ export function DirectionsPanel({
             </div>
             <div>
               <p className="text-xs text-[#868C98]">Arrival</p>
-              <p className="text-sm font-medium">
-                {arrivalTime}
-              </p>
+              <p className="text-sm font-medium">{arrivalTime}</p>
             </div>
           </div>
         )}
@@ -142,13 +165,9 @@ export function DirectionsPanel({
         <button
           onClick={openNativeNavigation}
           disabled={!userLocation}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="bg-primary flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          <Image
-            src={compass}
-            alt=""
-            className="h-4 w-4 object-cover"
-          />
+          <Image src={compass} alt="" className="h-4 w-4 object-cover" />
           Start Navigation
         </button>
 
