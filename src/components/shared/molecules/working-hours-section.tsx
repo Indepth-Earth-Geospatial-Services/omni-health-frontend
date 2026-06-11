@@ -9,10 +9,12 @@ import {
 
 interface WorkingHoursSectionProps {
   working_hours: Record<string, string>;
+  defaultOpen?: boolean;
 }
 
 export const WorkingHoursSection: React.FC<WorkingHoursSectionProps> = ({
   working_hours,
+  defaultOpen = false,
 }) => {
   const days = [
     { key: "monday", label: "Monday" },
@@ -34,6 +36,7 @@ export const WorkingHoursSection: React.FC<WorkingHoursSectionProps> = ({
       icon={<Clock className="h-5 w-5" />}
       data={working_hours}
       emptyMessage="Working hours not specified"
+      defaultOpen={defaultOpen}
     >
       <div className="overflow-hidden rounded-lg bg-gray-50">
         {days.map((day) => {

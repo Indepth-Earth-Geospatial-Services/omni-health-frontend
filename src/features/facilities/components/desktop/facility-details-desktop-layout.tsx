@@ -1,21 +1,25 @@
 "use client";
 
+import { useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarContentNav } from "@/features/user/components/desktop/sidebar-content";
-import FacilityDetailsBase from "@/components/shared/organisms/facility-details-base";
 import { useFacilityStore } from "@/features/user/store/facility-store";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { FacilityDetailsDesktopView } from "./facility-details-desktop-view";
 
 export function FacilityDetailsDesktopLayout() {
   const router = useRouter();
   const facility = useFacilityStore((state) => state.selectedFacility);
 
   useEffect(() => {
-    if (Object.values(facility || {}).length === 0) {
+    if (!facility?.facility_id) {
       router.push("/facilities");
     }
   }, [facility, router]);
+
+  const handleClose = useCallback(() => {
+    router.back();
+  }, [router]);
 
   if (!facility?.facility_id) {
     return (
@@ -32,11 +36,10 @@ export function FacilityDetailsDesktopLayout() {
     >
       <SidebarContentNav />
 
-      <main className="flex flex-1 flex-col overflow-hidden">
-        <FacilityDetailsBase
+      <main className="flex flex-1 flex-col overflow-hidden bg-white">
+        <FacilityDetailsDesktopView
           facility={facility}
-          onClose={() => router.back()}
-          variant="page"
+          onClose={handleClose}
         />
       </main>
     </SidebarProvider>

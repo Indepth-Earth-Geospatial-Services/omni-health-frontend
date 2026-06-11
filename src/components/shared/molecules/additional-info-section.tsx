@@ -6,6 +6,7 @@ interface AdditionalInfoSectionProps {
   facility_lga?: string;
   town?: string;
   facility_category?: string;
+  defaultOpen?: boolean;
 }
 
 export const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({
@@ -13,6 +14,7 @@ export const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({
   facility_lga,
   town,
   facility_category,
+  defaultOpen = false,
 }) => {
   const additionalInfo = [
     { label: "HFR ID", value: hfr_id },
@@ -29,6 +31,7 @@ export const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({
       title="Additional Information"
       icon={<AlertCircle className="h-5 w-5" />}
       data={additionalInfo}
+      defaultOpen={defaultOpen}
     >
       <div className="space-y-3">
         {additionalInfo.map((info, index) => (
