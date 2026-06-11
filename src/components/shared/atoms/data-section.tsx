@@ -15,6 +15,7 @@ interface DataSectionProps {
   data: any[] | Record<string, any>;
   className?: string;
   useAccordion?: boolean;
+  defaultOpen?: boolean;
 }
 
 export const DataSection: React.FC<DataSectionProps> = ({
@@ -24,6 +25,7 @@ export const DataSection: React.FC<DataSectionProps> = ({
   data,
   className = "",
   useAccordion = false,
+  defaultOpen = false,
 }) => {
   const hasData = Array.isArray(data)
     ? data.length > 0
@@ -47,7 +49,11 @@ export const DataSection: React.FC<DataSectionProps> = ({
     );
 
   return (
-    <Accordion type="multiple" className={`mb-6 ${className}`}>
+    <Accordion
+      type="multiple"
+      className={`mb-6 ${className}`}
+      {...(defaultOpen ? { defaultValue: [title] } : {})}
+    >
       <AccordionItem value={title}>
         <AccordionTrigger>
           <h3 className="flex items-center gap-2 text-lg font-semibold">

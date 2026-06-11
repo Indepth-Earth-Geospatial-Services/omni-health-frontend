@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import { MAPBOX_TOKEN } from "@/constants";
 import { useDrawerStore } from "@/features/user/store/drawer-store";

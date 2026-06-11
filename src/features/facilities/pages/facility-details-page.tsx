@@ -1,16 +1,23 @@
 "use client";
 import FacilityDetailsBase from "@/components/shared/organisms/facility-details-base";
 import { useFacilityStore } from "@/features/user/store/facility-store";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { FacilityDetailsDesktopLayout } from "../components/desktop/facility-details-desktop-layout";
 
 interface FacilityDetailsPageProps {
   onShowDirections?: () => void;
 }
 
 function FacilityDetailsPage({ onShowDirections }: FacilityDetailsPageProps) {
+  const isDesktop = useIsDesktop();
   const router = useRouter();
   const facility = useFacilityStore((state) => state.selectedFacility);
+
+  if (isDesktop) {
+    return <FacilityDetailsDesktopLayout />;
+  }
 
   const handleGoBack = () => {
     router.back();

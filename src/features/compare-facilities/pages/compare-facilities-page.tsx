@@ -20,8 +20,14 @@ import { useUserStore } from "@/features/user/store/user-store";
 import { useFacilityDirections } from "../hooks/useFacilityDirections";
 import EmptyState from "@/features/compare-facilities/components/emptyState";
 import { useUserLocation } from "@/features/user/hooks/use-user-location";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
+import { CompareFacilitiesDesktopLayout } from "../components/desktop/compare-facilities-desktop-layout";
 
 function CompareFacilitiesPage() {
+  const isDesktop = useIsDesktop();
+  if (isDesktop) {
+    return <CompareFacilitiesDesktopLayout />;
+  }
   const {
     facilities,
     addFacility,

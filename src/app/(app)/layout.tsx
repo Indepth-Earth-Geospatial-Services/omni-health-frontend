@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "../globals.css";
 import Providers from "../../providers/providers";
 import { AuthHydration } from "@/./features/auth/AuthHydration";
+import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,13 @@ export default function AppLayout({
 }>) {
   return (
     <div
-      className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} h-dvh *:mx-auto *:max-w-120!`}
+      className={cn(
+        geistSans.variable,
+        geistMono.variable,
+        inter.variable,
+        "h-dvh *:mx-auto *:max-w-120!",
+        "min-[39.4375rem]:*:max-w-full!",
+      )}
     >
       <Providers>
         <AuthHydration>{children}</AuthHydration>

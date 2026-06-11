@@ -11,14 +11,14 @@
 !.yarn/versions
 .claude
 # Co-Authored-By*
-
+mmorgrace@gmail.com
 # testing
 /coverage
 CODE_REVIEW.md
 # next.js
 /.next/
 /out/
-
+TABLET-DESKTOP-RESPONSIVENESS-PLAN.md
 # production
 /build
 
