@@ -5,6 +5,7 @@ import { useFacilityStore } from "@/features/user/store/facility-store";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { useFacilitySearch } from "@/hooks/use-facility-search";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { useSearchFilterStore } from "@/store/search-filter-store";
 import { Facility } from "@/types";
 import { SelectedFilters } from "@/types/search-filter";
@@ -16,7 +17,12 @@ import { useInView } from "react-intersection-observer";
 import { Button } from "../../../components/ui/button";
 import EmptyState from "../components/empty-state";
 import Error from "../components/error";
+import { FacilitiesDesktopLayout } from "../components/desktop/facilities-desktop-layout";
 function FacilitiesPage() {
+  const isDesktop = useIsDesktop();
+  if (isDesktop) {
+    return <FacilitiesDesktopLayout />;
+  }
   const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
   const [filters, setFilters] = useState<SelectedFilters>({});

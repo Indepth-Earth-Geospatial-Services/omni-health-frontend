@@ -14,7 +14,7 @@ import { useFacilityData } from "../hooks/use-facility-data";
 import { useDrawerStore } from "../store/drawer-store";
 import { useFacilityStore } from "../store/facility-store";
 import { useUserLocation } from "../hooks/use-user-location";
-import { useIsDesktop } from "../hooks/use-is-desktop";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { DesktopUserLayout } from "../components/desktop/desktop-user-layout";
 
 function UserPage() {

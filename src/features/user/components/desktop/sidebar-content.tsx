@@ -27,7 +27,7 @@ export function SidebarContentNav() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link
-          href="/"
+          href="/user"
           className="border-sidebar-border flex h-14 items-center gap-2 border-b"
         >
           <div className="relative size-9 shrink-0">
