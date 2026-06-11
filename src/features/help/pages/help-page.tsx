@@ -1,11 +1,17 @@
+"use client";
+import { useIsDesktop } from "@/hooks/use-is-desktop";
+import { HelpDesktopLayout } from "../components/desktop/help-desktop-layout";
 import FeedbackForm from "@/features/help/components/contact-form";
 import FAQ from "@/features/help/components/FAQ";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import Link from "next/link";
-import { Card } from "../../../components/ui/card";
 import HelpLine from "@/features/help/components/help-line";
 
 function HelpPage() {
+  const isDesktop = useIsDesktop();
+  if (isDesktop) {
+    return <HelpDesktopLayout />;
+  }
   return (
     <main className="h-dvh p-5">
       <div className="mb-3 flex items-center gap-3">

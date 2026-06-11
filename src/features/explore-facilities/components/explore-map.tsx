@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { MAPBOX_TOKEN } from "@/constants";
 import { useFacilityStore } from "@/features/user/store/facility-store";
@@ -8,7 +9,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Map, { Layer, Marker, Popup, Source } from "react-map-gl/mapbox";
-import riversLgas from "../data/rivers-lgas.json";
 import riversLGA from "../data/boundary.json";
 import FacilityInfoCard from "./facility-info-card";
 
@@ -17,17 +17,17 @@ interface ExploreMapProps {
 }
 
 const facilityColors = {
-  "Primary Health Center": "#2ECC71",        // fresh green – community-level care
-  "Primary": "#27AE60",                      // deeper green – same tier, slight contrast
+  "Primary Health Center": "#2ECC71", // fresh green – community-level care
+  Primary: "#27AE60", // deeper green – same tier, slight contrast
 
-  "Health Post": "#1ABC9C",                  // teal – basic outreach facilities
-  "Primary Health Clinic": "#16A085",        // darker teal – related but distinct
+  "Health Post": "#1ABC9C", // teal – basic outreach facilities
+  "Primary Health Clinic": "#16A085", // darker teal – related but distinct
 
   "Secondary Health Care Centre": "#3498DB", // blue – mid-level care
-  "Secondary": "#2980B9",                    // deeper blue – same tier
+  Secondary: "#2980B9", // deeper blue – same tier
 
-  "General Hospital": "#9B59B6",             // purple – advanced/general care
-  "Cottage Hospital": "#8E44AD",             // deeper purple – related category
+  "General Hospital": "#9B59B6", // purple – advanced/general care
+  "Cottage Hospital": "#8E44AD", // deeper purple – related category
 };
 
 function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
@@ -44,6 +44,7 @@ function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null,
   );
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const setSelectedFacilityInStore = useFacilityStore(
     (state) => state.setSelectedFacility,
   );
@@ -100,31 +101,41 @@ function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
           }}
         />
       </Source>
-      {allFacilities.map((facility) => (
-        <Marker
-          key={facility.facility_id}
-          longitude={facility.lon}
-          latitude={facility.lat}
-          onClick={() => setSelectedFacility(facility)}
-        >
-          <div className="group relative flex cursor-pointer flex-col items-center">
+      {allFacilities.map((facility) => {
+        const isHovered = hoveredId === facility.facility_id;
+        return (
+          <Marker
+            key={facility.facility_id}
+            longitude={facility.lon}
+            latitude={facility.lat}
+            onClick={() => setSelectedFacility(facility)}
+            style={{ zIndex: isHovered ? 9999 : 0 }}
+          >
             <div
-              className="group relative flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-sm transition-all hover:scale-125"
-              style={{
-                backgroundColor:
-                  facilityColors[
-                    facility.facility_category as keyof typeof facilityColors
-                  ] || "#51a199",
-              }}
+              className="relative flex cursor-pointer flex-col items-center"
+              onMouseEnter={() => setHoveredId(facility.facility_id)}
+              onMouseLeave={() => setHoveredId(null)}
             >
-              <Plus className="h-3 w-3 text-white" />
+              <div
+                className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-sm transition-all hover:scale-125"
+                style={{
+                  backgroundColor:
+                    facilityColors[
+                      facility.facility_category as keyof typeof facilityColors
+                    ] || "#51a199",
+                }}
+              >
+                <Plus className="h-3 w-3 text-white" />
+              </div>
+              {isHovered && (
+                <div className="pointer-events-none absolute bottom-full mb-2 rounded bg-white/90 px-2 py-1 text-xs font-semibold whitespace-nowrap text-green-700 shadow-sm backdrop-blur-sm">
+                  {facility.facility_name || "Health Centre"}
+                </div>
+              )}
             </div>
-            <div className="absolute bottom-full mb-2 hidden rounded bg-white/90 px-2 py-1 text-xs font-semibold whitespace-nowrap text-green-700 shadow-sm backdrop-blur-sm transition-all group-hover:block">
-              {facility.facility_name || "Health Centre"}
-            </div>
-          </div>
-        </Marker>
-      ))}
+          </Marker>
+        );
+      })}
 
       {selectedFacility && (
         <Popup

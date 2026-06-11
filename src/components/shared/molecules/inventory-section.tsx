@@ -4,10 +4,12 @@ import { Inventory } from "@/types";
 
 interface InventorySectionProps {
   inventory: Inventory;
+  defaultOpen?: boolean;
 }
 
 export const InventorySection: React.FC<InventorySectionProps> = ({
   inventory,
+  defaultOpen = false,
 }) => {
   const eq = inventory?.equipment || {};
 
@@ -71,6 +73,7 @@ export const InventorySection: React.FC<InventorySectionProps> = ({
       icon={<Shield className="h-5 w-5" />}
       data={inventoryItems}
       emptyMessage="Inventory information not available"
+      defaultOpen={defaultOpen}
     >
       <div className="grid grid-cols-2 gap-4">
         {inventoryItems.map((item, index) => (

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, RefObject } from "react";
 import mapboxgl from "mapbox-gl";
 import { Facility } from "@/features/user/types";
@@ -12,6 +13,17 @@ interface UseMapCameraProps {
   highlightedFacility?: Facility | null;
 }
 
+// helper: only extend bounds with coordinates that are actually numbers
+function safeExtend(
+  bounds: mapboxgl.LngLatBounds,
+  lng: number | undefined | null,
+  lat: number | undefined | null,
+) {
+  if (isFinite(lng as number) && isFinite(lat as number)) {
+    bounds.extend([lng as number, lat as number]);
+  }
+}
+
 export function useMapCamera({
   mapRef,
   userLocation,
@@ -21,66 +33,83 @@ export function useMapCamera({
   allFacilities,
   highlightedFacility,
 }: UseMapCameraProps) {
-  // 1. Fit bounds for "Near You"
+  // 1. Fit bounds for "Near You" browsing view
   useEffect(() => {
-    // GUARD: If user selected a facility, ignore "near you" updates temporarily
     if (highlightedFacility) return;
+    if (!showNearYouFacilities) return;
+    if (!mapRef.current) return;
+    // wait for the map to actually be loaded before calling fitBounds
+    const map = mapRef.current.getMap?.() ?? mapRef.current;
+    if (!map.isStyleLoaded()) return;
 
-    if (
-      showNearYouFacilities &&
-      nearYouFacilities.length > 0 &&
-      mapRef.current
-    ) {
-      const bounds = new mapboxgl.LngLatBounds();
-      nearYouFacilities.forEach((f) => bounds.extend([f.lon, f.lat]));
-      allFacilities.forEach((f) => bounds.extend([f.lon, f.lat]));
+    const bounds = new mapboxgl.LngLatBounds();
 
-      if (userLocation)
-        bounds.extend([userLocation.longitude, userLocation.latitude]);
+    nearYouFacilities.forEach((f) => safeExtend(bounds, f.lon, f.lat));
+    allFacilities.forEach((f) => safeExtend(bounds, f.lon, f.lat));
 
-      mapRef.current.fitBounds(bounds, {
-        padding: { top: 40, bottom: 350, left: 50, right: 50 },
-        duration: 3000, // Slightly longer duration for a smoother transition
-      });
+    if (userLocation) {
+      safeExtend(bounds, userLocation.longitude, userLocation.latitude);
     }
+
+    // critical: never call fitBounds on an empty bounds object
+    if (bounds.isEmpty()) return;
+
+    map.fitBounds(bounds, {
+      padding: { top: 40, bottom: 350, left: 50, right: 50 },
+      duration: 3000,
+    });
   }, [
     showNearYouFacilities,
     nearYouFacilities,
     userLocation,
     allFacilities,
     mapRef,
-    highlightedFacility, // Added this dependency to trigger re-zoom when deselecting
+    highlightedFacility,
   ]);
 
-  // 2. Fit bounds for Route
+  // 2. Fit bounds for route geometry
   useEffect(() => {
-    if (routeGeometry && mapRef.current) {
-      const coordinates = routeGeometry.coordinates;
-      const bounds = coordinates.reduce(
-        (b: mapboxgl.LngLatBounds, coord: [number, number]) => b.extend(coord),
-        new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]),
-      );
+    if (!routeGeometry || !mapRef.current) return;
 
-      mapRef.current.fitBounds(bounds, {
-        padding: { top: 40, bottom: 450, left: 50, right: 50 },
-        duration: 2000,
-      });
-    }
+    const map = mapRef.current.getMap?.() ?? mapRef.current;
+    const coordinates: [number, number][] = routeGeometry.coordinates;
+
+    if (!coordinates?.length) return;
+
+    const validCoords = coordinates.filter(
+      ([lng, lat]) => isFinite(lng) && isFinite(lat),
+    );
+    if (!validCoords.length) return;
+
+    const bounds = validCoords.reduce(
+      (b, coord) => b.extend(coord),
+      new mapboxgl.LngLatBounds(validCoords[0], validCoords[0]),
+    );
+
+    map.fitBounds(bounds, {
+      padding: { top: 40, bottom: 450, left: 50, right: 50 },
+      duration: 2000,
+    });
   }, [routeGeometry, mapRef, highlightedFacility]);
 
-  // 3. Fly to Highlighted Facility (The "Real Close" Logic)
+  // 3. Fly to selected facility
   useEffect(() => {
-    if (highlightedFacility && mapRef.current) {
-      mapRef.current.flyTo({
-        center: [highlightedFacility.lon, highlightedFacility.lat],
-        // 18.5 is building-level close. (15 is neighborhood, 20 is doorstep)
-        zoom: 18.5,
-        // Pitch tilts the camera for a 3D effect, making it feel more "immersive"
-        pitch: 50,
-        duration: 8000, // Slightly longer for a smoother "travel" effect
-        padding: { top: 40, bottom: 350, left: 50, right: 50 },
-        essential: true,
-      });
-    }
+    if (!highlightedFacility || !mapRef.current) return;
+    if (
+      !isFinite(highlightedFacility.lon) ||
+      !isFinite(highlightedFacility.lat)
+    )
+      return;
+
+    const map = mapRef.current.getMap?.() ?? mapRef.current;
+
+    map.flyTo({
+      center: [highlightedFacility.lon, highlightedFacility.lat],
+      zoom: 18.5,
+      pitch: 50,
+      duration: 8000,
+      padding: { top: 40, bottom: 350, left: 50, right: 50 },
+      essential: true,
+    });
   }, [highlightedFacility, mapRef]);
 }

@@ -123,9 +123,11 @@
 // export default DirectionDrawer;
 
 "use client";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { useNativeNavigation } from "@/hooks/use-native-navigation";
+import { useRouteGeometry } from "@/hooks/use-route-geometry";
 import compass from "@assets/img/icons/svg/compass-rose.svg";
 import {
   AlertCircle,
@@ -138,7 +140,6 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 import { useDrawerStore } from "../../store/drawer-store";
 import { useFacilityStore } from "../../store/facility-store";
 import { useUserStore } from "../../store/user-store";
@@ -163,7 +164,18 @@ function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
   const facility = useFacilityStore((s) => s.selectedFacility);
   const userLocation = useUserStore((state) => state.userLocation);
 
-  // Native navigation hook
+  // Real route data from Mapbox
+  const destination = facility
+    ? { latitude: facility.lat, longitude: facility.lon }
+    : null;
+
+  const { data: routeData } = useRouteGeometry({
+    origin: userLocation,
+    destination,
+    enabled: !!userLocation && !!destination,
+  });
+
+  // Native navigation hook (fallback estimates)
   const {
     routeInfo,
     openNativeNavigation,
@@ -172,14 +184,34 @@ function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
     platformInfo,
   } = useNativeNavigation({
     origin: userLocation,
-    destination: facility
-      ? {
-          latitude: facility.lat,
-          longitude: facility.lon,
-        }
-      : null,
+    destination,
     destinationName: facility?.facility_name,
   });
+
+  // Live arrival time — uses Mapbox duration when available
+  const [arrivalTime, setArrivalTime] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!routeData?.duration) {
+      // eslint-disable-next-line
+      setArrivalTime(routeInfo?.arrivalTime);
+      return;
+    }
+
+    const update = () => {
+      setArrivalTime(
+        new Date(Date.now() + routeData.duration * 1000).toLocaleTimeString(
+          [],
+          { hour: "2-digit", minute: "2-digit" },
+        ),
+      );
+    };
+
+    update();
+    const interval = setInterval(update, 60_000);
+
+    return () => clearInterval(interval);
+  }, [routeData?.duration, routeInfo?.arrivalTime]);
 
   // Handle start navigation
   const handleStartNavigation = () => {
@@ -220,7 +252,7 @@ function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
               <div className="flex items-center gap-2 text-[15px]">
                 <Clock className="h-4 w-4 shrink-0" />
                 <span className="truncate">
-                  Arrive by {routeInfo?.arrivalTime || "..."}
+                  Arrive by {arrivalTime || "..."}
                 </span>
               </div>
             </div>
@@ -256,7 +288,7 @@ function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
         {/* Fallback Section */}
         <div className="rounded-lg border border-gray-200 p-4">
           <p className="mb-3 text-sm text-gray-600">
-            If you're still here, use this link for instant directions:
+            If you&apos;re still here, use this link for instant directions:
           </p>
           <div className="space-y-2">
             <a
@@ -278,7 +310,8 @@ function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                   <div>
                     <p className="text-sm text-amber-800">
-                      Don't have {platformInfo.platformName}? Download it from:
+                      Don&apos;t have {platformInfo.platformName}? Download it
+                      from:
                     </p>
                     <a
                       href={platformInfo.appStoreLink}
@@ -368,7 +401,7 @@ function DirectionDrawer({ isOpen, onClose }: DirectionDrawerProps) {
                   </div>
                   <div className="flex items-center gap-2 text-[15px]">
                     <Clock className="h-4 w-4 shrink-0" />
-                    <span>Arrive by {routeInfo.arrivalTime}</span>
+                    <span>Arrive by {arrivalTime}</span>
                   </div>
                 </div>
               )}
