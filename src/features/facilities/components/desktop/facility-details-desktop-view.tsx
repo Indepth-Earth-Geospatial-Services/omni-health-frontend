@@ -163,7 +163,16 @@ export function FacilityDetailsDesktopView({
               </span>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button size="sm" className="bg-primary rounded-full text-[13px]">
+              <Button
+                size="sm"
+                className="bg-primary rounded-full text-[13px]"
+                onClick={() =>
+                  window.open(
+                    `https://www.google.com/maps/dir/?api=1&destination=${facility.lat},${facility.lon}&travelmode=driving`,
+                    "_blank",
+                  )
+                }
+              >
                 <Image src={compass} alt="" className="mr-1.5 size-3.5 object-cover" />
                 Directions
               </Button>
