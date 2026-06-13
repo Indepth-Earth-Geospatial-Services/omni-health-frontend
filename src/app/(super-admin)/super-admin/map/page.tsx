@@ -9,7 +9,7 @@ export default function MapPages() {
         <main className="flex min-h-screen flex-col">
           <HeaderProps
             title="Map"
-            description="System health overview and key metrics"
+            description="Geographic view of all registered healthcare facilities"
           />
           <MapPage />
         </main>

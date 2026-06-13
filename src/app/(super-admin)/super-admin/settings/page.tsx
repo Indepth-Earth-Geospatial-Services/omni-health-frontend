@@ -9,7 +9,7 @@ export default function SettingsPages() {
         <main className="flex min-h-screen flex-col">
           <HeaderProps
             title="Settings"
-            description="System health overview and key metrics"
+            description="Configure system preferences and account security"
           />
           <Settings />
         </main>
