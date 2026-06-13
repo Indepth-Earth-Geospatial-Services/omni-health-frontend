@@ -125,7 +125,7 @@ export default function UserAndRoleList({
 
   return (
     <>
-      <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
         {isFetching && !isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50">
             <p className="text-sm text-slate-500">Loading...</p>

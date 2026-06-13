@@ -61,31 +61,31 @@ export default function SuperDashboard() {
             value={isLoading ? "-" : kpiMetrics.totalFacilities}
             subtitle="Healthcare facilities"
             icon={<Building2 size={24} />}
-            //trend={{ value: "Active", isPositive: true }}
+            detailsHref="/super-admin/facility-registry"
           />
           <KPIStatsCards
             title="Total Users"
             value={isLoading ? "-" : kpiMetrics.totalUsers}
             subtitle="Registered users"
             icon={<Users size={24} />}
-            //trend={{ value: "Growing", isPositive: true }}
+            detailsHref="/super-admin/allUsers"
           />
           <KPIStatsCards
             title="Total Staff"
             value={isLoading ? "-" : kpiMetrics.totalStaff}
             subtitle="Medical personnel"
             icon={<Calendar size={24} />}
-            //trend={{ value: "Active", isPositive: true }}
+            detailsHref="/super-admin/staff"
           />
           <KPIStatsCards
             title="Admins"
             value={isLoading ? "-" : kpiMetrics.adminCount}
             subtitle="System administrators"
             icon={<UserCog size={24} />}
-            //trend={{ value: "Managing", isPositive: true }}
+            detailsHref="/super-admin/allUsers"
           />
         </div>
-        <div className="p-4">
+        {/* <div className="p-4">
           <small className="font-dmsans text-[14px] font-semibold text-[#525866]">
             Quick Actions
           </small>
@@ -115,12 +115,12 @@ export default function SuperDashboard() {
             icon={<Star size={24} />}
             href="/super-admin/allUsers?action=deactivate"
           />
-        </div>
-        <QuickAccessMap />
+        </div> */}
         <div className="mt-10 grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
           <MostActiveZonesCard />
-          <AlertsCard />
+          {/* <AlertsCard /> */}
         </div>
+        <QuickAccessMap />
       </main>
     </div>
   );

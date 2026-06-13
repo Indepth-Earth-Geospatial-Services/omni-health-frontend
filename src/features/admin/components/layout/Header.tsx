@@ -102,14 +102,13 @@ export default function Header({ name, className }: HeaderProps) {
       <div>
         <div className="flex items-center gap-4">
           {/* Notification Bell */}
-          <div className="relative" ref={dropdownRef}>
+          {/* <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="relative rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
               aria-label="Notifications"
             >
               <Bell size={20} />
-              {/* Notification Badge */}
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                   <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
@@ -118,10 +117,8 @@ export default function Header({ name, className }: HeaderProps) {
               )}
             </button>
 
-            {/* Notification Dropdown */}
             {isDropdownOpen && (
               <div className="absolute right-0 z-50 mt-2 w-96 rounded-xl border-2 border-slate-200 bg-white shadow-lg">
-                {/* Dropdown Header */}
                 <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                   <div>
                     <h3 className="text-base font-bold text-slate-900">
@@ -142,7 +139,6 @@ export default function Header({ name, className }: HeaderProps) {
                   )}
                 </div>
 
-                {/* Notification List */}
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="px-4 py-8 text-center">
@@ -179,7 +175,6 @@ export default function Header({ name, className }: HeaderProps) {
                   )}
                 </div>
 
-                {/* Dropdown Footer */}
                 {notifications.length > 0 && (
                   <div className="border-t border-slate-200 px-4 py-3">
                     <button className="text-primary w-full text-center text-sm font-medium hover:underline">
@@ -189,7 +184,7 @@ export default function Header({ name, className }: HeaderProps) {
                 )}
               </div>
             )}
-          </div>
+          </div> */}
           {/* Facility Image */}
           <FacilityImageButton
             facilityId={facilityId ?? ""}

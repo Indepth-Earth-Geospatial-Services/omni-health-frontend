@@ -27,7 +27,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Omni Health",
+  title: "Geo Health",
   description: "Healthcare Management System",
   icons: {
     icon: [

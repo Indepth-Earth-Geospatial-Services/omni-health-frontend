@@ -47,19 +47,19 @@ const MostActiveZonesCard = () => {
       {
         name: "Health Post",
         value: healthPostCount,
-        color: "bg-orange-400",
+        color: "bg-purple-400",
         width: `${Math.round((healthPostCount / maxValue) * 100)}%`,
       },
       {
         name: "Health Clinic",
         value: healthClinicCount,
-        color: "bg-purple-600",
+        color: "bg-rose-400",
         width: `${Math.round((healthClinicCount / maxValue) * 100)}%`,
       },
       {
         name: "Model Primary HealthCentre (MPHC)",
         value: mphcCount,
-        color: "bg-blue-500",
+        color: "bg-amber-400",
         width: `${Math.round((mphcCount / maxValue) * 100)}%`,
       },
     ];
@@ -72,7 +72,7 @@ const MostActiveZonesCard = () => {
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-50 text-gray-900">
           <Shield className="h-5 w-5" strokeWidth={2} />
         </div>
-        <h3 className="text-lg font-bold text-gray-900">Most Active Zones</h3>
+        <h3 className="text-lg font-bold text-gray-900">Facilities by Category</h3>
       </div>
 
       {/* List Container */}

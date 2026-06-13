@@ -114,20 +114,19 @@ export default function Header({ name, className }: HeaderProps) {
       <div className="flex items-center gap-4">
         {/* Notification Bell */}
         <div className="relative" ref={dropdownRef}>
-          <button
+          {/* <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="relative rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
             aria-label="Notifications"
           >
             <Bell size={20} />
-            {/* Notification Badge */}
             {unreadCount > 0 && (
               <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                 <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
                 <span className="bg-primary relative inline-flex h-2 w-2 rounded-full"></span>
               </span>
             )}
-          </button>
+          </button> */}
 
           {/* Notification Dropdown */}
           {isDropdownOpen && (
