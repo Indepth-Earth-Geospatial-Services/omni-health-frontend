@@ -85,7 +85,7 @@ export default function SuperDashboard() {
             detailsHref="/super-admin/allUsers"
           />
         </div>
-        <div className="p-4">
+        {/* <div className="p-4">
           <small className="font-dmsans text-[14px] font-semibold text-[#525866]">
             Quick Actions
           </small>
@@ -115,12 +115,12 @@ export default function SuperDashboard() {
             icon={<Star size={24} />}
             href="/super-admin/allUsers?action=deactivate"
           />
-        </div>
-        <QuickAccessMap />
+        </div> */}
         <div className="mt-10 grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
           <MostActiveZonesCard />
-          <AlertsCard />
+          {/* <AlertsCard /> */}
         </div>
+        <QuickAccessMap />
       </main>
     </div>
   );
