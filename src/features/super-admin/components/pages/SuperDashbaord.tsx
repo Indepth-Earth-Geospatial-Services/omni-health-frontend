@@ -61,28 +61,28 @@ export default function SuperDashboard() {
             value={isLoading ? "-" : kpiMetrics.totalFacilities}
             subtitle="Healthcare facilities"
             icon={<Building2 size={24} />}
-            //trend={{ value: "Active", isPositive: true }}
+            detailsHref="/super-admin/facility-registry"
           />
           <KPIStatsCards
             title="Total Users"
             value={isLoading ? "-" : kpiMetrics.totalUsers}
             subtitle="Registered users"
             icon={<Users size={24} />}
-            //trend={{ value: "Growing", isPositive: true }}
+            detailsHref="/super-admin/allUsers"
           />
           <KPIStatsCards
             title="Total Staff"
             value={isLoading ? "-" : kpiMetrics.totalStaff}
             subtitle="Medical personnel"
             icon={<Calendar size={24} />}
-            //trend={{ value: "Active", isPositive: true }}
+            detailsHref="/super-admin/staff"
           />
           <KPIStatsCards
             title="Admins"
             value={isLoading ? "-" : kpiMetrics.adminCount}
             subtitle="System administrators"
             icon={<UserCog size={24} />}
-            //trend={{ value: "Managing", isPositive: true }}
+            detailsHref="/super-admin/allUsers"
           />
         </div>
         <div className="p-4">
