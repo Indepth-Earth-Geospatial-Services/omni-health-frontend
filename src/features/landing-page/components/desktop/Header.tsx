@@ -91,7 +91,7 @@ export default function Header() {
         </div>
 
         {/* Mobile: admin icon only, pinned right */}
-        <div className="flex items-center justify-end md:hidden">
+        {/* <div className="flex items-center justify-end md:hidden">
           <Link
             href="/login"
             className="rounded-full p-1.5 text-white/90 transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
@@ -99,7 +99,7 @@ export default function Header() {
           >
             <LogIn size={18} strokeWidth={2} />
           </Link>
-        </div>
+        </div> */}
       </div>
       {/* ── End Utility Bar ── */}
     </header>
