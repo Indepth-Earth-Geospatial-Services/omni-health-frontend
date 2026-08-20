@@ -30,6 +30,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { Spinner } from "@/components/ui/spinner";
 import EmptyState from "@/features/compare-facilities/components/emptyState";
+import { useFacilitySearch } from "@/hooks/use-facility-search";
 
 export function CompareFacilitiesDesktopLayout() {
   useUserLocation();
@@ -75,7 +76,7 @@ export function CompareFacilitiesDesktopLayout() {
   return (
     <SidebarProvider
       defaultOpen={false}
-      className="!mx-0 !max-w-full h-dvh overflow-hidden"
+      className="!mx-0 h-dvh !max-w-full overflow-hidden"
     >
       <SidebarContentNav />
 
@@ -103,9 +104,7 @@ export function CompareFacilitiesDesktopLayout() {
         <main className="scrollbar-hide flex-1 overflow-auto px-5 pb-5">
           {selectedFacilitiesCount === 0 && (
             <div className="relative mt-8 flex min-h-[400px] items-center justify-center">
-              <EmptyState
-                onAddFacility={() => handleAddFacilityClick(0)}
-              />
+              <EmptyState onAddFacility={() => handleAddFacilityClick(0)} />
             </div>
           )}
 
@@ -115,7 +114,10 @@ export function CompareFacilitiesDesktopLayout() {
                 <div className="mb-6 flex gap-6">
                   {facilities.map((facility, index) =>
                     facility ? (
-                      <Card key={facility.facility_id} className="relative flex-1">
+                      <Card
+                        key={facility.facility_id}
+                        className="relative flex-1"
+                      >
                         <Button
                           variant="ghost"
                           size="icon"
@@ -190,7 +192,7 @@ function FacilitySelectionDialog({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500, 2);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500, 1);
 
   const {
     data,
@@ -199,9 +201,18 @@ function FacilitySelectionDialog({
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useAllFacilities({ name: debouncedSearchTerm });
+  } = useAllFacilities();
 
-  const facilities = data?.pages.flatMap((page) => page.facilities) ?? [];
+  const searchFacilityQuery = useFacilitySearch({ name: debouncedSearchTerm });
+
+  const allFacilitiesData =
+    data?.pages.flatMap((page) => page.facilities) ?? [];
+
+  const searchFacilitiesData =
+    searchFacilityQuery.data?.pages.flatMap((p) => p.facilities) ?? [];
+
+  const facilities =
+    debouncedSearchTerm.length > 1 ? searchFacilitiesData : allFacilitiesData;
 
   const handleSelect = (facility: Facility) => {
     onSelect(facility);
@@ -224,21 +235,25 @@ function FacilitySelectionDialog({
           />
         </div>
         <ScrollArea className="h-80">
-          {isLoading && (
+          {(isLoading || searchFacilityQuery.isLoading) && (
             <div className="flex justify-center py-8">
               <Spinner />
             </div>
           )}
-          {isError && (
+          {(isError || searchFacilityQuery.isError) && (
             <p className="py-8 text-center text-red-500">
               Failed to load facilities.
             </p>
           )}
-          {!isLoading && !isError && facilities.length === 0 && (
-            <p className="py-8 text-center text-[#868C98]">
-              No facilities found.
-            </p>
-          )}
+          {!isLoading &&
+            !searchFacilityQuery.isLoading &&
+            !searchFacilityQuery.isError &&
+            !isError &&
+            facilities.length === 0 && (
+              <p className="py-8 text-center text-[#868C98]">
+                No facilities found.
+              </p>
+            )}
           {facilities.length > 0 && (
             <ul className="space-y-1">
               {facilities.map((facility) => (
@@ -248,13 +263,11 @@ function FacilitySelectionDialog({
                     onClick={() => handleSelect(facility)}
                   >
                     <p className="font-semibold">{facility.facility_name}</p>
-                    <p className="text-sm text-[#868C98]">
-                      {facility.address}
-                    </p>
+                    <p className="text-sm text-[#868C98]">{facility.address}</p>
                   </button>
                 </li>
               ))}
-              {hasNextPage && (
+              {!debouncedSearchTerm && hasNextPage && (
                 <li className="py-3 text-center">
                   <Button
                     variant="outline"

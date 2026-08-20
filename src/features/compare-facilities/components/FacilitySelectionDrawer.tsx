@@ -14,6 +14,7 @@ import { Facility } from "@/types/api-response";
 import { Spinner } from "@/components/ui/spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { useFacilitySearch } from "@/hooks/use-facility-search";
 
 interface FacilitySelectionDrawerProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export function FacilitySelectionDrawer({
 }: FacilitySelectionDrawerProps) {
   const [snap, setSnap] = useState<string | number | null>(0.9);
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500, 2);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500, 1);
 
   const {
     data,
@@ -37,14 +38,22 @@ export function FacilitySelectionDrawer({
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useAllFacilities({ name: debouncedSearchTerm });
+  } = useAllFacilities();
+  const searchFacilityQuery = useFacilitySearch({ name: debouncedSearchTerm });
 
   const handleSelect = (facility: Facility) => {
     onSelectFacility(facility);
     onOpenChange(false);
   };
 
-  const facilities = data?.pages.flatMap((page) => page.facilities) ?? [];
+  const allFacilitiesData =
+    data?.pages.flatMap((page) => page.facilities) ?? [];
+
+  const searchFacilitiesData =
+    searchFacilityQuery.data?.pages.flatMap((p) => p.facilities) ?? [];
+
+  const facilities =
+    debouncedSearchTerm.length > 1 ? searchFacilitiesData : allFacilitiesData;
 
   return (
     <Drawer
@@ -68,15 +77,22 @@ export function FacilitySelectionDrawer({
           </div>
         </DrawerHeader>
         <div className="flex-1 overflow-auto px-4">
-          {isLoading && <Spinner className="mx-auto" />}
-          {isError && (
-            <p className="text-center text-red-500">
-              Failed to load facilities.
-            </p>
+          {(isLoading || searchFacilityQuery.isLoading) && (
+            <Spinner className="mx-auto" />
           )}
-          {!isLoading && !isError && facilities.length === 0 && (
-            <p className="text-center text-[#868C98]">No facilities found.</p>
-          )}
+          {isError ||
+            (searchFacilityQuery.isError && (
+              <p className="text-center text-red-500">
+                Failed to load facilities.
+              </p>
+            ))}
+          {/* FIXME */}
+          {!isLoading &&
+            !searchFacilityQuery.isLoading &&
+            !isError &&
+            facilities.length === 0 && (
+              <p className="text-center text-[#868C98]">No facilities found.</p>
+            )}
           {facilities.length > 0 && (
             <ScrollArea className="relative h-full">
               <ul className="space-y-2">
@@ -94,7 +110,7 @@ export function FacilitySelectionDrawer({
                   </li>
                 ))}
               </ul>
-              {hasNextPage && (
+              {!debouncedSearchTerm && hasNextPage && (
                 <div className="py-4 text-center">
                   <Button
                     onClick={() => fetchNextPage()}

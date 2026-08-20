@@ -20,9 +20,7 @@ import Error from "../components/error";
 import { FacilitiesDesktopLayout } from "../components/desktop/facilities-desktop-layout";
 function FacilitiesPage() {
   const isDesktop = useIsDesktop();
-  if (isDesktop) {
-    return <FacilitiesDesktopLayout />;
-  }
+
   const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
   const [filters, setFilters] = useState<SelectedFilters>({});
@@ -113,6 +111,10 @@ function FacilitiesPage() {
       clearAllFilters();
     };
   }, [clearAllFilters]);
+
+  if (isDesktop) {
+    return <FacilitiesDesktopLayout />;
+  }
 
   return (
     <main className="scrollbar-hide h-dvh overflow-auto px-5 pb-5">
