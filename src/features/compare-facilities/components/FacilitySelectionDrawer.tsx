@@ -86,7 +86,7 @@ export function FacilitySelectionDrawer({
                 Failed to load facilities.
               </p>
             ))}
-          {/* FIXME */}
+
           {!isLoading &&
             !searchFacilityQuery.isLoading &&
             !isError &&
