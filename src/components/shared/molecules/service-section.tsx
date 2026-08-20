@@ -15,6 +15,6 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({
     data={services_list}
     emptyMessage="No services information available"
   >
-    <ChipList items={services_list} limit={8} color="blue" />
+    <ChipList items={services_list} color="blue" />
   </DataSection>
 );
