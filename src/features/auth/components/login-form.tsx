@@ -136,7 +136,9 @@ export default function LoginForm() {
 
       // Validate required fields
       if (!user.email || !user.role) {
-        throw new Error("Invalid response from server: missing required fields");
+        throw new Error(
+          "Invalid response from server: missing required fields",
+        );
       }
 
       // Block non-admin roles — this portal is for admins only
@@ -386,27 +388,6 @@ export default function LoginForm() {
             )}
           </Button>
         </form>
-
-        {/* Divider */}
-        <div className="my-6 flex items-center gap-4">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-sm text-gray-400">or continue with</span>
-          <div className="h-px flex-1 bg-gray-200" />
-        </div>
-
-        {/* Social Login */}
-        {/* <SocialLogin /> */}
-
-        {/* Register Link */}
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="text-primary font-semibold hover:underline"
-          >
-            Create account
-          </Link>
-        </p>
       </motion.div>
 
       {showFacilityModal && (

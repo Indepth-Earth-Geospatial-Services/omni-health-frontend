@@ -8,7 +8,7 @@ export interface UserState {
   userLocation: Coordinates | null;
   lastUpdated: number | null;
   locationError: string | null;
-  isLoadingPosition: boolen;
+  isLoadingPosition: boolean;
   permissionState: "prompt" | "granted" | "denied" | "unsupported" | null;
 }
 

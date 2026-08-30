@@ -1,7 +1,7 @@
 "use client";
 import FacilityListItem from "@/components/shared/molecules/facility-list-item";
 import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
-import { useFacilityStore } from "@/features/user/store/facility-store";
+import { FacilityDetailsView } from "@/components/shared/organisms/facility-details-view";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { useFacilitySearch } from "@/hooks/use-facility-search";
@@ -11,7 +11,6 @@ import { Facility } from "@/types";
 import { SelectedFilters } from "@/types/search-filter";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { Button } from "../../../components/ui/button";
@@ -20,18 +19,12 @@ import Error from "../components/error";
 import { FacilitiesDesktopLayout } from "../components/desktop/facilities-desktop-layout";
 function FacilitiesPage() {
   const isDesktop = useIsDesktop();
-  if (isDesktop) {
-    return <FacilitiesDesktopLayout />;
-  }
-  const router = useRouter();
+
   const { ref, inView } = useInView({ threshold: 0.5 });
   const [filters, setFilters] = useState<SelectedFilters>({});
+  const [detailsFacility, setDetailsFacility] = useState<Facility | null>(null);
 
   const searchInput = useSearchFilterStore((state) => state.searchQuery);
-
-  const setSelectedFacility = useFacilityStore(
-    (state) => state.setSelectedFacility,
-  );
 
   const clearAllFilters = useSearchFilterStore(
     (state) => state.clearAllFilters,
@@ -87,13 +80,9 @@ function FacilitiesPage() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleViewDetails = useCallback(
-    (facility: Facility) => {
-      setSelectedFacility(facility);
-      router.push(`/facilities/${facility.facility_id}`);
-    },
-    [router, setSelectedFacility],
-  );
+  const handleViewDetails = useCallback((facility: Facility) => {
+    setDetailsFacility(facility);
+  }, []);
 
   // eslint-disable-next-line
   const handleFilter = useCallback((filterValues: any) => {
@@ -113,6 +102,10 @@ function FacilitiesPage() {
       clearAllFilters();
     };
   }, [clearAllFilters]);
+
+  if (isDesktop) {
+    return <FacilitiesDesktopLayout />;
+  }
 
   return (
     <main className="scrollbar-hide h-dvh overflow-auto px-5 pb-5">
@@ -198,6 +191,11 @@ function FacilitiesPage() {
           )}
         </div>
       )}
+
+      <FacilityDetailsView
+        facility={detailsFacility}
+        onClose={() => setDetailsFacility(null)}
+      />
     </main>
   );
 }

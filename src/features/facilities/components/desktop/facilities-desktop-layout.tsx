@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarContentNav } from "@/features/user/components/desktop/sidebar-content";
 import FacilityListItem from "@/components/shared/molecules/facility-list-item";
 import { SearchAndFilter } from "@/components/shared/organisms/search-and-filter";
-import { useFacilityStore } from "@/features/user/store/facility-store";
+import { FacilityDetailsView } from "@/components/shared/organisms/facility-details-view";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useAllFacilities } from "@/hooks/use-facilities";
 import { useFacilitySearch } from "@/hooks/use-facility-search";
@@ -15,7 +12,6 @@ import { useSearchFilterStore } from "@/store/search-filter-store";
 import { Facility } from "@/types";
 import { SelectedFilters } from "@/types/search-filter";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { Button } from "@/components/ui/button";
@@ -23,14 +19,11 @@ import EmptyState from "../empty-state";
 import Error from "../error";
 
 export function FacilitiesDesktopLayout() {
-  const router = useRouter();
   const { ref, inView } = useInView({ threshold: 0.5 });
   const [filters, setFilters] = useState<SelectedFilters>({});
+  const [detailsFacility, setDetailsFacility] = useState<Facility | null>(null);
 
   const searchInput = useSearchFilterStore((state) => state.searchQuery);
-  const setSelectedFacility = useFacilityStore(
-    (state) => state.setSelectedFacility,
-  );
   const clearAllFilters = useSearchFilterStore(
     (state) => state.clearAllFilters,
   );
@@ -78,13 +71,9 @@ export function FacilitiesDesktopLayout() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleViewDetails = useCallback(
-    (facility: Facility) => {
-      setSelectedFacility(facility);
-      router.push(`/facilities/${facility.facility_id}`);
-    },
-    [router, setSelectedFacility],
-  );
+  const handleViewDetails = useCallback((facility: Facility) => {
+    setDetailsFacility(facility);
+  }, []);
 
   const handleFilter = useCallback((filterValues: SelectedFilters) => {
     setFilters(filterValues);
@@ -105,7 +94,7 @@ export function FacilitiesDesktopLayout() {
   return (
     <SidebarProvider
       defaultOpen={false}
-      className="!mx-0 !max-w-full h-dvh overflow-hidden"
+      className="!mx-0 h-dvh !max-w-full overflow-hidden"
     >
       <SidebarContentNav />
 
@@ -125,10 +114,7 @@ export function FacilitiesDesktopLayout() {
 
         {/* Search & Filter */}
         <div className="shrink-0 border-b border-[#E2E4E9] px-5 py-3">
-          <SearchAndFilter
-            includeFilter={true}
-            onApplyFilters={handleFilter}
-          />
+          <SearchAndFilter includeFilter={true} onApplyFilters={handleFilter} />
         </div>
 
         {/* Facility List */}
@@ -197,6 +183,11 @@ export function FacilitiesDesktopLayout() {
           )}
         </main>
       </div>
+
+      <FacilityDetailsView
+        facility={detailsFacility}
+        onClose={() => setDetailsFacility(null)}
+      />
     </SidebarProvider>
   );
 }

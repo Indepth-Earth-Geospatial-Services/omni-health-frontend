@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import { FacilityDetailsView } from "@/components/shared/organisms/facility-details-view";
 import { MAPBOX_TOKEN } from "@/constants";
-import { useFacilityStore } from "@/features/user/store/facility-store";
 import { Facility } from "@/features/user/types";
 import { Plus } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Map, { Layer, Marker, Popup, Source } from "react-map-gl/mapbox";
 import riversLGA from "../data/boundary.json";
@@ -31,7 +30,6 @@ const facilityColors = {
 };
 
 function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
-  const router = useRouter();
   const mapRef = useRef<any>(null);
   const [viewState, setViewState] = useState({
     longitude: 7.0498,
@@ -44,13 +42,10 @@ function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null,
   );
+  const [detailsFacility, setDetailsFacility] = useState<Facility | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const setSelectedFacilityInStore = useFacilityStore(
-    (state) => state.setSelectedFacility,
-  );
   const onViewDetails = () => {
-    setSelectedFacilityInStore(selectedFacility);
-    router.push(`/facilities/${selectedFacility.facility_id}`);
+    setDetailsFacility(selectedFacility);
   };
 
   useEffect(() => {
@@ -153,6 +148,11 @@ function ExploreMap({ allFacilities = [] }: ExploreMapProps) {
           />
         </Popup>
       )}
+
+      <FacilityDetailsView
+        facility={detailsFacility}
+        onClose={() => setDetailsFacility(null)}
+      />
     </Map>
   );
 }

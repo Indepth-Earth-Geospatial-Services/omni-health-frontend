@@ -25,9 +25,7 @@ import { CompareFacilitiesDesktopLayout } from "../components/desktop/compare-fa
 
 function CompareFacilitiesPage() {
   const isDesktop = useIsDesktop();
-  if (isDesktop) {
-    return <CompareFacilitiesDesktopLayout />;
-  }
+
   const {
     facilities,
     addFacility,
@@ -66,6 +64,10 @@ function CompareFacilitiesPage() {
   const handleReset = () => {
     clearAll();
   };
+
+  if (isDesktop) {
+    return <CompareFacilitiesDesktopLayout />;
+  }
 
   return (
     <div className="relative min-h-dvh">

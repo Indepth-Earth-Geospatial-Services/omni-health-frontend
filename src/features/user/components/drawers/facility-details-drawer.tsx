@@ -58,7 +58,6 @@ function FacilityDetailsDrawer({
           facility={facilityToUse}
           onShowDirections={onShowDirections}
           onClose={onClose}
-          variant="drawer"
         />
       </DrawerContent>
     </Drawer>

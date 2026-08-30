@@ -20,7 +20,6 @@ export function FacilityDetailsPanel({
         facility={facility}
         onClose={onClose}
         onShowDirections={onShowDirections}
-        variant="drawer"
       />
     </aside>
   );
