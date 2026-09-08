@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import { Shield, CheckCircle2 } from "lucide-react";
-import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
+// TEMP: see src/features/super-admin/TEMP-chunked-facilities/README.md
+import { useFacilitiesForMap } from "@/features/super-admin/TEMP-chunked-facilities/useChunkedFacilities";
 
 interface ZoneItem {
   name: string;
@@ -13,7 +14,7 @@ interface ZoneItem {
 
 const MostActiveZonesCard = () => {
   // Fetch all facilities
-  const { data } = useFacilities({ page: 1, limit: 1000 });
+  const { data } = useFacilitiesForMap();
 
   // Calculate counts by facility category
   const zones: ZoneItem[] = useMemo(() => {

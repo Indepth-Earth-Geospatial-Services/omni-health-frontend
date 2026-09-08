@@ -48,7 +48,7 @@ function AdminLoginButton() {
       aria-label="Administrator login"
     >
       <LogIn size={14} strokeWidth={2} aria-hidden="true" />
-      Admin Login
+      Login
     </Link>
   );
 }
@@ -89,17 +89,6 @@ export default function Header() {
             <AdminLoginButton />
           </div>
         </div>
-
-        {/* Mobile: admin icon only, pinned right */}
-        {/* <div className="flex items-center justify-end md:hidden">
-          <Link
-            href="/login"
-            className="rounded-full p-1.5 text-white/90 transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
-            aria-label="Administrator login"
-          >
-            <LogIn size={18} strokeWidth={2} />
-          </Link>
-        </div> */}
       </div>
       {/* ── End Utility Bar ── */}
     </header>

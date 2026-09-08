@@ -6,12 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  useAuthStore,
-  useAssignedLgas,
-  User,
-} from "@/features/auth/auth-store";
-import { RIVERS_STATE_LGAS } from "@/features/super-admin/constants/lga";
+import { useAuthStore, User } from "@/features/auth/auth-store";
 import {
   Mail,
   Shield,
@@ -21,10 +16,20 @@ import {
   X,
   UserRound,
   MapPin,
+  Pencil,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, ChangeEvent } from "react";
 import { toast } from "sonner";
+import {
+  useMyProfile,
+  useUpdateProfile,
+  useUploadAvatar,
+  useDeleteAvatar,
+} from "../hooks/useProfile";
+import { MAX_AVATAR_BYTES } from "@/services/profile.service";
 
 // ── Image Viewer ──────────────────────────────────────────────────────────────
 function ImageViewer({
@@ -65,18 +70,10 @@ function ImageViewer({
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getInitials(user: User | null) {
-  if (!user) return "U";
-  const f = user.first_name?.[0] || "";
-  const l = user.last_name?.[0] || "";
-  return (f + l).toUpperCase() || user.email[0].toUpperCase();
-}
-
-function getFullName(user: User | null) {
-  if (!user) return "Unknown User";
-  if (user.first_name || user.last_name)
-    return `${user.first_name || ""} ${user.last_name || ""}`.trim();
-  return user.email.split("@")[0];
+function getInitials(first?: string | null, last?: string | null, email?: string) {
+  const f = first?.[0] || "";
+  const l = last?.[0] || "";
+  return (f + l).toUpperCase() || email?.[0]?.toUpperCase() || "U";
 }
 
 function roleBadgeClass(role: string) {
@@ -100,22 +97,45 @@ interface ProfileModalProps {
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const { user, logout } = useAuthStore();
-  const assignedLgaIds = useAssignedLgas();
-  const assignedLgas = assignedLgaIds.map((id) => {
-    const match = RIVERS_STATE_LGAS.find((l) => l.value === String(id));
-    return match?.label ?? String(id);
-  });
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  // /me is the authoritative source — it carries the picture and the LGA names
+  // the store only knows as ids.
+  const { data: profile, isLoading: isProfileLoading } = useMyProfile(isOpen);
+  const updateProfile = useUpdateProfile();
+  const uploadAvatar = useUploadAvatar();
+  const deleteAvatar = useDeleteAvatar();
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
-  const serverImage = (user as { image?: string })?.image || null;
-  const activeImage = previewImage || serverImage;
+  const displayFirst = profile?.first_name ?? user?.first_name ?? "";
+  const displayLast = profile?.last_name ?? user?.last_name ?? "";
+  const email = profile?.email ?? user?.email ?? "";
+  const role = profile?.role ?? user?.role ?? "user";
+  const isActive = profile?.is_active ?? user?.is_active ?? false;
+  const avatarUrl =
+    profile?.profile_image_url ?? (user as User | null)?.image ?? null;
+  const assignedLgas = profile?.assigned_lgas ?? [];
+
+  const fullName =
+    `${displayFirst} ${displayLast}`.trim() ||
+    email.split("@")[0] ||
+    "Unknown User";
+
+  // Seed the inputs as the edit form opens, so a cancelled edit never leaves
+  // stale text behind the next time it is opened.
+  const startEditingName = () => {
+    setFirstName(displayFirst);
+    setLastName(displayLast);
+    setIsEditingName(true);
+  };
 
   const handleClose = () => {
-    setPreviewImage(null);
+    setIsEditingName(false);
     onClose();
   };
 
@@ -125,30 +145,52 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     router.push("/login");
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file.");
+  const handleSaveName = () => {
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
+
+    if (!trimmedFirst || !trimmedLast) {
+      toast.error("First and last name are both required.");
       return;
     }
-    setPreviewImage(URL.createObjectURL(file));
-    toast.info("Profile photo update coming soon.");
-    e.target.value = "";
+    if (trimmedFirst.length > 100 || trimmedLast.length > 100) {
+      toast.error("Names must be 100 characters or fewer.");
+      return;
+    }
+    if (trimmedFirst === displayFirst && trimmedLast === displayLast) {
+      setIsEditingName(false);
+      return;
+    }
+
+    updateProfile.mutate(
+      { first_name: trimmedFirst, last_name: trimmedLast },
+      { onSuccess: () => setIsEditingName(false) },
+    );
   };
 
-  const handleRemoveImage = () => {
-    if (previewImage) {
-      setPreviewImage(null);
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose a valid image file.");
       return;
     }
-    toast.info("Profile photo removal coming soon.");
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error("Images must be 5 MB or smaller.");
+      return;
+    }
+    // Uploading replaces any existing picture, so there is no delete first.
+    uploadAvatar.mutate(file);
   };
+
+  const isAvatarBusy = uploadAvatar.isPending || deleteAvatar.isPending;
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-lg overflow-hidden bg-white p-0">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto bg-white p-0">
           {/* Header band */}
           <div className="from-primary/90 to-primary relative bg-gradient-to-br px-6 pt-6 pb-20">
             <DialogHeader>
@@ -171,18 +213,28 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             />
 
             <div
-              onClick={() => activeImage && setIsViewerOpen(true)}
-              className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white shadow-xl transition-all duration-300 ${activeImage ? "cursor-zoom-in hover:scale-105" : "cursor-default"}`}
+              onClick={() => avatarUrl && !isAvatarBusy && setIsViewerOpen(true)}
+              className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-4 border-white shadow-xl transition-all duration-300 ${
+                avatarUrl && !isAvatarBusy
+                  ? "cursor-zoom-in hover:scale-105"
+                  : "cursor-default"
+              }`}
             >
-              {activeImage ? (
+              {avatarUrl ? (
                 <img
-                  src={activeImage}
+                  src={avatarUrl}
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <div className="from-primary to-primary/80 flex h-full w-full items-center justify-center bg-gradient-to-br text-3xl font-bold text-white">
-                  {getInitials(user)}
+                  {getInitials(displayFirst, displayLast, email)}
+                </div>
+              )}
+
+              {isAvatarBusy && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
                 </div>
               )}
             </div>
@@ -191,15 +243,17 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             <div className="mt-3 flex items-center gap-2">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200"
+                disabled={isAvatarBusy}
+                className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 disabled:opacity-50"
               >
                 <Camera size={13} />
-                {activeImage ? "Change" : "Upload Photo"}
+                {avatarUrl ? "Change" : "Upload Photo"}
               </button>
-              {activeImage && (
+              {avatarUrl && (
                 <button
-                  onClick={handleRemoveImage}
-                  className="flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+                  onClick={() => deleteAvatar.mutate()}
+                  disabled={isAvatarBusy}
+                  className="flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-100 disabled:opacity-50"
                 >
                   <Trash2 size={13} />
                   Remove
@@ -210,15 +264,94 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
           {/* Name + role */}
           <div className="px-6 pt-3 pb-2 text-center">
-            <h3 className="text-lg font-bold text-gray-900">
-              {getFullName(user)}
-            </h3>
-            <span
-              className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium ${roleBadgeClass(user?.role || "user")}`}
-            >
-              <Shield size={11} />
-              {formatRole(user?.role || "user")}
-            </span>
+            {isEditingName ? (
+              <div className="mx-auto max-w-sm text-left">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label
+                      htmlFor="profile-first-name"
+                      className="mb-1 block text-[10px] tracking-wide text-gray-400 uppercase"
+                    >
+                      First Name
+                    </label>
+                    <input
+                      id="profile-first-name"
+                      type="text"
+                      maxLength={100}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      disabled={updateProfile.isPending}
+                      className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="profile-last-name"
+                      className="mb-1 block text-[10px] tracking-wide text-gray-400 uppercase"
+                    >
+                      Last Name
+                    </label>
+                    <input
+                      id="profile-last-name"
+                      type="text"
+                      maxLength={100}
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      disabled={updateProfile.isPending}
+                      className="focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 flex justify-center gap-2">
+                  <button
+                    onClick={() => setIsEditingName(false)}
+                    disabled={updateProfile.isPending}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveName}
+                    disabled={updateProfile.isPending}
+                    className="bg-primary hover:bg-primary/90 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
+                  >
+                    {updateProfile.isPending ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        Saving…
+                      </>
+                    ) : (
+                      <>
+                        <Check size={12} />
+                        Save
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-center gap-2">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {isProfileLoading && !user ? "…" : fullName}
+                  </h3>
+                  <button
+                    onClick={startEditingName}
+                    title="Edit your name"
+                    className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                </div>
+                <span
+                  className={`mt-1.5 inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-medium ${roleBadgeClass(role)}`}
+                >
+                  <Shield size={11} />
+                  {formatRole(role)}
+                </span>
+              </>
+            )}
           </div>
 
           <div className="mx-6 border-t border-gray-100" />
@@ -234,7 +367,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   Email
                 </p>
                 <p className="truncate text-sm font-medium text-gray-900">
-                  {user?.email || "—"}
+                  {email || "—"}
                 </p>
               </div>
             </div>
@@ -248,9 +381,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   Account Status
                 </p>
                 <p
-                  className={`text-sm font-medium ${user?.is_active ? "text-green-600" : "text-red-500"}`}
+                  className={`text-sm font-medium ${isActive ? "text-green-600" : "text-red-500"}`}
                 >
-                  {user?.is_active ? "Active" : "Inactive"}
+                  {isActive ? "Active" : "Inactive"}
                 </p>
               </div>
             </div>
@@ -296,7 +429,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       <ImageViewer
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}
-        imageUrl={activeImage}
+        imageUrl={avatarUrl}
       />
     </>
   );
