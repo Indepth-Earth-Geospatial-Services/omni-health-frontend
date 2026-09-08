@@ -33,6 +33,7 @@ import {
 import { inviteService, type InvitePreview } from "@/services/invite.service";
 import { profileService } from "@/services/profile.service";
 import { useAuthStore, type User } from "@/features/auth/auth-store";
+import FacilitySelectionModal from "./FacilitySelectionModal";
 import { getRoleDashboard } from "@/lib/auth-constants";
 import { ApiError, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
@@ -44,6 +45,18 @@ type LinkState =
   | { status: "gone"; message: string }
   /** 404 or anything else — the link never worked. */
   | { status: "invalid"; message: string };
+
+/**
+ * What still has to happen after the account is created. An admin needs a
+ * facility selected before AdminSessionGuard will let /admin render, and the
+ * accept response carries no facility ids of its own.
+ */
+type PostAcceptState =
+  | null
+  /** Several facilities — they pick one, exactly as the login form does. */
+  | { kind: "choose-facility"; facilityIds: string[] }
+  /** No coverage yet, so /admin would bounce them straight back out. */
+  | { kind: "no-facility" };
 
 function formatRole(role: string) {
   return role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -98,12 +111,17 @@ export default function AcceptInviteForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const login = useAuthStore((state) => state.login);
+  const setCurrentFacilityId = useAuthStore(
+    (state) => state.setCurrentFacilityId,
+  );
 
   const [linkState, setLinkState] = useState<LinkState>({ status: "loading" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // The account exists from here on — only the landing step is left.
+  const [postAccept, setPostAccept] = useState<PostAcceptState>(null);
 
   const form = useForm<AcceptInviteFormData>({
     resolver: zodResolver(acceptInviteSchema),
@@ -192,6 +210,24 @@ export default function AcceptInviteForm() {
         description: "Your account is ready — you are now signed in.",
       });
 
+      // A super admin needs no facility and can go straight through.
+      if (user.role !== "admin") {
+        router.push(getRoleDashboard(user.role));
+        return;
+      }
+
+      // AdminSessionGuard logs out any admin reaching /admin without a
+      // facility selected, so resolve that here rather than navigating into a
+      // redirect loop. login() already set it when there is exactly one.
+      if (facilityIds.length === 0) {
+        setPostAccept({ kind: "no-facility" });
+        return;
+      }
+      if (facilityIds.length > 1) {
+        setPostAccept({ kind: "choose-facility", facilityIds });
+        return;
+      }
+
       router.push(getRoleDashboard(user.role));
     } catch (error) {
       const status = error instanceof ApiError ? error.statusCode : undefined;
@@ -218,6 +254,52 @@ export default function AcceptInviteForm() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // ── After the account exists ────────────────────────────────────────────────
+  // These take priority over every link state below: the invite is spent, so
+  // re-checking it would only report a 410.
+  if (postAccept?.kind === "choose-facility") {
+    return (
+      <FacilitySelectionModal
+        isOpen
+        facilityIds={postAccept.facilityIds}
+        onSelect={(facilityId) => {
+          setCurrentFacilityId(facilityId);
+          router.push("/admin");
+        }}
+      />
+    );
+  }
+
+  if (postAccept?.kind === "no-facility") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-slate-200 bg-white p-8 text-center"
+      >
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50">
+          <ShieldCheck className="h-7 w-7 text-green-600" />
+        </div>
+        <h3 className="mt-4 text-lg font-bold text-gray-900">
+          Your account is ready
+        </h3>
+        <p className="mt-2 text-sm text-gray-600">
+          No facilities have been assigned to you yet, so there is nothing to
+          manage in the dashboard right now.
+        </p>
+        <p className="mt-4 text-xs text-gray-500">
+          Ask a super admin to assign you LGA coverage, then sign in.
+        </p>
+        <Link
+          href="/login"
+          className="text-primary mt-6 inline-block text-sm font-medium hover:underline"
+        >
+          Go to sign in
+        </Link>
+      </motion.div>
+    );
   }
 
   // Nothing to validate — they reached the page without a token in the URL.
