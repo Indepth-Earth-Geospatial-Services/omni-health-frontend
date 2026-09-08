@@ -86,11 +86,12 @@ function InviteRow({ invite }: { invite: Invite }) {
                 ? `Revoked ${formatDate(invite.revoked_at)}`
                 : `Expires ${formatDate(invite.expires_at)}`}
           </span>
-          {invite.lga_ids.length > 0 && (
+          {/* Null for super admins, who cover every LGA rather than a list. */}
+          {(invite.lga_ids?.length ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1">
               <MapPin size={10} />
-              {invite.lga_ids.length} LGA
-              {invite.lga_ids.length > 1 ? "s" : ""}
+              {invite.lga_ids!.length} LGA
+              {invite.lga_ids!.length > 1 ? "s" : ""}
             </span>
           )}
         </div>

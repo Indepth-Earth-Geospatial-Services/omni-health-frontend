@@ -74,7 +74,11 @@ export interface Invite {
   first_name: string;
   last_name: string;
   role: InviteRole;
-  lga_ids: number[];
+  /**
+   * Null for a super_admin invite — the API rejects lga_ids for that role, so
+   * nothing is stored. Also null when an admin is invited with no coverage.
+   */
+  lga_ids: number[] | null;
   status: InviteStatus;
   invited_by: number;
   expires_at: string;
