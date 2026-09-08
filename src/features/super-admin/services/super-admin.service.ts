@@ -51,6 +51,62 @@ export interface DeactivateUserResponse {
   message: string;
 }
 
+/**
+ * Accounts exist only by invitation — public registration is closed. The `user`
+ * role is retired, so an invite can only ever create an admin or a super admin.
+ * A super admin covers every LGA, so `lga_ids` is rejected for that role.
+ */
+export type InviteRole = "admin" | "super_admin";
+
+export type InviteStatus = "pending" | "accepted" | "revoked" | "expired";
+
+export interface CreateInviteRequest {
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: InviteRole;
+  lga_ids?: number[];
+}
+
+export interface Invite {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: InviteRole;
+  lga_ids: number[];
+  status: InviteStatus;
+  invited_by: number;
+  expires_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface CreateInviteResponse {
+  message: string;
+  /** Can be false on a 201 — the invite exists but the email never went out. */
+  email_sent: boolean;
+  invite: Invite;
+}
+
+export interface GetInvitesParams {
+  status?: InviteStatus;
+  page?: number;
+  limit?: number;
+}
+
+export interface GetInvitesResponse {
+  message: string;
+  pagination: UserPagination;
+  invites: Invite[];
+}
+
+export interface RevokeInviteResponse {
+  status: string;
+  message: string;
+}
+
 export interface GetAllStaffResponse {
   staff: StaffMember[];
   message: string;
@@ -266,6 +322,7 @@ export type NotificationsResponse = Notification[];
 class SuperAdminService {
   public ENDPOINTS = {
     USERS: "/admin/users",
+    INVITES: "/admin/invites", // POST create · GET list · {id}/resend · DELETE {id}
     ASSIGN_MANAGER: "/admin/assign-manager",
     DEACTIVATE_ACCOUNT: "/deactivate-account",
     SUSPEND_USER: "/admin/users", // POST /admin/users/{user_id}/suspend
@@ -293,6 +350,10 @@ class SuperAdminService {
 
   constructor() {
     this.getUsers = this.getUsers.bind(this);
+    this.createInvite = this.createInvite.bind(this);
+    this.getInvites = this.getInvites.bind(this);
+    this.resendInvite = this.resendInvite.bind(this);
+    this.revokeInvite = this.revokeInvite.bind(this);
     this.assignManager = this.assignManager.bind(this);
     this.deactivateAccount = this.deactivateAccount.bind(this);
     this.createStaff = this.createStaff.bind(this);
@@ -393,6 +454,73 @@ class SuperAdminService {
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Create an invitation and email the link
+   * POST /api/v1/admin/invites
+   * Requires Super Admin role
+   *
+   * The raw token is never returned — it only reaches the recipient's inbox.
+   * A 201 can still carry `email_sent: false` when the mail provider fails, so
+   * callers must check it rather than assuming success.
+   */
+  async createInvite(data: CreateInviteRequest): Promise<CreateInviteResponse> {
+    const payload: CreateInviteRequest = {
+      email: data.email.trim().toLowerCase(),
+      first_name: data.first_name.trim(),
+      last_name: data.last_name.trim(),
+      role: data.role,
+    };
+    // The API rejects lga_ids outright on a super_admin invite (422).
+    if (data.role === "admin") {
+      payload.lga_ids = data.lga_ids ?? [];
+    }
+
+    const response = await apiClient.post(this.ENDPOINTS.INVITES, payload);
+    return response.data;
+  }
+
+  /**
+   * List invitations, newest first
+   * GET /api/v1/admin/invites
+   * `status` is derived from timestamps server-side — an invite turns
+   * `expired` on its own once expires_at passes.
+   */
+  async getInvites(params: GetInvitesParams = {}): Promise<GetInvitesResponse> {
+    const { status, page = 1, limit = 50 } = params;
+
+    const cleanParams: Record<string, string | number> = { page, limit };
+    if (status) cleanParams.status = status;
+
+    const response = await apiClient.get(this.ENDPOINTS.INVITES, {
+      params: cleanParams,
+    });
+    return response.data;
+  }
+
+  /**
+   * Issue a fresh link and email it again
+   * POST /api/v1/admin/invites/{invite_id}/resend
+   * The previous token stops working immediately.
+   */
+  async resendInvite(inviteId: number): Promise<CreateInviteResponse> {
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.INVITES}/${inviteId}/resend`,
+    );
+    return response.data;
+  }
+
+  /**
+   * Revoke a pending invitation
+   * DELETE /api/v1/admin/invites/{invite_id}
+   * The row is kept for the audit trail; its link stops working.
+   */
+  async revokeInvite(inviteId: number): Promise<RevokeInviteResponse> {
+    const response = await apiClient.delete(
+      `${this.ENDPOINTS.INVITES}/${inviteId}`,
+    );
+    return response.data;
   }
 
   /**
