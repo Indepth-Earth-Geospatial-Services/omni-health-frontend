@@ -44,7 +44,7 @@ export function ProfileAvatar({
       <img
         src={imageUrl}
         alt={fullName}
-        className={cn("rounded-full object-cover", className)}
+        className={cn("shrink-0 rounded-full object-cover", className)}
       />
     );
   }
