@@ -20,6 +20,7 @@ import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import ProfileModal from "../../../profile/pages/ProfileModal";
+import { ProfileAvatar } from "../../../profile/components/ProfileAvatar";
 
 interface MenuItem {
   label: string;
@@ -124,10 +125,6 @@ export default function Sidebar() {
   const facility = facilityData?.facility;
 
   const facilityName = facility?.facility_name || "No Facility";
-  const userInitials =
-    user?.first_name && user?.last_name
-      ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
-      : user?.email?.[0]?.toUpperCase() || "U";
 
   const displayName =
     user?.first_name || user?.last_name
@@ -316,20 +313,18 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile - Clickable */}
-      <div className="shrink-0 border-t border-gray-100 p-4">
+      <div className="shrink-0 p-1">
         <button
           onClick={() => setIsProfileModalOpen(true)}
           title={isCollapsed ? displayName : undefined}
           aria-label={isCollapsed ? displayName : undefined}
           className={cn(
             "group flex w-full items-center rounded-lg p-2 transition-all duration-200 hover:bg-gray-100",
-            isCollapsed ? "justify-center" : "gap-3",
+            isCollapsed ? "justify-center" : "gap-2",
           )}
         >
-          {/* User avatar — initials from name, falls back to email initial */}
-          <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold">
-            {userInitials}
-          </div>
+          {/* Uploaded picture, falling back to initials */}
+          <ProfileAvatar className="h-10 w-10" textClassName="text-sm" />
 
           {!isCollapsed && (
             <>

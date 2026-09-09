@@ -190,9 +190,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto bg-white p-0">
+        {/* overflow-x-hidden matters: the decorative circles below are pushed
+            half outside the band with translate-x, and CSS resolves a `visible`
+            axis to `auto` when the other axis scrolls — which is what put a
+            horizontal scrollbar on this dialog. */}
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-x-hidden overflow-y-auto bg-white p-0 sm:max-w-lg">
           {/* Header band */}
-          <div className="from-primary/90 to-primary relative bg-gradient-to-br px-6 pt-6 pb-20">
+          <div className="from-primary/90 to-primary relative overflow-hidden bg-gradient-to-br px-4 pt-6 pb-20 sm:px-6">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold text-white">
                 My Profile
@@ -263,10 +267,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </div>
 
           {/* Name + role */}
-          <div className="px-6 pt-3 pb-2 text-center">
+          <div className="px-4 pt-3 pb-2 text-center sm:px-6">
             {isEditingName ? (
               <div className="mx-auto max-w-sm text-left">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <div>
                     <label
                       htmlFor="profile-first-name"
@@ -357,7 +361,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           <div className="mx-6 border-t border-gray-100" />
 
           {/* Info rows */}
-          <div className="space-y-2 px-6 py-4">
+          <div className="space-y-2 px-4 py-4 sm:px-6">
             <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
               <div className="bg-primary/10 flex h-9 w-9 items-center justify-center rounded-full">
                 <Mail size={15} className="text-primary" />
@@ -391,7 +395,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
           {/* Assigned LGAs */}
           {assignedLgas.length > 0 && (
-            <div className="px-6 pb-3">
+            <div className="px-4 pb-3 sm:px-6">
               <div className="rounded-lg bg-gray-50 px-3 py-2.5">
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <MapPin size={12} className="text-gray-400" />
@@ -414,7 +418,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           )}
 
           {/* Logout */}
-          <div className="px-6 pb-6">
+          <div className="px-4 pb-6 sm:px-6">
             <button
               onClick={handleLogout}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
