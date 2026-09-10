@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { ArrowRight, X, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -15,6 +15,8 @@ import {
   useStaffForm,
   type FieldConfig,
 } from "@/features/admin/hooks/use-staff-form";
+import Tabs from "@/features/super-admin/components/ui/Tabs";
+import BulkImportStaffPanel from "@/components/shared/modals/BulkImportStaffPanel";
 
 interface AddStaffModalProps {
   isOpen: boolean;
@@ -54,6 +56,13 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
     onSubmit,
     onClose,
   });
+
+  const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
+
+  const handleModalClose = useCallback(() => {
+    setActiveTab("single");
+    handleClose();
+  }, [handleClose]);
 
   const renderField = useCallback(
     (field: FieldConfig) => {
@@ -155,7 +164,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
   return (
     <div className="font-geist fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/50" onClick={handleModalClose} />
 
       {/* Modal — fixed height with flex column so header/footer stay sticky */}
       <div className="relative flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
@@ -168,7 +177,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
             </p>
           </div>
           <button
-            onClick={handleClose}
+            onClick={handleModalClose}
             disabled={isSubmitting}
             className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
           >
@@ -176,8 +185,27 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
           </button>
         </div>
 
+        <div className="shrink-0 px-6 pt-4">
+          <Tabs
+            tabs={[
+              { label: "Single Add", value: "single" },
+              { label: "Bulk Import", value: "bulk" },
+            ]}
+            activeTab={activeTab}
+            onTabChange={(value) => setActiveTab(value as "single" | "bulk")}
+            className="py-0"
+          />
+        </div>
+
         {/* ── Scrollable Body ── */}
-        {isLoadingSchema ? (
+        {activeTab === "bulk" ? (
+          <div className="flex-1 overflow-y-auto p-6">
+            <BulkImportStaffPanel
+              facilityId={facilityId}
+              onSuccess={handleModalClose}
+            />
+          </div>
+        ) : isLoadingSchema ? (
           <div className="flex flex-1 items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="text-primary h-8 w-8 animate-spin" />
@@ -192,7 +220,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
                 Failed to load form
               </p>
               <p className="text-xs text-slate-500">Please try again later</p>
-              <Button variant="outline" size="sm" onClick={handleClose}>
+              <Button variant="outline" size="sm" onClick={handleModalClose}>
                 Close
               </Button>
             </div>
@@ -214,11 +242,11 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
         )}
 
         {/* ── Sticky Footer ── */}
-        {!isLoadingSchema && !isSchemaError && (
+        {activeTab === "single" && !isLoadingSchema && !isSchemaError && (
           <div className="flex shrink-0 items-center justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={handleModalClose}
               disabled={isSubmitting}
               className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
             >

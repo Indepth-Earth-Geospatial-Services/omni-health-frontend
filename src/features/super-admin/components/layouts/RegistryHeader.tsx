@@ -180,7 +180,9 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
 
           {/* Sort Dropdown */}
           {showSortBy && (
-            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+            <div
+              className={hasSelection ? "pointer-events-none opacity-40" : ""}
+            >
               <SortDropdown
                 isOpen={activeDropdown === "sort"}
                 onToggle={() =>
@@ -195,7 +197,9 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
 
           {/* Filter Dropdown */}
           {showFilters && (
-            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+            <div
+              className={hasSelection ? "pointer-events-none opacity-40" : ""}
+            >
               <FilterDropdown
                 isOpen={activeDropdown === "filter"}
                 onToggle={() =>
@@ -216,7 +220,9 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
 
           {/* Export Dropdown */}
           {showExport && (
-            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+            <div
+              className={hasSelection ? "pointer-events-none opacity-40" : ""}
+            >
               <ExportDropdown
                 isOpen={activeDropdown === "export"}
                 onToggle={() =>
@@ -232,10 +238,12 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
 
           {/* Add New Button */}
           {buttonLabel && (
-            <div className={hasSelection ? "pointer-events-none opacity-40" : ""}>
+            <div
+              className={hasSelection ? "pointer-events-none opacity-40" : ""}
+            >
               <Button
                 onClick={onButtonClick}
-                size="xl"
+                size="lg"
                 className="flex items-center gap-2 shadow-sm"
               >
                 {buttonIcon}

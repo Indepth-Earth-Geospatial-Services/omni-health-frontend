@@ -32,7 +32,7 @@ const adminMenuItems: MenuItem[] = [
   { label: "Overview", icon: MailOpen, href: "/admin" },
   { label: "Staff", icon: UserCog, href: "/admin/staff" },
   { label: "Facility Profile", icon: Hospital, href: "/admin/facility" },
-  { label: "Equipments & Facility", icon: Hospital, href: "/admin/equipments" },
+  { label: "Inventory", icon: Hospital, href: "/admin/equipments" },
   { label: "Settings", icon: Settings, href: "/admin/settings" },
 ];
 

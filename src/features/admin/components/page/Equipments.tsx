@@ -22,7 +22,12 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
   const [isFacilityOpen, setIsFacilityOpen] = useState(true);
 
   // Fetch inventory data
-  const { data: inventoryData, isLoading, isError, error } = useFacilityInventory(facilityId);
+  const {
+    data: inventoryData,
+    isLoading,
+    isError,
+    error,
+  } = useFacilityInventory(facilityId);
 
   // Equipment actions hook
   const actions = useEquipmentActions({ facilityId });
@@ -50,7 +55,8 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
               Failed to load inventory
             </h3>
             <p className="mt-1 text-sm text-slate-600">
-              {error?.message || "An error occurred while fetching inventory data"}
+              {error?.message ||
+                "An error occurred while fetching inventory data"}
             </p>
           </div>
         </div>
@@ -59,8 +65,12 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
   }
 
   // Convert inventory objects to arrays
-  const equipmentItems = convertInventoryToArray(inventoryData?.inventory?.equipment);
-  const infrastructureItems = convertInventoryToArray(inventoryData?.inventory?.infrastructure);
+  const equipmentItems = convertInventoryToArray(
+    inventoryData?.inventory?.equipment,
+  );
+  const infrastructureItems = convertInventoryToArray(
+    inventoryData?.inventory?.infrastructure,
+  );
 
   return (
     <>
@@ -130,6 +140,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           }
           isAdding={actions.isAddingEquipment}
           addButtonLabel="New Equipment"
+          buttonClassName="shrink-0 text-sm sm:text-lg"
           icon={Activity}
           emptyMessage="No equipment tracked yet. Add your first equipment item."
         />
@@ -151,6 +162,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           }
           isAdding={actions.isAddingInfrastructure}
           addButtonLabel="New Infrastructure"
+          buttonClassName="shrink-0 text-sm sm:text-lg"
           icon={Hospital}
           emptyMessage="No infrastructure tracked yet. Add your first item."
         />

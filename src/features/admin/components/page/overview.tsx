@@ -196,46 +196,55 @@ export default function Overview() {
             ) : (
               <div className="flex flex-1 flex-col gap-1">
                 {(() => {
-                  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+                  const DAY_ORDER = [
+                    "sunday",
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                  ];
                   const hours = Object.entries(
-                    (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                    (facility?.working_hours as
+                      Record<string, string> | undefined) ?? {},
                   ).sort(([a], [b]) => {
                     const ai = DAY_ORDER.indexOf(a.toLowerCase());
                     const bi = DAY_ORDER.indexOf(b.toLowerCase());
                     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
                   });
                   return hours.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-slate-400">
-                    No operating hours set
-                  </p>
-                ) : (
-                  hours.map(([day, raw]) => {
-                    const isClosed = !raw || raw.toLowerCase() === "closed";
-                    const hours = isClosed ? "Closed" : formatTimeRange(raw);
-                    const todayName = new Date()
-                      .toLocaleDateString("en-US", { weekday: "long" })
-                      .toLowerCase();
-                    const isToday = day.toLowerCase() === todayName;
+                    <p className="py-6 text-center text-sm text-slate-400">
+                      No operating hours set
+                    </p>
+                  ) : (
+                    hours.map(([day, raw]) => {
+                      const isClosed = !raw || raw.toLowerCase() === "closed";
+                      const hours = isClosed ? "Closed" : formatTimeRange(raw);
+                      const todayName = new Date()
+                        .toLocaleDateString("en-US", { weekday: "long" })
+                        .toLowerCase();
+                      const isToday = day.toLowerCase() === todayName;
 
-                    return (
-                      <div
-                        key={day}
-                        className={`flex items-center justify-between gap-2 rounded-lg px-2 py-2 sm:px-3 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
-                      >
-                        <span
-                          className={`truncate text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                      return (
+                        <div
+                          key={day}
+                          className={`flex items-center justify-between gap-2 rounded-lg px-2 py-2 sm:px-3 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
                         >
-                          {isToday ? `${day} (Today)` : day}
-                        </span>
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap sm:px-2.5 sm:text-xs ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
-                        >
-                          {hours}
-                        </span>
-                      </div>
-                    );
-                  })
-                );
+                          <span
+                            className={`truncate text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                          >
+                            {isToday ? `${day} (Today)` : day}
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap sm:px-2.5 sm:text-xs ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
+                          >
+                            {hours}
+                          </span>
+                        </div>
+                      );
+                    })
+                  );
                 })()}
               </div>
             )}

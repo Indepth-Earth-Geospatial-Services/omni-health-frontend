@@ -42,7 +42,7 @@ const adminMenuItems: MenuItem[] = [
   { label: "Staff", icon: Hospital, href: "/super-admin/staff" },
   { label: "Users", icon: BarChart3, href: "/super-admin/allUsers" },
   {
-    label: "Equipments & Infrastructure",
+    label: "Inventory",
     icon: Hospital,
     href: "/super-admin/all-equipments",
   },

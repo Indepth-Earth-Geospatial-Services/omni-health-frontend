@@ -34,6 +34,8 @@ interface InventoryChecklistProps {
   ) => Promise<void>;
   isAdding: boolean;
   addButtonLabel: string;
+  /** Extra classes merged onto the "Add" button — e.g. to bump up its text size. */
+  buttonClassName?: string;
   icon: LucideIcon;
   emptyMessage: string;
 }
@@ -53,6 +55,7 @@ export function InventoryChecklist({
   onSaveStockTake,
   isAdding,
   addButtonLabel,
+  buttonClassName,
   icon: Icon,
   emptyMessage,
 }: InventoryChecklistProps) {
@@ -169,7 +172,12 @@ export function InventoryChecklist({
               Stock take
             </button>
           )}
-          <Button size="sm" onClick={onAdd} disabled={isAdding}>
+          <Button
+            size="lg"
+            onClick={onAdd}
+            disabled={isAdding}
+            className={cn("shrink-0", buttonClassName)}
+          >
             <Plus size={16} className="text-white" />
             <span className="hidden sm:inline">{addButtonLabel}</span>
             <span className="sm:hidden">Add</span>
