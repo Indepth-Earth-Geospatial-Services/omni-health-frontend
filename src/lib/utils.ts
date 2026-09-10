@@ -12,6 +12,12 @@ export class ApiError extends Error {
     message: string,
     public statusCode?: number,
     public code?: string,
+    /**
+     * The raw `detail` payload, kept intact for the endpoints that return a
+     * structured body rather than a string — e.g. the invite API's
+     * `{ detail: { unavailable_lgas: [...] } }` on a 409.
+     */
+    public details?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -54,8 +60,9 @@ export function handleApiError(error: unknown): ApiError {
 
     const statusCode = error.response?.status;
     const code = error.response?.data?.code;
+    const details = error.response?.data?.detail;
 
-    return new ApiError(message, statusCode, code);
+    return new ApiError(message, statusCode, code, details);
   }
 
   if (error instanceof ApiError) {

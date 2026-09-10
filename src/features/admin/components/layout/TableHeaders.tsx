@@ -52,11 +52,11 @@ const TableHeaders: React.FC<TableHeadersProps> = ({
   buttonIcon = <Plus size={18} />,
 }) => {
   return (
-    <div className="w-full bg-white p-4">
+    <div className="w-full bg-white px-0 py-4 sm:p-4">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         {/* Left side - Title */}
-        <div>
-          <h2 className="text-sm font-bold text-gray-600">{title}</h2>
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-bold text-gray-600">{title}</h2>
         </div>
 
         {/* Right side - Search, Sort, Filters, and Optional Button */}
@@ -140,7 +140,7 @@ const TableHeaders: React.FC<TableHeadersProps> = ({
               onClick={onButtonClick}
               variant="default"
               size="xl"
-              className="text-lg"
+              className="shrink-0 text-sm sm:text-lg"
             >
               {buttonIcon}
               {buttonLabel}

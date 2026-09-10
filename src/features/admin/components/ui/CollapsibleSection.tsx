@@ -31,29 +31,29 @@ export function CollapsibleSection({
     >
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-slate-50 sm:px-6"
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 sm:h-12 sm:w-12">
             {icon}
           </div>
-          <div className="text-left">
-            <h3 className="font-geist text-[18px] font-medium text-black">
+          <div className="min-w-0 text-left">
+            <h3 className="font-geist truncate text-[16px] font-medium text-black sm:text-[18px]">
               {title}
             </h3>
-            <p className="font-geist text-sm font-normal text-[#868C98]">
+            <p className="font-geist truncate text-xs font-normal text-[#868C98] sm:text-sm">
               {description}
             </p>
           </div>
         </div>
         {isOpen ? (
-          <ChevronUp size={20} className="text-slate-400" />
+          <ChevronUp size={20} className="shrink-0 text-slate-400" />
         ) : (
-          <ChevronDown size={20} className="text-slate-400" />
+          <ChevronDown size={20} className="shrink-0 text-slate-400" />
         )}
       </button>
 
-      {isOpen && <div className="px-6 pb-6">{children}</div>}
+      {isOpen && <div className="px-4 pb-6 sm:px-6">{children}</div>}
     </div>
   );
 }
