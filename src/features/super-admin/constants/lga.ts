@@ -49,11 +49,13 @@ export const LGA_FILTER_OPTIONS = [
   })),
 ];
 
-// Facility types for healthcare facilities
+// Facility types for healthcare facilities. These are the exact values stored
+// in facility_category — the facility form writes them, and the registry filter
+// sends them to the API, so they must match the data rather than read nicely.
 export const FACILITY_TYPES = [
   "Health Post",
   "Health Clinic",
-  "Model Primary Health Care",
+  "Model Primary Health Center",
 ];
 
 // Nigerian states (limited for now)

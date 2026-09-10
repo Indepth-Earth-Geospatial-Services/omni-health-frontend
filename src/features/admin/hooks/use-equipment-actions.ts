@@ -167,6 +167,60 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
     }
   }, [itemToDelete, deleteType, deleteEquipmentMutation, deleteInfrastructureMutation]);
 
+  /**
+   * Set one item's quantity without any modal or toast — for the inline
+   * stepper, where the changed number is its own feedback. POST upserts, so
+   * this is the same endpoint the edit modal uses.
+   */
+  const setItemQuantity = useCallback(
+    async (type: InventoryType, itemName: string, quantity: number) => {
+      const mutation =
+        type === "equipment" ? updateEquipmentMutation : updateInfrastructureMutation;
+      await mutation.mutateAsync({ item_name: itemName, quantity });
+    },
+    [updateEquipmentMutation, updateInfrastructureMutation],
+  );
+
+  /**
+   * Save a stock take. Only changed rows are sent, so a typical audit is a
+   * handful of requests rather than one per tracked item. Sequential on
+   * purpose — these are writes, and ordering keeps the failure case legible.
+   */
+  const saveStockTake = useCallback(
+    async (
+      type: InventoryType,
+      changes: { itemName: string; quantity: number }[],
+    ) => {
+      if (changes.length === 0) return;
+      const mutation =
+        type === "equipment" ? updateEquipmentMutation : updateInfrastructureMutation;
+
+      let saved = 0;
+      try {
+        for (const change of changes) {
+          await mutation.mutateAsync({
+            item_name: change.itemName,
+            quantity: change.quantity,
+          });
+          saved++;
+        }
+        toast.success(
+          `Stock take saved — ${saved} item${saved === 1 ? "" : "s"} updated.`,
+          { duration: 4000 },
+        );
+      } catch {
+        toast.error(
+          saved > 0
+            ? `Saved ${saved} of ${changes.length} before failing. Please retry the rest.`
+            : "Could not save the stock take. Please try again.",
+          { duration: 5000 },
+        );
+        throw new Error("stock-take-failed");
+      }
+    },
+    [updateEquipmentMutation, updateInfrastructureMutation],
+  );
+
   // Close handlers
   const closeEditEquipmentModal = useCallback(() => {
     setIsEditEquipmentModalOpen(false);
@@ -214,6 +268,8 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
     handleUpdateInfrastructure,
     handleDeleteClick,
     handleConfirmDelete,
+    setItemQuantity,
+    saveStockTake,
     closeEditEquipmentModal,
     closeEditInfrastructureModal,
     closeDeleteModal,

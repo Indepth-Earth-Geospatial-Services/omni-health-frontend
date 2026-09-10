@@ -51,8 +51,8 @@ export default function FacilityProfile() {
         <Button
           type="button"
           variant="default"
-          size="xl"
-          className="text-lg"
+          size="lg"
+          className="shrink-0 text-sm sm:text-lg"
           onClick={() => setIsEditModalOpen(true)}
         >
           <Calendar size={18} />
@@ -95,7 +95,9 @@ export default function FacilityProfile() {
             onToggle={() => sections.toggle("operatingHours")}
           >
             <OperatingHoursContent
-              workingHours={facility?.working_hours as Record<string, string> | undefined}
+              workingHours={
+                facility?.working_hours as Record<string, string> | undefined
+              }
               isLoading={isLoading}
               isError={isError}
             />
@@ -339,11 +341,21 @@ function OperatingHoursContent({
 
   if (isError) {
     return (
-      <p className="pt-4 text-sm text-red-500">Failed to load operating hours</p>
+      <p className="pt-4 text-sm text-red-500">
+        Failed to load operating hours
+      </p>
     );
   }
 
-  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  const DAY_ORDER = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
   const entries = workingHours
     ? Object.entries(workingHours).sort(([a], [b]) => {
         const ai = DAY_ORDER.indexOf(a.toLowerCase());
@@ -367,13 +379,13 @@ function OperatingHoursContent({
         return (
           <div
             key={day}
-            className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-2.5"
+            className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5 sm:px-4"
           >
-            <span className="text-sm font-medium capitalize text-slate-700">
+            <span className="truncate text-sm font-medium text-slate-700 capitalize">
               {day}
             </span>
             <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap sm:px-2.5 sm:text-xs ${
                 isClosed
                   ? "bg-red-50 text-red-500"
                   : "bg-green-50 text-green-600"
@@ -500,17 +512,17 @@ function SpecialistsContent({
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#868C98] text-sm font-medium text-white">
               {formattedName.substring(0, 2).toUpperCase()}
             </div>
-            <div className="flex flex-1 justify-between">
-              <div>
-                <h4 className="font-geist text-[15px] font-medium text-black">
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h4 className="font-geist truncate text-[15px] font-medium text-black">
                   {formattedName}
                 </h4>
-                <p className="font-geist text-[13px] text-[#868C98]">
+                <p className="font-geist truncate text-[13px] text-[#868C98]">
                   Facility Specialist
                 </p>
               </div>
-              <div className="flex items-center">
-                <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              <div className="flex shrink-0 items-center">
+                <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-green-700">
                   Available
                 </span>
               </div>
@@ -614,7 +626,9 @@ function InfoRow({ label, value }: { label: string; value?: string }) {
       <p className="font-geist mb-1 text-[15px] font-normal text-[#868C98]">
         {label}
       </p>
-      <p className="font-geist mb-2 text-[19px] font-normal text-black">
+      {/* Facility ID is a UUID with no spaces — it has to be allowed to break
+          mid-string or it pushes the whole card wider than the viewport. */}
+      <p className="font-geist mb-2 text-[17px] font-normal wrap-break-word text-black sm:text-[19px]">
         {value || "Not available"}
       </p>
     </div>

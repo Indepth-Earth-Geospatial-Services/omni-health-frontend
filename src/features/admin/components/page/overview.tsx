@@ -162,10 +162,11 @@ export default function Overview() {
           />
         </div>
 
-        {/* Working Hours + Facility Overview */}
-        <div className="mb-6 flex gap-6">
+        {/* Working Hours + Facility Overview. Stacks below lg — two cards
+            sharing a phone's width leaves neither readable. */}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:gap-6">
           {/* Working Hours */}
-          <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-white p-6">
+          <div className="flex min-w-0 flex-1 flex-col rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="mb-5 flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
                 <Clock size={18} className="text-teal-600" />
@@ -195,55 +196,64 @@ export default function Overview() {
             ) : (
               <div className="flex flex-1 flex-col gap-1">
                 {(() => {
-                  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+                  const DAY_ORDER = [
+                    "sunday",
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                  ];
                   const hours = Object.entries(
-                    (facility?.working_hours as Record<string, string> | undefined) ?? {},
+                    (facility?.working_hours as
+                      Record<string, string> | undefined) ?? {},
                   ).sort(([a], [b]) => {
                     const ai = DAY_ORDER.indexOf(a.toLowerCase());
                     const bi = DAY_ORDER.indexOf(b.toLowerCase());
                     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
                   });
                   return hours.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-slate-400">
-                    No operating hours set
-                  </p>
-                ) : (
-                  hours.map(([day, raw]) => {
-                    const isClosed = !raw || raw.toLowerCase() === "closed";
-                    const hours = isClosed ? "Closed" : formatTimeRange(raw);
-                    const todayName = new Date()
-                      .toLocaleDateString("en-US", { weekday: "long" })
-                      .toLowerCase();
-                    const isToday = day.toLowerCase() === todayName;
+                    <p className="py-6 text-center text-sm text-slate-400">
+                      No operating hours set
+                    </p>
+                  ) : (
+                    hours.map(([day, raw]) => {
+                      const isClosed = !raw || raw.toLowerCase() === "closed";
+                      const hours = isClosed ? "Closed" : formatTimeRange(raw);
+                      const todayName = new Date()
+                        .toLocaleDateString("en-US", { weekday: "long" })
+                        .toLowerCase();
+                      const isToday = day.toLowerCase() === todayName;
 
-                    return (
-                      <div
-                        key={day}
-                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
-                      >
-                        <span
-                          className={`text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                      return (
+                        <div
+                          key={day}
+                          className={`flex items-center justify-between gap-2 rounded-lg px-2 py-2 sm:px-3 ${isToday ? "bg-teal-50 ring-1 ring-teal-200" : "hover:bg-slate-50"}`}
                         >
-                          {isToday ? `${day} (Today)` : day}
-                        </span>
-                        <span
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
-                        >
-                          {hours}
-                        </span>
-                      </div>
-                    );
-                  })
-                );
+                          <span
+                            className={`truncate text-sm font-medium capitalize ${isToday ? "text-teal-700" : "text-slate-600"}`}
+                          >
+                            {isToday ? `${day} (Today)` : day}
+                          </span>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap sm:px-2.5 sm:text-xs ${isClosed ? "bg-red-50 text-red-500" : isToday ? "bg-teal-100 text-teal-700" : "bg-green-50 text-green-600"}`}
+                          >
+                            {hours}
+                          </span>
+                        </div>
+                      );
+                    })
+                  );
                 })()}
               </div>
             )}
           </div>
 
           {/* Facility Overview */}
-          <div className="flex flex-1 flex-col rounded-xl border border-gray-200 bg-white p-6">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 flex-col rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
                   <Building2 size={18} className="text-blue-600" />
                 </div>
@@ -258,7 +268,7 @@ export default function Overview() {
               </div>
               <button
                 onClick={() => router.push("/admin/facility")}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
               >
                 <Pencil size={13} />
                 Edit Profile
@@ -297,7 +307,7 @@ export default function Overview() {
                     size={15}
                     className="mt-0.5 shrink-0 text-slate-400"
                   />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
                       Location
                     </p>
@@ -313,8 +323,9 @@ export default function Overview() {
                   </div>
                 </div>
 
-                {/* Contact */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Contact — one per row on phones, where two columns leave the
+                    email truncated to nothing */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-3">
                     <Phone size={14} className="shrink-0 text-slate-400" />
                     <div className="min-w-0">
@@ -358,11 +369,11 @@ export default function Overview() {
         </div>
 
         <section>
-          <div className="mt-6 flex w-full flex-col justify-between gap-4 md:flex-row">
+          <div className="mt-6 flex w-full flex-col justify-between gap-4 lg:flex-row">
             {/* --- Card 1: Facility Specialists List --- */}
-            <div className="flex-1 rounded-xl border border-gray-200 bg-white p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-700">
+            <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-bold text-slate-700 sm:text-xl">
                   Healthcare Professionals
                 </h2>
                 <button
@@ -392,22 +403,22 @@ export default function Overview() {
                     return (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-slate-50"
+                        className="flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-slate-50"
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#375DFB] text-sm font-medium text-white">
                             {formattedName.substring(0, 2).toUpperCase()}
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-slate-700">
+                          <div className="min-w-0">
+                            <h3 className="truncate font-semibold text-slate-700">
                               {formattedName}
                             </h3>
-                            <p className="text-sm text-slate-400">
+                            <p className="truncate text-sm text-slate-400">
                               Facility Specialist
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="shrink-0 text-right">
                           <p className="text-sm font-medium text-[#375DFB]">
                             {/* Role is the same as name in this context */}
                             Staff
@@ -428,17 +439,17 @@ export default function Overview() {
             </div>
 
             {/* --- Card 2: Facility Location Map --- */}
-            <div className="relative flex-[1.2] overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div className="relative min-h-80 min-w-0 flex-[1.2] overflow-hidden rounded-xl border border-gray-200 bg-white">
               {/* Header overlay */}
-              <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/90 px-5 py-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <MapPin size={15} className="text-teal-600" />
-                  <h2 className="text-sm font-bold text-slate-800">
+              <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-100 bg-white/90 px-4 py-3 backdrop-blur-sm sm:px-5">
+                <div className="flex min-w-0 items-center gap-2">
+                  <MapPin size={15} className="shrink-0 text-teal-600" />
+                  <h2 className="truncate text-sm font-bold text-slate-800">
                     Facility Location
                   </h2>
                 </div>
                 {facility?.facility_lga && (
-                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                  <span className="shrink-0 truncate rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
                     {facility.facility_lga}
                   </span>
                 )}
