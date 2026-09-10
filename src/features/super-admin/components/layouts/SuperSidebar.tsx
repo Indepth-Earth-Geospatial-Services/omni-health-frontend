@@ -8,15 +8,25 @@ import {
   BarChart3,
   Map,
   ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/features/auth/auth-store";
+import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import ProfileModal from "../../../profile/pages/ProfileModal";
 
-const adminMenuItems = [
+interface MenuItem {
+  label: string;
+  icon: LucideIcon;
+  href: string;
+}
+
+const adminMenuItems: MenuItem[] = [
   {
     label: "Dashboard",
     icon: Hospital,
@@ -43,15 +53,76 @@ const adminMenuItems = [
   { label: "Settings", icon: Settings, href: "/super-admin/settings" },
 ];
 
-const userMenuItems = [
+const userMenuItems: MenuItem[] = [
   { label: "Admin Dashboard", icon: Map, href: "/admin" },
   { label: "User Dashboard", icon: Map, href: "/user" },
 ];
+
+/**
+ * A single nav row. Collapsed it is an icon centred in the rail, with the label
+ * moved to the native tooltip — a custom one would be clipped by the nav's own
+ * overflow-y-auto.
+ */
+function SidebarLink({
+  item,
+  isActive,
+  isCollapsed,
+}: {
+  item: MenuItem;
+  isActive: boolean;
+  isCollapsed: boolean;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      title={isCollapsed ? item.label : undefined}
+      aria-label={isCollapsed ? item.label : undefined}
+      className={cn(
+        "flex items-center rounded-md py-2.5 text-sm font-medium transition-all duration-200",
+        isCollapsed ? "justify-center px-0" : "gap-3 px-3",
+        isActive
+          ? "text-primary bg-gray-100"
+          : "text-gray-700 hover:bg-gray-200",
+        // The nudge reads as jitter once the icon is centred in a narrow rail.
+        !isActive && !isCollapsed && "hover:translate-x-1",
+      )}
+    >
+      <Icon size={18} className="shrink-0" />
+      {!isCollapsed && <span className="truncate">{item.label}</span>}
+    </Link>
+  );
+}
+
+/** Section label when open, a plain rule when collapsed. */
+function SectionHeading({
+  label,
+  isCollapsed,
+  className,
+}: {
+  label: string;
+  isCollapsed: boolean;
+  className?: string;
+}) {
+  if (isCollapsed) {
+    return <div className="mx-auto my-3 h-px w-8 bg-gray-200" />;
+  }
+  return (
+    <div className={className}>
+      <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
+        {label}
+      </p>
+    </div>
+  );
+}
 
 export default function SuperSidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const { isCollapsed, toggle } = useSidebarCollapse();
 
   const userInitials =
     user?.first_name && user?.last_name
@@ -64,111 +135,136 @@ export default function SuperSidebar() {
       : "My Account";
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-col bg-white shadow-lg">
-      {/* Brand */}
-      <Link href="/" className="group flex items-center gap-2 sm:gap-2.5">
-        <div className="flex h-16 items-center gap-4 px-4">
+    <aside
+      className={cn(
+        "sticky top-0 flex h-screen shrink-0 flex-col bg-white shadow-lg",
+        "transition-[width] duration-300 ease-in-out",
+        isCollapsed ? "w-20" : "w-64",
+      )}
+    >
+      {/* Brand — the wordmark drops away when collapsed, leaving just the mark */}
+      <div
+        className={cn(
+          "flex h-16 shrink-0 items-center border-b border-gray-100",
+          isCollapsed ? "justify-center px-2" : "px-4",
+        )}
+      >
+        <Link
+          href="/"
+          title={isCollapsed ? "RSPHCMB" : undefined}
+          className="group flex min-w-0 items-center gap-3"
+        >
           <Image
             src="/img/image.png"
-            alt="Healthcare facility background"
+            alt="RSPHCMB logo"
             priority
             width={40}
             height={40}
             quality={75}
+            className="shrink-0"
           />
-          <h1 className="text-sm font-bold tracking-tight text-[#0aa150] drop-shadow-lg transition-transform group-hover:scale-105 sm:text-base md:text-xl">
-            RSPHCMB
-          </h1>
-        </div>
-      </Link>
-
-      {/* Admin Menu Header */}
-      <div className="px-4 pt-6 pb-2">
-        <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
-          Admin Menu
-        </p>
+          {!isCollapsed && (
+            <h1 className="truncate text-base font-bold tracking-tight text-[#0aa150] drop-shadow-lg transition-transform group-hover:scale-105 md:text-xl">
+              RSPHCMB
+            </h1>
+          )}
+        </Link>
       </div>
 
-      {/* Admin Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 pb-4">
-        <div className="flex flex-col gap-1">
-          {adminMenuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
+      {/* Collapse toggle */}
+      <div
+        className={cn(
+          "flex px-2 pt-3",
+          isCollapsed ? "justify-center" : "justify-end",
+        )}
+      >
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="hover:text-primary rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100"
+        >
+          {isCollapsed ? (
+            <PanelLeftOpen size={18} />
+          ) : (
+            <PanelLeftClose size={18} />
+          )}
+        </button>
+      </div>
 
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "text-primary bg-gray-100"
-                    : "text-gray-700 hover:translate-x-1 hover:bg-gray-200",
-                )}
-              >
-                <Icon size={18} />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+      {/* Admin Menu Header */}
+      <SectionHeading
+        label="Admin Menu"
+        isCollapsed={isCollapsed}
+        className="px-4 pt-3 pb-2"
+      />
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-x-hidden overflow-y-auto px-2 pb-4">
+        <div className="flex flex-col gap-1">
+          {adminMenuItems.map((item) => (
+            <SidebarLink
+              key={item.label}
+              item={item}
+              isActive={pathname === item.href}
+              isCollapsed={isCollapsed}
+            />
+          ))}
         </div>
 
         {/* User Portal Header */}
-        <div className="px-2 pt-6 pb-2">
-          <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
-            User Portal
-          </p>
-        </div>
+        <SectionHeading
+          label="User Portal"
+          isCollapsed={isCollapsed}
+          className="px-2 pt-6 pb-2"
+        />
 
-        {/* User Navigation */}
         <div className="flex flex-col gap-1">
-          {userMenuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "text-primary bg-gray-100"
-                    : "text-gray-700 hover:translate-x-1 hover:bg-gray-200",
-                )}
-              >
-                <Icon size={18} />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+          {userMenuItems.map((item) => (
+            <SidebarLink
+              key={item.label}
+              item={item}
+              isActive={pathname === item.href}
+              isCollapsed={isCollapsed}
+            />
+          ))}
         </div>
       </nav>
 
       {/* User Profile — opens ProfileModal */}
-      <div className="border-t border-gray-100 p-4">
+      <div className="shrink-0 border-t border-gray-100 p-4">
         <button
           onClick={() => setIsProfileModalOpen(true)}
-          className="group flex w-full items-center gap-3 rounded-lg p-2 transition-all duration-200 hover:bg-gray-100"
+          title={isCollapsed ? displayName : undefined}
+          aria-label={isCollapsed ? displayName : undefined}
+          className={cn(
+            "group flex w-full items-center rounded-lg p-2 transition-all duration-200 hover:bg-gray-100",
+            isCollapsed ? "justify-center" : "gap-3",
+          )}
         >
           <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
             {userInitials}
           </div>
 
-          <div className="flex-1 overflow-hidden text-left">
-            <p className="truncate text-sm font-semibold text-gray-900">
-              {displayName}
-            </p>
-            <p className="truncate text-xs text-gray-500">
-              {user?.email || ""}
-            </p>
-          </div>
+          {!isCollapsed && (
+            <>
+              <div className="flex-1 overflow-hidden text-left">
+                <p className="truncate text-sm font-semibold text-gray-900">
+                  {displayName}
+                </p>
+                <p className="truncate text-xs text-gray-500">
+                  {user?.email || ""}
+                </p>
+              </div>
 
-          <ChevronRight
-            size={16}
-            className="group-hover:text-primary text-gray-400 transition-all duration-200 group-hover:translate-x-0.5"
-          />
+              <ChevronRight
+                size={16}
+                className="group-hover:text-primary shrink-0 text-gray-400 transition-all duration-200 group-hover:translate-x-0.5"
+              />
+            </>
+          )}
         </button>
       </div>
 
