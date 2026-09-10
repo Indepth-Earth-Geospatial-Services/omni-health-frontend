@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { superAdminService } from "../services/super-admin.service";
+import { ApiError } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const lgaKeys = {
@@ -27,11 +28,14 @@ export function useUnassignLga(onSuccess?: () => void) {
       toast.success("LGA unassigned successfully. User may have been demoted if no assignments remain.");
       onSuccess?.();
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      // apiClient's interceptor already normalizes failures into an
+      // ApiError — `.message` is the readable backend detail, not a raw
+      // axios `err.response.data` shape.
       const msg =
-        err?.response?.data?.detail?.[0]?.msg ||
-        err?.response?.data?.message ||
-        "Failed to unassign LGA. Please try again.";
+        err instanceof ApiError && err.message
+          ? err.message
+          : "Failed to unassign LGA. Please try again.";
       toast.error(msg);
     },
   });

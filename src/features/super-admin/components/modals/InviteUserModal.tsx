@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   X,
   Mail,
@@ -17,6 +17,7 @@ import { MultiSelectDropdown } from "../ui/MultiSelectDropdown";
 import { useMultiSelect } from "../../hooks/use-multi-select";
 import { useCreateInvite, getUnavailableLgas } from "../../hooks/useInvites";
 import { useUnassignedLgas } from "../../hooks/useLgas";
+import { useLgaFacilityCounts } from "../../hooks/useLgaFacilityCounts";
 import type { InviteRole } from "../../services/super-admin.service";
 
 const ROLE_OPTIONS: {
@@ -61,9 +62,25 @@ export default function InviteUserModal({
   // rather than hardcoded — availability changes as admins are added.
   const { data: unassignedLgas = [], isLoading: isLoadingLgas } =
     useUnassignedLgas(isOpen);
+  const { data: lgaFacilityCounts } = useLgaFacilityCounts();
+
+  // Inviting an admin to an LGA with 0 facilities succeeds but hands them
+  // coverage over nothing — same dead end assign-manager rejects outright —
+  // so it's kept out of the picker rather than offered. Nothing is filtered
+  // until the counts have actually loaded — an LGA absent from that map
+  // means 0 facilities only once it's known to be complete, not while it's
+  // simply still in flight.
+  const assignableLgas = useMemo(
+    () =>
+      lgaFacilityCounts
+        ? unassignedLgas.filter((lga) => (lgaFacilityCounts[lga.lga_name] ?? 0) > 0)
+        : unassignedLgas,
+    [unassignedLgas, lgaFacilityCounts],
+  );
+  const hiddenEmptyLgaCount = unassignedLgas.length - assignableLgas.length;
 
   const lgaSelect = useMultiSelect({
-    items: unassignedLgas,
+    items: assignableLgas,
     getItemId: (lga) => String(lga.lga_id),
     getItemLabel: (lga) => lga.lga_name,
   });
@@ -328,7 +345,7 @@ export default function InviteUserModal({
           {isAdminInvite && (
             <div className="mb-5">
               <MultiSelectDropdown
-                items={unassignedLgas}
+                items={assignableLgas}
                 selectedIds={lgaSelect.selectedIds}
                 getItemId={(lga) => String(lga.lga_id)}
                 getItemLabel={(lga) => lga.lga_name}
@@ -352,13 +369,18 @@ export default function InviteUserModal({
                 emptyText={
                   unassignedLgas.length === 0
                     ? "Every LGA is already covered"
-                    : "No LGAs match your search"
+                    : assignableLgas.length === 0
+                      ? "The remaining LGAs have no facilities yet"
+                      : "No LGAs match your search"
                 }
                 icon={<MapPin size={15} className="text-slate-400" />}
               />
               <p className="mt-2 text-xs text-slate-500">
                 Optional — you can invite an admin with no coverage and assign
-                LGAs later. Only LGAs nobody covers yet are listed.
+                LGAs later. Only LGAs nobody covers yet are listed
+                {hiddenEmptyLgaCount > 0 &&
+                  ` (${hiddenEmptyLgaCount} hidden — no facilities registered there yet)`}
+                .
               </p>
             </div>
           )}
