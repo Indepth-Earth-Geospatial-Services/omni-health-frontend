@@ -5,7 +5,7 @@ import { AuthHydration } from "@/features/auth/AuthHydration";
 import { AdminSessionGuard } from "@/features/auth/AdminSessionGuard";
 
 export const metadata: Metadata = {
-  title: "Omni Health Admin",
+  title: "Geo Health Admin",
   description: "Healthcare facility management dashboard",
 };
 
@@ -20,7 +20,9 @@ export default function RootLayout({
         <AdminSessionGuard>
           <div className="flex h-screen overflow-hidden">
             <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">{children}</div>
+            <div className="flex flex-1 flex-col overflow-hidden">
+              {children}
+            </div>
           </div>
         </AdminSessionGuard>
       </AuthHydration>

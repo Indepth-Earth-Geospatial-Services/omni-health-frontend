@@ -150,7 +150,7 @@ export default function Settings() {
                   className="bg-primary text-xs text-white"
                   onClick={() => setIsResetPasswordOpen(true)}
                 >
-                  Change
+                  Reset
                 </Button>
               </div>
             </div>

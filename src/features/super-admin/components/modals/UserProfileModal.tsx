@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
-import { X } from "lucide-react";
-import { User } from "../../services/super-admin.service";
+
+import { memo, useMemo } from "react";
+import { X, Mail, MapPin, Building2 } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
+import type { User } from "../../services/super-admin.service";
+import { getInitials, getRoleBadgeColor } from "../../utils/user-helpers";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -10,269 +12,196 @@ interface UserProfileModalProps {
   user: User | null;
 }
 
-const UserProfileModal: React.FC<UserProfileModalProps> = ({
+function getStatusBadge(user: User) {
+  if (user.is_suspended) {
+    return {
+      label: "Suspended",
+      className: "border-amber-200 bg-amber-50 text-amber-700",
+    };
+  }
+  if (user.is_active) {
+    return {
+      label: "Active",
+      className: "border-green-200 bg-green-50 text-green-700",
+    };
+  }
+  return {
+    label: "Inactive",
+    className: "border-slate-200 bg-slate-100 text-slate-600",
+  };
+}
+
+/**
+ * Read-only, so there's nothing to hold in state — the whole component is
+ * just a projection of the `user` prop. Wrapped in `memo` so it doesn't
+ * re-render on unrelated parent state changes (the table re-renders on
+ * every search keystroke and page/dropdown toggle) unless `isOpen` or
+ * `user` actually change.
+ */
+const UserProfileModal = memo(function UserProfileModal({
   isOpen,
   onClose,
   user,
-}) => {
-  const [activeTab, setActiveTab] = useState("user-directory");
+}: UserProfileModalProps) {
+  // Hooks run unconditionally, before the early return below. Both derive
+  // from data the list query already fetched — there's no separate
+  // per-user facilities endpoint to call — so this is a memo, not a fetch:
+  // it just stops the row-projection work from re-running on every render
+  // the modal's parent triggers (search keystrokes, pagination, dropdown
+  // toggles) unless the user's own data actually changed.
+  const lgaNames = useMemo(
+    () => (user?.managed_lga ? Object.values(user.managed_lga) : []),
+    [user?.managed_lga],
+  );
+  const facilities = useMemo(
+    () => user?.managed_facilities ?? [],
+    [user?.managed_facilities],
+  );
 
   if (!isOpen || !user) return null;
 
-  // Format date for last active
-  const formatLastActive = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const isToday =
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
-
-    const timeStr = date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    return isToday ? `today, ${timeStr}` : date.toLocaleDateString();
-  };
-
-  // const handleEditFacility = () => {
-  //   onClose();
-  //   onEditFacility?.();
-  // };
+  const status = getStatusBadge(user);
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 transition-opacity"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed top-0 right-0 z-50 h-[80%] w-full max-w-lg overflow-y-auto bg-white shadow-2xl">
+      <div
+        className="fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl"
+        style={{ maxHeight: "calc(100vh - 2rem)" }}
+      >
         {/* Header */}
-        <div className="border-slate-200 bg-white p-6">
-          <div className="mb-4 flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-bold text-white">
-                {user.full_name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-800">
-                  {user.full_name}
-                </h2>
-                <p className="text-sm text-slate-500">{user.email}</p>
-              </div>
+        <div className="from-primary to-primary/80 relative overflow-hidden bg-linear-to-r px-6 py-5">
+          <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-white/10" />
+          <div className="relative flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white">User Profile</h2>
+              <p className="mt-0.5 text-xs text-white/70">
+                Account details and LGA coverage
+              </p>
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        {/* <div className="flex flex-wrap items-center gap-2 px-6 py-3">
-          <Button
-            onClick={handleEditFacility}
-            size="sm"
-            variant="outline"
-            className="gap-1.5 text-xs"
-          >
-            <Edit size={14} />
-            Edit Facility
-          </Button>
-          <Button
-            onClick={handleContact}
-            size="sm"
-            variant="outline"
-            className="gap-1.5 text-xs"
-            disabled={!facility.contact_info?.phone}
-          >
-            <MessageSquare size={14} />
-            Contact
-          </Button> */}
-        {/* <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-            <FileText size={14} />
-            Request Report
-          </Button> */}
-        {/* <Button
-            onClick={handleOpenMap}
-            size="sm"
-            variant="outline"
-            className="gap-1.5 text-xs"
-            disabled={!facility.facility_id}
-          >
-            <MapPinIcon size={14} />
-            View on Map
-          </Button>
-        </div> */}
-
-        {/* Tabs */}
-        <div className="mx-4 rounded-lg border border-slate-200 bg-[#F6F8FA] px-2 py-2">
-          <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={() => setActiveTab("user-directory")}
-              className={`px-6 py-3 text-center text-sm font-medium transition-colors ${
-                activeTab === "user-directory"
-                  ? "rounded-lg bg-[#E2E4E9] text-black"
-                  : "bg-transparent text-[#868C98] hover:text-slate-700"
-              }`}
+        {/* Scrollable content */}
+        <div
+          className="overflow-y-auto px-6 py-5"
+          style={{ maxHeight: "calc(100vh - 2rem - 140px)" }}
+        >
+          {/* User card */}
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+            <div
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-400 text-sm font-bold text-white shadow-sm`}
             >
-              User Directory
-            </button>
-            <button
-              onClick={() => setActiveTab("roles-permissions")}
-              className={`px-6 py-3 text-center text-sm font-medium transition-colors ${
-                activeTab === "roles-permissions"
-                  ? "rounded-lg bg-[#E2E4E9] text-black"
-                  : "bg-transparent text-[#868C98] hover:text-slate-700"
-              }`}
+              {getInitials(user.full_name)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-800">
+                {user.full_name}
+              </p>
+              <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-slate-500">
+                <Mail size={11} className="shrink-0" />
+                {user.email}
+              </p>
+            </div>
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getRoleBadgeColor(user.role)}`}
             >
-              Roles & Permissions
-            </button>
+              {user.role.replace("_", " ").toUpperCase()}
+            </span>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {activeTab === "user-directory" && (
-            <div className="space-y-6">
-              {/* User Details */}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-slate-500">
-                    User ID
-                  </label>
-                  <p className="mt-1 rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                    {user.user_id}
-                  </p>
-                </div>
+          {/* Role + Status */}
+          <div className="mb-5 grid grid-cols-2 gap-3">
+            <div>
+              <p className="mb-1.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                Status
+              </p>
+              <span
+                className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}
+              >
+                {status.label}
+              </span>
+            </div>
+          </div>
 
-                <div>
-                  <label className="text-xs font-medium text-slate-500">
-                    Role
-                  </label>
-                  <p className="mt-1 rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                    {user.role.replace("_", " ").toUpperCase()}
-                  </p>
-                </div>
+          {/* Assigned LGAs */}
+          <div className="mb-5">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+              Assigned LGAs{lgaNames.length > 0 && ` (${lgaNames.length})`}
+            </p>
+            {lgaNames.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {lgaNames.map((lga) => (
+                  <span
+                    key={lga}
+                    className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700"
+                  >
+                    <MapPin size={10} />
+                    {lga}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-4 text-center text-xs text-slate-400">
+                {user.role === "super_admin"
+                  ? "No LGA list — super admins cover every LGA"
+                  : "No LGAs assigned yet"}
+              </p>
+            )}
+          </div>
 
-                <div>
-                  <label className="text-xs font-medium text-slate-500">
-                    Last Active
-                  </label>
-                  <p className="mt-1 rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                    {formatLastActive(user.created_at)}
-                  </p>
+          {/* Managed Facilities — the full batch. Previously a 2-item
+              preview in the table row with its own expand/collapse; that
+              column is gone now that the complete list lives here. */}
+          <div>
+            <p className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+              Managed Facilities
+              {facilities.length > 0 && ` (${facilities.length})`}
+            </p>
+            {facilities.length > 0 ? (
+              <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50/50 p-2.5">
+                <div className="flex flex-wrap gap-1.5">
+                  {facilities.map((facility) => (
+                    <span
+                      key={facility.facility_id}
+                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600"
+                    >
+                      <Building2 size={10} className="text-slate-400" />
+                      {facility.facility_name}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              {/* Managed Facilities */}
-              {/* {user.managed_facilities.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-sm font-semibold text-slate-700">
-                    Managed Facilities
-                  </h3>
-                  <div className="space-y-2">
-                    {user.managed_facilities.map((facility) => (
-                      <div
-                        key={facility.facility_id}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                            <Building2 size={16} className="text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-800">
-                              {facility.facility_name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              ID: {facility.facility_id}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                          Access
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )} */}
-
-              {/* {user.managed_facilities.length === 0 && (
-                <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
-                  <Building2 size={32} className="mx-auto text-slate-300" />
-                  <p className="mt-2 text-sm text-slate-500">
-                    No facilities assigned
-                  </p>
-                </div>
-              )} */}
-            </div>
-          )}
-
-          {activeTab === "roles-permissions" && (
-            <div className="rounded-lg border border-slate-200 p-4">
-              <p className="mb-2 text-lg text-black">Permissions</p>
-              <div>
-                <div className="space-y-6">
-                  {/* User Details */}
-                  <div className="space-y-4">
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>View all facilities</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>Approve/reject facilities</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>Annotate & request remediation</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>View audit logs</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>Configure system settings</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>Export reports</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                    <div className="mt-1 flex justify-between rounded-lg border border-gray-200 bg-[#E2E4E9] p-2.5 text-sm font-medium text-[#868C98]">
-                      <p>Manage integrations</p>
-                      <p className="text-primary text-sm">Granted</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+            ) : (
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-4 text-center text-xs text-slate-400">
+                No facilities assigned yet
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="border-slate-200 bg-white p-6">
-          <Button onClick={onClose} size="lg" className="">
-            Cancel
+        <div className="flex justify-end border-t border-slate-100 px-6 py-4">
+          <Button onClick={onClose} size="lg">
+            Close
           </Button>
         </div>
       </div>
     </>
   );
-};
+});
 
 export default UserProfileModal;

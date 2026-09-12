@@ -1,6 +1,12 @@
 "use client";
 
-import { Mail, Phone, HelpCircle, MessageSquare, HeadphonesIcon } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  HelpCircle,
+  MessageSquare,
+  HeadphonesIcon,
+} from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarContentNav } from "@/features/user/components/desktop/sidebar-content";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +18,7 @@ export function HelpDesktopLayout() {
   return (
     <SidebarProvider
       defaultOpen={false}
-      className="!mx-0 !max-w-full h-dvh overflow-hidden"
+      className="!mx-0 h-dvh !max-w-full overflow-hidden"
     >
       <SidebarContentNav />
 
@@ -28,9 +34,12 @@ export function HelpDesktopLayout() {
           <div className="mx-auto max-w-4xl px-5 py-6">
             {/* Hero */}
             <div className="mb-8 text-center">
-              <h2 className="text-3xl font-semibold text-[#343434]">Help &amp; Support</h2>
+              <h2 className="text-3xl font-semibold text-[#343434]">
+                Help &amp; Support
+              </h2>
               <p className="mt-2 text-[#868C98]">
-                Find answers to common questions, send us a message, or reach out directly.
+                Find answers to common questions, send us a message, or reach
+                out directly.
               </p>
             </div>
 
@@ -72,7 +81,7 @@ export function HelpDesktopLayout() {
                     <HelpLine
                       icon={<Mail size={24} color="#51A199" />}
                       title="Email Support"
-                      value={"support@omni-health.org"}
+                      value={"support@geohealth.org"}
                     />
                   </div>
                 </TabsContent>

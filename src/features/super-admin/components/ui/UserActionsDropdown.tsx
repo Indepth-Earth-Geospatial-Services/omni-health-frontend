@@ -5,17 +5,22 @@ import {
   ShieldOff,
   ShieldCheck,
   ArrowLeftRight,
-  Ban,
-  Pen,
+  MoreVertical,
   MapPin,
   MapPinOff,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { User } from "../../services/super-admin.service";
 
 interface UserActionsDropdownProps {
   user: User;
   isOpen: boolean;
-  onToggle: () => void;
+  onOpenChange: (open: boolean) => void;
   onViewProfile: () => void;
   onSuspend: () => void;
   onUnsuspend: () => void;
@@ -28,112 +33,85 @@ interface UserActionsDropdownProps {
 export function UserActionsDropdown({
   user,
   isOpen,
-  onToggle,
+  onOpenChange,
   onViewProfile,
   onSuspend,
   onUnsuspend,
   onChangeRole,
-  onDeactivate,
   onAssignLga,
   onUnassignLga,
 }: UserActionsDropdownProps) {
   return (
-    <div className="relative">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        className="hover:text-primary rounded-lg p-2 text-slate-400 transition-all hover:bg-teal-50"
-      >
-        <Pen size={18} />
-      </button>
-
-      {isOpen && (
-        <div
-          className="absolute top-full right-0 z-50 mt-1 w-48 rounded-lg border border-slate-200 bg-white shadow-lg"
+    // Radix portals DropdownMenuContent to document.body, so it always
+    // renders in full instead of being clipped by the table's
+    // overflow-x-auto scroll wrapper (previously required scrolling the
+    // table sideways just to see the rest of the menu).
+    <DropdownMenu open={isOpen} onOpenChange={onOpenChange}>
+      <DropdownMenuTrigger asChild>
+        <button
           onClick={(e) => e.stopPropagation()}
+          className="hover:text-primary rounded-lg p-2 text-slate-400 transition-all hover:bg-teal-50"
         >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewProfile();
-            }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            <Eye size={16} className="text-slate-400" />
-            View Profile
-          </button>
+          <MoreVertical size={18} />
+        </button>
+      </DropdownMenuTrigger>
 
-          {!user.is_active ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onUnsuspend();
-              }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-green-700 transition-colors hover:bg-green-50"
-            >
-              <ShieldCheck size={16} className="text-green-500" />
-              Unsuspend Account
-            </button>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSuspend();
-              }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-amber-700 transition-colors hover:bg-amber-50"
-            >
-              <ShieldOff size={16} className="text-amber-500" />
-              Suspend Account
-            </button>
-          )}
+      <DropdownMenuContent
+        align="end"
+        className="w-48 bg-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <DropdownMenuItem
+          onClick={onViewProfile}
+          className="cursor-pointer text-slate-700"
+        >
+          <Eye size={16} className="text-slate-400" />
+          View Profile
+        </DropdownMenuItem>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAssignLga();
-            }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-teal-700 transition-colors hover:bg-teal-50"
+        {!user.is_active ? (
+          <DropdownMenuItem
+            onClick={onUnsuspend}
+            className="cursor-pointer text-green-700 focus:bg-green-50 focus:text-green-700"
           >
-            <MapPin size={16} className="text-teal-500" />
-            Assign LGA
-          </button>
+            <ShieldCheck size={16} className="text-green-500" />
+            Unsuspend Account
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem
+            onClick={onSuspend}
+            className="cursor-pointer text-amber-700 focus:bg-amber-50 focus:text-amber-700"
+          >
+            <ShieldOff size={16} className="text-amber-500" />
+            Suspend Account
+          </DropdownMenuItem>
+        )}
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onUnassignLga();
-            }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
-          >
-            <MapPinOff size={16} className="text-red-400" />
-            Unassign LGA
-          </button>
+        <DropdownMenuItem
+          onClick={onAssignLga}
+          className="cursor-pointer text-teal-700 focus:bg-teal-50 focus:text-teal-700"
+        >
+          <MapPin size={16} className="text-teal-500" />
+          Assign LGA
+        </DropdownMenuItem>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onChangeRole();
-            }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            <ArrowLeftRight size={16} className="text-slate-400" />
-            Change Role
-          </button>
+        <DropdownMenuItem
+          onClick={onUnassignLga}
+          variant="destructive"
+          className="cursor-pointer"
+        >
+          <MapPinOff size={16} />
+          Unassign LGA
+        </DropdownMenuItem>
 
-          {/* <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeactivate();
-            }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            <Ban size={16} className="text-slate-400" />
-            Deactivate
-          </button> */}
-        </div>
-      )}
-    </div>
+        <DropdownMenuItem
+          onClick={onChangeRole}
+          className="cursor-pointer text-slate-700"
+        >
+          <ArrowLeftRight size={16} className="text-slate-400" />
+          Change Role
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

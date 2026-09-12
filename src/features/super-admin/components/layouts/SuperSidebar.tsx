@@ -192,7 +192,7 @@ export default function SuperSidebar() {
 
       {/* Admin Menu Header */}
       <SectionHeading
-        label="Admin Menu"
+        label="Menu"
         isCollapsed={isCollapsed}
         className="px-4 pt-3 pb-2"
       />

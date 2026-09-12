@@ -1,8 +1,8 @@
 import { Toaster } from "sonner";
 
 export const metadata = {
-  title: "Authentication - OmniHealth",
-  description: "Sign in or create an account to access OmniHealth",
+  title: "Authentication - GeoHealth",
+  description: "Sign in or create an account to access GeoHealth",
 };
 
 export default function AuthLayout({

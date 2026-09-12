@@ -2,11 +2,13 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
-import { Calendar, UserPlus, Users } from "lucide-react";
+import { Calendar, Users } from "lucide-react";
 import StaffTableHeader, {
   type FilterState,
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
+import Tabs from "@/features/super-admin/components/ui/Tabs";
 import UserAndRoleList from "../layouts/UserAndRoleList";
+import InvitationsList from "../layouts/InvitationsList";
 import InviteUserModal from "../modals/InviteUserModal";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { superAdminService } from "../../services/super-admin.service";
@@ -17,7 +19,7 @@ import { toast } from "sonner";
 export default function AllUserPage() {
   const searchParams = useSearchParams();
   const actionParam = searchParams.get("action");
-  // const [activeTab, setActiveTab] = useState("user-directory");
+  const [activeTab, setActiveTab] = useState("users");
   const [isExporting, setIsExporting] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
@@ -60,10 +62,10 @@ export default function AllUserPage() {
   // Fetch sample of users for additional KPI insights
   const { data: usersData } = useSuperAdminUsers({ page: 1, limit: 20 });
 
-  // const tabs = [
-  //   { label: "User Directory", value: "user-directory" },
-  // { label: "Roles & Permissions", value: "roles-permissions" },
-  // ];
+  const tabs = [
+    { label: "Users", value: "users" },
+    { label: "Invitations", value: "invitations" },
+  ];
 
   // Get KPI metrics from analytics endpoint (server-side)
   const totalUsers =
@@ -126,24 +128,19 @@ export default function AllUserPage() {
             value={totalUsers}
             subtitle=""
             icon={<Users size={24} />}
-            //trend={{ value: "20%", isPositive: true }}
           />
           <KPIStatsCards
             title="Active Users"
             value={activeUsers}
             subtitle=""
             icon={<Users size={24} />}
-            // trend={{ value: "2% Decrease", isPositive: false }}
           />
           <KPIStatsCards
             title="Inactive Users"
             value={inactiveUsers}
             subtitle=""
             icon={<Calendar size={24} />}
-            // trend={{
-            //   value: inactiveUsers > 0 ? "Needs attention" : "All active",
-            //   isPositive: inactiveUsers === 0,
-            // }}
+
           />
           <KPIStatsCards
             title="Super Admins"
@@ -155,36 +152,39 @@ export default function AllUserPage() {
         </div>
 
         {/* Tabs */}
-        {/* <div className="mb-6">
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-        </div> */}
-
-        {/* Conditionally render content based on active tab */}
-        {/* {activeTab === "user-directory" && ( */}
-        <>
-          <StaffTableHeader
-            title="Users List"
-            searchPlaceholder="Search users..."
-            onSearch={handleSearch}
-            buttonLabel="Invite User"
-            buttonIcon={<UserPlus size={18} />}
-            onButtonClick={() => setIsInviteOpen(true)}
-            showGenderFilter={false}
-            showStatusFilter={true}
-            onStatusFilter={handleStatusFilter}
-            showExport={true}
-            onExport={handleExport}
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
+        <div className="mb-6">
+          <Tabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            size="md"
           />
-          <UserAndRoleList
-            searchQuery={filters.searchQuery}
-            statusFilter={filters.selectedStatus}
-          />
-        </>
-        {/* )} */}
+        </div>
 
-        {/* {activeTab === "roles-permissions" && <UserPermissionTab />} */}
+        {activeTab === "users" && (
+          <>
+            <StaffTableHeader
+              title="Users List"
+              searchPlaceholder="Search users..."
+              onSearch={handleSearch}
+              showGenderFilter={false}
+              showStatusFilter={true}
+              onStatusFilter={handleStatusFilter}
+              showExport={true}
+              onExport={handleExport}
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+            />
+            <UserAndRoleList
+              searchQuery={filters.searchQuery}
+              statusFilter={filters.selectedStatus}
+            />
+          </>
+        )}
+
+        {activeTab === "invitations" && (
+          <InvitationsList onInviteClick={() => setIsInviteOpen(true)} />
+        )}
       </main>
 
       <InviteUserModal
