@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import {
   UserCog,
   Hospital,
@@ -17,6 +17,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/features/auth/auth-store";
+import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import ProfileModal from "../../../profile/pages/ProfileModal";
 
 interface MenuItem {
@@ -56,31 +57,6 @@ const userMenuItems: MenuItem[] = [
   { label: "Admin Dashboard", icon: Map, href: "/admin" },
   { label: "User Dashboard", icon: Map, href: "/user" },
 ];
-
-/** Below Tailwind's `lg` — i.e. medium screens and narrower. */
-const NARROW_SCREEN_QUERY = "(max-width: 1023px)";
-
-/**
- * Tracks a media query without an effect, so no setState-in-effect and no
- * hydration mismatch: the server snapshot assumes a wide screen and React
- * re-reads the real value on the client.
- */
-function useNarrowScreen(query: string) {
-  const subscribe = useCallback(
-    (onChange: () => void) => {
-      const mql = window.matchMedia(query);
-      mql.addEventListener("change", onChange);
-      return () => mql.removeEventListener("change", onChange);
-    },
-    [query],
-  );
-
-  return useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(query).matches,
-    () => false,
-  );
-}
 
 /**
  * A single nav row. Collapsed it is an icon centred in the rail, with the label
@@ -146,25 +122,7 @@ export default function SuperSidebar() {
   const { user } = useAuthStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Medium screens and narrower collapse on their own to hand the width back to
-  // the tables. An explicit toggle overrides that; `null` means "follow the
-  // viewport". State lives in the layout, which persists across super-admin
-  // routes, so a choice survives navigation.
-  const isNarrowScreen = useNarrowScreen(NARROW_SCREEN_QUERY);
-  const [userPreference, setUserPreference] = useState<boolean | null>(null);
-  const [lastScreenWasNarrow, setLastScreenWasNarrow] = useState(isNarrowScreen);
-
-  // Crossing the breakpoint retires the old preference, so resizing back to a
-  // wide screen reopens the sidebar rather than stranding it collapsed.
-  // Adjusting state during render like this is the documented alternative to
-  // synchronising it from an effect.
-  if (lastScreenWasNarrow !== isNarrowScreen) {
-    setLastScreenWasNarrow(isNarrowScreen);
-    setUserPreference(null);
-  }
-
-  const isCollapsed = userPreference ?? isNarrowScreen;
-  const setIsCollapsed = (collapsed: boolean) => setUserPreference(collapsed);
+  const { isCollapsed, toggle } = useSidebarCollapse();
 
   const userInitials =
     user?.first_name && user?.last_name
@@ -222,7 +180,7 @@ export default function SuperSidebar() {
       >
         <button
           type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggle}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!isCollapsed}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
