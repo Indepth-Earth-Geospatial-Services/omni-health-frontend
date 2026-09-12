@@ -141,6 +141,7 @@ class AdminService {
     this.addEquipment = this.addEquipment.bind(this);
     this.addInfrastructure = this.addInfrastructure.bind(this);
     this.exportStaff = this.exportStaff.bind(this);
+    this.bulkImportStaff = this.bulkImportStaff.bind(this);
     this.uploadFacilityImages = this.uploadFacilityImages.bind(this);
     this.deleteFacilityImage = this.deleteFacilityImage.bind(this);
     this.deleteEquipment = this.deleteEquipment.bind(this);
@@ -238,6 +239,33 @@ class AdminService {
     const response = await apiClient.patch(
       `${this.ENDPOINTS.STAFF}/${staffId}`,
       data,
+    );
+    return response.data;
+  }
+
+  /**
+   * Bulk import staff from a spreadsheet (xlsx/xls/csv).
+   * POST /admin/staff/bulk-import?facility_id={facility_id}
+   */
+  async bulkImportStaff({
+    facilityId,
+    file,
+  }: {
+    facilityId: string;
+    file: File;
+  }): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient.post(
+      `${this.ENDPOINTS.STAFF}/bulk-import`,
+      formData,
+      {
+        params: { facility_id: facilityId },
+        // Drop the default JSON content type so the browser sets
+        // multipart/form-data with the correct boundary itself.
+        headers: { "Content-Type": undefined },
+      },
     );
     return response.data;
   }

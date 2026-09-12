@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <>
       <Header name="Overview" />
-      <div className="flex-1 overflow-y-auto bg-white p-6">
+      <div className="flex-1 overflow-y-auto bg-white p-4 sm:p-6">
         <Overview />
       </div>
     </>

@@ -72,8 +72,11 @@ const StaffTable: React.FC<StaffTableProps> = ({
     hasStatus,
   } = columnVisibility;
 
+  // The tall minimum keeps the pagination footer from jumping between pages,
+  // but 720px exceeds a phone's whole viewport — so it scales down on small
+  // screens rather than forcing a screenful of empty table.
   return (
-    <div className="relative overflow-x-auto" style={{ minHeight: "720px" }}>
+    <div className="relative min-h-96 overflow-x-auto sm:min-h-130 lg:min-h-180">
       <table className="w-full border-collapse text-left">
         {/* --- Header --- */}
         <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">

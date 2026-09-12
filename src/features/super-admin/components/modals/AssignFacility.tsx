@@ -9,13 +9,29 @@ import {
   Loader2,
   CheckCircle2,
   Info,
+  AlertTriangle,
   ChevronDown,
 } from "lucide-react";
 import { User } from "../../services/super-admin.service";
 import { Button } from "@/features/admin/components/ui/button";
 import { superAdminService } from "../../services/super-admin.service";
 import { useUnassignedLgas } from "../../hooks/useLgas";
+import { useLgaFacilityCounts } from "../../hooks/useLgaFacilityCounts";
+import { ApiError } from "@/lib/utils";
 import { toast } from "sonner";
+
+/**
+ * The backend rejects assigning an LGA that currently has zero facilities —
+ * assigning it would hand the admin coverage over nothing — but the 400 it
+ * sends back isn't a normal `{ detail: "..." }` body handleApiError can read,
+ * so `ApiError.message` ends up being axios's generic
+ * "Request failed with status code 400" instead of anything useful. Since
+ * that's the only real reason this call 400s (the picker below already hides
+ * every zero-facility LGA it knows about), any 400 here is treated as this
+ * case rather than shown to the user verbatim.
+ */
+const EMPTY_LGA_ERROR =
+  "One or more selected LGAs have no facilities yet. Please add facilities to that LGA before assigning it.";
 
 interface AssignFacilityModalProps {
   isOpen: boolean;
@@ -50,6 +66,11 @@ export default function AssignFacilityModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [isListOpen, setIsListOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // The backend's own message — it now also folds in any LGA it dropped from
+  // the user's existing coverage because that LGA has no facilities left, so
+  // this is shown as-is rather than replaced with a generic line.
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,18 +78,35 @@ export default function AssignFacilityModal({
       setSelectedLgaIds([]);
       setSearchQuery("");
       setIsListOpen(false);
+      setSuccessMessage(null);
+      setErrorMessage(null);
     }
   }, [isOpen]);
 
   const { data: unassignedLgas = [], isLoading: isLoadingLgas } =
     useUnassignedLgas(isOpen);
+  const { data: lgaFacilityCounts } = useLgaFacilityCounts();
+
+  // Assigning an LGA with 0 facilities is a dead end the backend rejects, so
+  // it's kept out of the picker entirely rather than offered and then
+  // bounced. Nothing is filtered until the counts have actually loaded — an
+  // LGA absent from that map means 0 facilities only once it's known to be
+  // complete, not while it's simply still in flight.
+  const assignableLgas = useMemo(
+    () =>
+      lgaFacilityCounts
+        ? unassignedLgas.filter((lga) => (lgaFacilityCounts[lga.lga_name] ?? 0) > 0)
+        : unassignedLgas,
+    [unassignedLgas, lgaFacilityCounts],
+  );
+  const hiddenEmptyLgaCount = unassignedLgas.length - assignableLgas.length;
 
   const filteredLgas = useMemo(
     () =>
-      unassignedLgas.filter((lga) =>
+      assignableLgas.filter((lga) =>
         lga.lga_name.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [unassignedLgas, searchQuery],
+    [assignableLgas, searchQuery],
   );
 
   const toggleLga = (id: number) => {
@@ -99,21 +137,35 @@ export default function AssignFacilityModal({
         : (user.user_id as number);
 
     setIsSubmitting(true);
+    setErrorMessage(null);
     try {
-      await superAdminService.assignManager({
+      const response = await superAdminService.assignManager({
         user_id: userId,
         lga_ids: selectedLgaIds,
       });
-      toast.success(
-        `${user.full_name} has been assigned to ${selectedLgaIds.length} LGA${selectedLgaIds.length > 1 ? "s" : ""} and promoted to Admin.`,
-      );
+      // The backend's message already covers the assignment and, when it
+      // applies, the cleanup of any previously-managed LGA that has 0
+      // facilities left — relay it verbatim rather than guessing at a
+      // shorter summary that might drop that detail.
+      const message =
+        response?.message ||
+        `${user.full_name} has been assigned to ${selectedLgaIds.length} LGA${selectedLgaIds.length > 1 ? "s" : ""} and promoted to Admin.`;
+      toast.success(message);
+      setSuccessMessage(message);
       onSuccess?.();
-      onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      // A 400 here only ever means an LGA with no facilities slipped through
+      // (the picker filters them out, but the count data can be stale) —
+      // the backend's own 400 body isn't one handleApiError can read, so its
+      // `.message` is just axios's generic "Request failed with status code
+      // 400" rather than anything worth showing.
       const msg =
-        err?.response?.data?.detail?.[0]?.msg ||
-        err?.response?.data?.message ||
-        "Failed to assign LGA(s). Please try again.";
+        err instanceof ApiError && err.statusCode === 400
+          ? EMPTY_LGA_ERROR
+          : err instanceof ApiError && err.message
+            ? err.message
+            : "Failed to assign LGA(s). Please try again.";
+      setErrorMessage(msg);
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -160,6 +212,29 @@ export default function AssignFacilityModal({
           className="overflow-y-auto px-6 py-5"
           style={{ maxHeight: "calc(100vh - 2rem - 80px)" }}
         >
+          {successMessage ? (
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                <CheckCircle2 size={28} className="text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-slate-800">
+                  Assignment updated
+                </p>
+                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
+                  {successMessage}
+                </p>
+              </div>
+              <Button
+                onClick={onClose}
+                size="lg"
+                className="mt-1 w-full max-w-[200px]"
+              >
+                Done
+              </Button>
+            </div>
+          ) : (
+          <>
           {/* User card */}
           <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
             <div className="from-primary to-primary/70 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white shadow-sm">
@@ -271,8 +346,10 @@ export default function AssignFacilityModal({
                     </div>
                   ) : filteredLgas.length === 0 ? (
                     <p className="py-6 text-center text-xs text-slate-400">
-                      {unassignedLgas.length === 0
-                        ? "All LGAs are already assigned"
+                      {assignableLgas.length === 0
+                        ? unassignedLgas.length === 0
+                          ? "All LGAs are already assigned"
+                          : "The remaining LGAs have no facilities yet"
                         : "No LGAs match your search"}
                     </p>
                   ) : (
@@ -344,6 +421,12 @@ export default function AssignFacilityModal({
                 )}
               </div>
             )}
+            {hiddenEmptyLgaCount > 0 && (
+              <p className="mt-1.5 text-xs text-slate-400">
+                {hiddenEmptyLgaCount} LGA{hiddenEmptyLgaCount > 1 ? "s" : ""} hidden
+                — no facilities registered there yet.
+              </p>
+            )}
           </div>
 
           {/* Selected chips */}
@@ -370,6 +453,16 @@ export default function AssignFacilityModal({
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Assignment error — a friendly, specific reason instead of the
+              generic "Request failed with status code 400", plus the toast
+              fired alongside it. */}
+          {errorMessage && (
+            <div className="mb-5 flex gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5">
+              <AlertTriangle size={15} className="mt-0.5 shrink-0 text-red-500" />
+              <p className="text-xs text-red-700">{errorMessage}</p>
             </div>
           )}
 
@@ -406,6 +499,8 @@ export default function AssignFacilityModal({
               </>
             )}
           </Button>
+          </>
+          )}
         </div>
       </div>
     </>

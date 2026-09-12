@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import SuperAdminMap from "../ui/SuperAdminMap";
 import { Facility } from "@/types/api-response";
-import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
+// TEMP: see src/features/super-admin/TEMP-chunked-facilities/README.md
+import { useFacilitiesForMap } from "@/features/super-admin/TEMP-chunked-facilities/useChunkedFacilities";
 
 export default function QuickAccessMap() {
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
@@ -12,10 +13,7 @@ export default function QuickAccessMap() {
   );
 
   // Fetch facilities for the map
-  const { data, isLoading, isError } = useFacilities({
-    page: 1,
-    limit: 1000,
-  });
+  const { data, isLoading, isError } = useFacilitiesForMap();
 
   const facilities = data?.facilities || [];
 
@@ -42,34 +40,40 @@ export default function QuickAccessMap() {
         </Link>
       </div>
 
-      {/* Map Container */}
-      <div className="h-[500px] w-full overflow-hidden rounded-xl">
-        {isLoading ? (
-          <div className="flex h-full w-full items-center justify-center bg-gray-100">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
-              <p className="text-sm text-gray-500">Loading map...</p>
+      {/* Map Container. The map renders immediately — tiles are ready in about
+          a second — with facilities arriving behind a non-blocking chip, rather
+          than a spinner standing in for the whole map while they load. */}
+      <div className="relative h-[500px] w-full overflow-hidden rounded-xl">
+        <SuperAdminMap
+          facilities={facilities as unknown as Facility[]}
+          width="100%"
+          height="100%"
+          onMarkerClick={handleMarkerClick}
+          selectedFacility={selectedFacility}
+        />
+
+        {isLoading && (
+          <div className="pointer-events-none absolute top-3 left-1/2 z-10 -translate-x-1/2">
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3.5 py-1.5 shadow-md backdrop-blur-sm">
+              <div className="border-primary h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-t-transparent" />
+              <p className="text-xs font-medium text-slate-600">
+                Loading facilities
+                {data?.pagination?.total_records
+                  ? ` — ${facilities.length} of ${data.pagination.total_records}`
+                  : "…"}
+              </p>
             </div>
           </div>
-        ) : isError ? (
-          <div className="flex h-full w-full items-center justify-center bg-gray-100">
-            <div className="text-center">
-              <p className="text-sm font-medium text-red-500">
-                Failed to load facilities
-              </p>
-              <p className="mt-1 text-xs text-gray-400">
-                Please try again later
+        )}
+
+        {isError && (
+          <div className="pointer-events-none absolute top-3 left-1/2 z-10 -translate-x-1/2">
+            <div className="rounded-full border border-red-200 bg-white/95 px-3.5 py-1.5 shadow-md backdrop-blur-sm">
+              <p className="text-xs font-medium text-red-600">
+                Could not load facilities
               </p>
             </div>
           </div>
-        ) : (
-          <SuperAdminMap
-            facilities={facilities as unknown as Facility[]}
-            width="100%"
-            height="100%"
-            onMarkerClick={handleMarkerClick}
-            selectedFacility={selectedFacility}
-          />
         )}
       </div>
 

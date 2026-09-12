@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { apiClient } from "@/lib/client";
+import { useFacilityOptions } from "./useFacilityOptions";
 
 export interface FilterState {
   searchQuery: string;
@@ -26,6 +26,12 @@ const DEFAULT_FILTERS: FilterState = {
 
 interface UseStaffFiltersOptions {
   initialFilters?: FilterState;
+  /**
+   * Whether the facility list is needed. Defaults to false so a page that
+   * renders no facility dropdown never pays for the request — All Users was
+   * fetching the list on every visit and displaying none of it.
+   */
+  loadFacilities?: boolean;
   onFiltersChange?: (filters: FilterState) => void;
   onSearch?: (value: string) => void;
   onLGAFilter?: (value: string) => void;
@@ -36,6 +42,7 @@ interface UseStaffFiltersOptions {
 
 export function useStaffFilters({
   initialFilters,
+  loadFacilities = false,
   onFiltersChange,
   onSearch,
   onLGAFilter,
@@ -43,43 +50,24 @@ export function useStaffFilters({
   onGenderFilter,
   onStatusFilter,
 }: UseStaffFiltersOptions = {}) {
-  const [filters, setFilters] = useState<FilterState>(
-    initialFilters || DEFAULT_FILTERS
-  );
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loadingFacilities, setLoadingFacilities] = useState(false);
+  // Controlled when the caller supplies `initialFilters` (both current callers
+  // do, alongside onFiltersChange), uncontrolled otherwise. Previously the prop
+  // was mirrored into state and re-synced from an effect, which meant two
+  // sources of truth and a render cascade on every parent update.
+  const [uncontrolledFilters, setUncontrolledFilters] =
+    useState<FilterState>(DEFAULT_FILTERS);
+  const filters = initialFilters ?? uncontrolledFilters;
+
+  // Shared and cached across mounts — see useFacilityOptions for why this no
+  // longer reads from GET /facilities.
+  const { data: facilities = [], isLoading: loadingFacilities } =
+    useFacilityOptions(loadFacilities);
 
   // Dropdown open states
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   // Refs for click outside handling
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  // Fetch facilities on mount
-  useEffect(() => {
-    const fetchFacilities = async () => {
-      setLoadingFacilities(true);
-      try {
-        const response = await apiClient.get("/facilities", {
-          params: { limit: 100 },
-        });
-        setFacilities(response.data.facilities || response.data || []);
-      } catch (error) {
-        console.error("Failed to fetch facilities:", error);
-        setFacilities([]);
-      } finally {
-        setLoadingFacilities(false);
-      }
-    };
-    fetchFacilities();
-  }, []);
-
-  // Sync with parent filters
-  useEffect(() => {
-    if (initialFilters) {
-      setFilters(initialFilters);
-    }
-  }, [initialFilters]);
 
   // Handle click outside to close dropdowns
   useEffect(() => {
@@ -103,7 +91,7 @@ export function useStaffFilters({
   const updateFilter = useCallback(
     (key: keyof FilterState, value: string) => {
       const newFilters = { ...filters, [key]: value };
-      setFilters(newFilters);
+      setUncontrolledFilters(newFilters);
       onFiltersChange?.(newFilters);
 
       // Call individual handlers for backward compatibility
@@ -129,7 +117,7 @@ export function useStaffFilters({
   }, [updateFilter]);
 
   const resetFilters = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+    setUncontrolledFilters(DEFAULT_FILTERS);
     onFiltersChange?.(DEFAULT_FILTERS);
   }, [onFiltersChange]);
 
