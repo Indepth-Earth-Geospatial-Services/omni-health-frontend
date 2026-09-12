@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Building2, Loader2 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { MultiSelectDropdown } from "@/features/super-admin/components/ui/MultiSelectDropdown";
+import { useMultiSelect } from "@/features/super-admin/hooks/use-multi-select";
 
 type InventoryType = "equipment" | "infrastructure";
 
@@ -17,7 +19,8 @@ interface InventoryItemModalProps {
   onSubmit?: (data: InventoryFormData) => void;
   isSubmitting?: boolean;
   type: InventoryType;
-  // Optional facility selection for super-admin
+  // Optional facility selection for super-admin — lets the same item be added
+  // to several facilities at once instead of one modal round-trip each.
   showFacilitySelector?: boolean;
   facilities?: FacilityOption[];
   isLoadingFacilities?: boolean;
@@ -26,7 +29,7 @@ interface InventoryItemModalProps {
 export interface InventoryFormData {
   name: string;
   quantity: string;
-  facilityId?: string;
+  facilityIds?: string[];
 }
 
 const typeConfig = {
@@ -62,17 +65,17 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
   facilities = [],
   isLoadingFacilities = false,
 }) => {
-  const [formData, setFormData] = useState<InventoryFormData>({
-    name: "",
-    quantity: "",
-    facilityId: "",
+  const [formData, setFormData] = useState({ name: "", quantity: "" });
+
+  const facilitySelect = useMultiSelect({
+    items: facilities,
+    getItemId: (f) => f.facility_id,
+    getItemLabel: (f) => f.facility_name,
   });
 
   const config = typeConfig[type];
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -85,17 +88,21 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
       return;
     }
 
-    if (showFacilitySelector && !formData.facilityId) {
-      alert("Please select a facility");
+    if (showFacilitySelector && facilitySelect.selectedIds.length === 0) {
+      alert("Please select at least one facility");
       return;
     }
 
-    onSubmit?.(formData);
+    onSubmit?.({
+      ...formData,
+      facilityIds: showFacilitySelector ? facilitySelect.selectedIds : undefined,
+    });
   };
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setFormData({ name: "", quantity: "", facilityId: "" });
+      setFormData({ name: "", quantity: "" });
+      facilitySelect.deselectAll();
       onClose();
     }
   };
@@ -112,53 +119,48 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between rounded-t-2xl bg-white px-6 py-4">
           <div>
-            <h1 className="mb-4 mt-2 text-3xl font-medium text-slate-900">
+            <h1 className="mt-2 mb-4 text-3xl font-medium text-slate-900">
               {config.title}
             </h1>
             <div>
               <h2 className="text-xl font-medium text-slate-600">
                 {config.subtitle}
               </h2>
-              <p className="mt-1 text-sm text-slate-500">{config.description}</p>
+              <p className="mt-1 text-sm text-slate-500">
+                {config.description}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
-          {/* Facility Selector (for super-admin) */}
+          {/* Facility Selector (for super-admin) — pick one or many facilities
+              to add this same item to in one go. */}
           {showFacilitySelector && (
-            <div>
-              <label
-                htmlFor="facilityId"
-                className="mb-2 block text-sm font-medium text-slate-700"
-              >
-                Select Facility
-              </label>
-              {isLoadingFacilities ? (
-                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5">
-                  <Loader2 size={16} className="animate-spin text-slate-400" />
-                  <span className="text-sm text-slate-500">Loading facilities...</span>
-                </div>
-              ) : (
-                <select
-                  id="facilityId"
-                  name="facilityId"
-                  value={formData.facilityId}
-                  onChange={handleInputChange}
-                  required
-                  disabled={isSubmitting}
-                  className="w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Select a facility</option>
-                  {facilities.map((facility) => (
-                    <option key={facility.facility_id} value={facility.facility_id}>
-                      {facility.facility_name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+            <MultiSelectDropdown
+              items={facilities}
+              selectedIds={facilitySelect.selectedIds}
+              getItemId={(f) => f.facility_id}
+              getItemLabel={(f) => f.facility_name}
+              onToggle={facilitySelect.toggle}
+              onSelectAll={() =>
+                facilitySelect.isAllSelected
+                  ? facilitySelect.deselectAll()
+                  : facilitySelect.selectAll()
+              }
+              isAllSelected={facilitySelect.isAllSelected}
+              isPartiallySelected={facilitySelect.isPartiallySelected}
+              label="Facilities"
+              required
+              disabled={isSubmitting}
+              isLoading={isLoadingFacilities}
+              loadingText="Loading facilities..."
+              placeholder="Select one or more facilities"
+              searchPlaceholder="Search facility..."
+              emptyText="No facilities found"
+              icon={<Building2 size={15} className="text-slate-400" />}
+            />
           )}
 
           {/* Name Input */}
@@ -178,7 +180,7 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
               placeholder={config.namePlaceholder}
               required
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus:ring-primary w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -200,7 +202,7 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
               min="1"
               required
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+              className="focus:ring-primary w-full rounded-lg border border-slate-200 bg-gray-100 px-4 py-2.5 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -209,14 +211,21 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             <Button
               type="submit"
               variant="default"
-              size="xl"
-              disabled={isSubmitting || (showFacilitySelector && isLoadingFacilities)}
+              size="lg"
+              disabled={
+                isSubmitting || (showFacilitySelector && isLoadingFacilities)
+              }
               className="text-lg"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
                   {config.loadingText}
+                </>
+              ) : showFacilitySelector && facilitySelect.selectedCount > 1 ? (
+                <>
+                  {config.buttonText} to {facilitySelect.selectedCount} facilities
+                  <ArrowRight size={18} />
                 </>
               ) : (
                 <>

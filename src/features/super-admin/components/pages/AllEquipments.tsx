@@ -1,6 +1,5 @@
 "use client";
 import { useState, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import { Package, Building2 } from "lucide-react";
 import StaffTableHeader, {
@@ -8,16 +7,12 @@ import StaffTableHeader, {
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
 import Tabs from "@/features/super-admin/components/ui/Tabs";
 import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
-import { useFacilitiesInventory } from "../../hooks/useFacilitiesInventory";
-import EquipmentList from "../layouts/EquipmentList";
-import InfrastructureList from "../layouts/InfrastructureList";
+import { useFacilityOptions } from "../../hooks/useFacilityOptions";
+import { useBatchAddInventoryItem } from "../../hooks/useFacilitiesByInventory";
+import UniqueInventoryList from "../layouts/UniqueInventoryList";
 import InventoryItemModal, {
   type InventoryFormData,
 } from "@/features/admin/feature/InventoryItemModal";
-import {
-  useAddEquipment,
-  useAddInfrastructure,
-} from "@/features/admin/hooks/useAdminStaff";
 import { toast } from "sonner";
 
 export default function EquipmentPage() {
@@ -29,7 +24,6 @@ export default function EquipmentPage() {
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [isInfrastructureModalOpen, setIsInfrastructureModalOpen] =
     useState(false);
-  const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
 
   // ========== FILTER STATE ==========
   // Manages search and filtering for equipment and infrastructure
@@ -46,16 +40,15 @@ export default function EquipmentPage() {
   const { data: inventoryData, isLoading: isLoadingInventory } =
     useUniqueInventory();
 
-  // Fetch facilities for the dropdown
+  // Fetch facilities for the dropdown — the lightweight analytics-backed list
+  // (name + id only), not the full facility payload with inventory attached.
   const { data: facilitiesData, isLoading: isLoadingFacilities } =
-    useFacilitiesInventory();
-
-  // ========== QUERY CLIENT ==========
-  const queryClient = useQueryClient();
+    useFacilityOptions();
 
   // ========== MUTATIONS ==========
-  const addEquipmentMutation = useAddEquipment(selectedFacilityId);
-  const addInfrastructureMutation = useAddInfrastructure(selectedFacilityId);
+  // One hook for both tabs — facility (or facilities) is passed per call
+  // rather than fixed, since a single item can be added to many at once.
+  const batchAddMutation = useBatchAddInventoryItem();
 
   // ========== TAB CONFIGURATION ==========
   // Define available tabs (Equipment and Infrastructure only)
@@ -80,65 +73,77 @@ export default function EquipmentPage() {
     setFilters(newFilters);
   }, []);
 
-  // Handle adding new equipment
-  const handleAddEquipment = useCallback(
-    async (data: InventoryFormData) => {
-      if (!data.facilityId) return;
-
-      setSelectedFacilityId(data.facilityId);
-
-      try {
-        await addEquipmentMutation.mutateAsync({
-          item_name: data.name,
-          quantity: parseInt(data.quantity, 10),
-        });
-
-        toast.success(`${data.name} added successfully!`);
-        // Refresh the inventory list
-        await queryClient.invalidateQueries({ queryKey: ["unique-inventory"] });
-        setIsEquipmentModalOpen(false);
-      } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-        toast.error(
-          err?.response?.data?.message ||
-            "Failed to add equipment. Please try again.",
+  // Reports how many of the selected facilities the add actually succeeded
+  // for, since a partial failure shouldn't read as a full success or a full
+  // failure — some facilities really did get the item.
+  const reportBatchResult = useCallback(
+    (itemName: string, result: { succeeded: number; failed: number }) => {
+      if (result.failed === 0) {
+        toast.success(
+          result.succeeded === 1
+            ? `${itemName} added successfully!`
+            : `${itemName} added to ${result.succeeded} facilities!`,
+        );
+      } else if (result.succeeded === 0) {
+        toast.error(`Failed to add ${itemName}. Please try again.`);
+      } else {
+        toast.warning(
+          `${itemName} added to ${result.succeeded} of ${result.succeeded + result.failed} facilities — the rest failed.`,
         );
       }
     },
-    [addEquipmentMutation, queryClient],
+    [],
   );
 
-  // Handle adding new infrastructure
-  const handleAddInfrastructure = useCallback(
+  // Handle adding new equipment — to one or several facilities at once
+  const handleAddEquipment = useCallback(
     async (data: InventoryFormData) => {
-      if (!data.facilityId) return;
-
-      setSelectedFacilityId(data.facilityId);
+      if (!data.facilityIds?.length) return;
 
       try {
-        await addInfrastructureMutation.mutateAsync({
-          item_name: data.name,
+        const result = await batchAddMutation.mutateAsync({
+          facilityIds: data.facilityIds,
+          itemName: data.name,
           quantity: parseInt(data.quantity, 10),
+          type: "equipment",
         });
+        reportBatchResult(data.name, result);
+        setIsEquipmentModalOpen(false);
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        toast.error(err?.message || "Failed to add equipment. Please try again.");
+      }
+    },
+    [batchAddMutation, reportBatchResult],
+  );
 
-        toast.success(`${data.name} added successfully!`);
-        // Refresh the inventory list
-        await queryClient.invalidateQueries({ queryKey: ["unique-inventory"] });
+  // Handle adding new infrastructure — to one or several facilities at once
+  const handleAddInfrastructure = useCallback(
+    async (data: InventoryFormData) => {
+      if (!data.facilityIds?.length) return;
+
+      try {
+        const result = await batchAddMutation.mutateAsync({
+          facilityIds: data.facilityIds,
+          itemName: data.name,
+          quantity: parseInt(data.quantity, 10),
+          type: "infrastructure",
+        });
+        reportBatchResult(data.name, result);
         setIsInfrastructureModalOpen(false);
       } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
+        const err = error as { message?: string };
         toast.error(
-          err?.response?.data?.message ||
-            "Failed to add infrastructure. Please try again.",
+          err?.message || "Failed to add infrastructure. Please try again.",
         );
       }
     },
-    [addInfrastructureMutation, queryClient],
+    [batchAddMutation, reportBatchResult],
   );
 
   // Format facilities for the dropdown
   const facilityOptions =
-    facilitiesData?.facilities?.map((f) => ({
+    facilitiesData?.map((f) => ({
       facility_id: f.facility_id,
       facility_name: f.facility_name,
     })) || [];
@@ -176,7 +181,8 @@ export default function EquipmentPage() {
               title="Equipment Management"
               searchPlaceholder="Search equipment..."
               onSearch={handleSearch}
-              buttonLabel="Add New Equipment"
+              buttonLabel="New Equipment"
+              buttonClassName="shrink-0 text-sm sm:text-lg"
               onButtonClick={() => setIsEquipmentModalOpen(true)}
               showGenderFilter={false}
               showStatusFilter={false}
@@ -190,9 +196,11 @@ export default function EquipmentPage() {
                 <span className="ml-3 text-gray-600">Loading equipment...</span>
               </div>
             ) : (
-              <EquipmentList
-                equipmentList={inventoryData?.equipment || []}
+              <UniqueInventoryList
+                type="equipment"
+                items={inventoryData?.equipment || []}
                 searchQuery={filters.searchQuery}
+                emptyMessage="No equipment items found"
               />
             )}
           </>
@@ -205,7 +213,8 @@ export default function EquipmentPage() {
               title="Infrastructure Management"
               searchPlaceholder="Search infrastructure..."
               onSearch={handleSearch}
-              buttonLabel="Add New Infrastructure"
+              buttonLabel="New Infrastructure"
+              buttonClassName="shrink-0 text-sm sm:text-lg"
               onButtonClick={() => setIsInfrastructureModalOpen(true)}
               showGenderFilter={false}
               showStatusFilter={false}
@@ -221,9 +230,11 @@ export default function EquipmentPage() {
                 </span>
               </div>
             ) : (
-              <InfrastructureList
-                infrastructureList={inventoryData?.infrastructure || []}
+              <UniqueInventoryList
+                type="infrastructure"
+                items={inventoryData?.infrastructure || []}
                 searchQuery={filters.searchQuery}
+                emptyMessage="No infrastructure items found"
               />
             )}
           </>
@@ -235,7 +246,7 @@ export default function EquipmentPage() {
         isOpen={isEquipmentModalOpen}
         onClose={() => setIsEquipmentModalOpen(false)}
         onSubmit={handleAddEquipment}
-        isSubmitting={addEquipmentMutation.isPending}
+        isSubmitting={batchAddMutation.isPending}
         type="equipment"
         showFacilitySelector
         facilities={facilityOptions}
@@ -247,7 +258,7 @@ export default function EquipmentPage() {
         isOpen={isInfrastructureModalOpen}
         onClose={() => setIsInfrastructureModalOpen(false)}
         onSubmit={handleAddInfrastructure}
-        isSubmitting={addInfrastructureMutation.isPending}
+        isSubmitting={batchAddMutation.isPending}
         type="infrastructure"
         showFacilitySelector
         facilities={facilityOptions}

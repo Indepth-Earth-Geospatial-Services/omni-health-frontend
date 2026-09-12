@@ -2,11 +2,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, UserPlus, Users } from "lucide-react";
 import StaffTableHeader, {
   type FilterState,
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
 import UserAndRoleList from "../layouts/UserAndRoleList";
+import InviteUserModal from "../modals/InviteUserModal";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { superAdminService } from "../../services/super-admin.service";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +19,7 @@ export default function AllUserPage() {
   const actionParam = searchParams.get("action");
   // const [activeTab, setActiveTab] = useState("user-directory");
   const [isExporting, setIsExporting] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   // Show toast message based on action query parameter
   useEffect(() => {
@@ -164,8 +166,9 @@ export default function AllUserPage() {
             title="Users List"
             searchPlaceholder="Search users..."
             onSearch={handleSearch}
-            // buttonLabel="Add New User"
-            onButtonClick={() => console.log("Add new user")}
+            buttonLabel="Invite User"
+            buttonIcon={<UserPlus size={18} />}
+            onButtonClick={() => setIsInviteOpen(true)}
             showGenderFilter={false}
             showStatusFilter={true}
             onStatusFilter={handleStatusFilter}
@@ -183,6 +186,11 @@ export default function AllUserPage() {
 
         {/* {activeTab === "roles-permissions" && <UserPermissionTab />} */}
       </main>
+
+      <InviteUserModal
+        isOpen={isInviteOpen}
+        onClose={() => setIsInviteOpen(false)}
+      />
     </div>
   );
 }

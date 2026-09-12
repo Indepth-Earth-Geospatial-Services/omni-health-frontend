@@ -85,6 +85,23 @@ export const useDeleteStaff = (facilityId: string) => {
   });
 };
 
+/**
+ * Bulk-imports staff from a spreadsheet for a given facility. Used by both the
+ * admin and super-admin "Add Staff" modals, so it invalidates both features'
+ * staff list query keys.
+ */
+export const useBulkImportStaff = (facilityId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) =>
+      adminService.bulkImportStaff({ facilityId, file }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminStaffKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["all-staff"] });
+    },
+  });
+};
+
 export const useInvalidateStaffCache = () => {
   const queryClient = useQueryClient();
   return {

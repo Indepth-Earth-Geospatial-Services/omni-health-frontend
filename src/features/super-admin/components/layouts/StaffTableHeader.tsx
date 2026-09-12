@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Search, Plus, Download, Upload, Building2, X } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
+import { cn } from "@/lib/utils";
 import DownloadNominalRollModal from "../modals/DownloadNominalRollModal";
 import { FilterDropdown } from "../ui/FilterDropdown";
 import {
@@ -38,6 +39,8 @@ interface StaffTableHeadersProps {
   buttonLabel?: string;
   onButtonClick?: () => void;
   buttonIcon?: React.ReactNode;
+  /** Extra classes merged onto the CTA button — e.g. to bump up its text size. */
+  buttonClassName?: string;
   filters?: FilterState;
   onFiltersChange?: (filters: FilterState) => void;
 }
@@ -62,6 +65,7 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
   buttonLabel,
   onButtonClick,
   buttonIcon = <Plus size={18} />,
+  buttonClassName,
   filters: externalFilters,
   onFiltersChange,
 }) => {
@@ -232,7 +236,7 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
               className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               <Download size={16} />
-              Download Nominal Role
+              Export
             </button>
           )}
 
@@ -240,8 +244,8 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
           {buttonLabel && (
             <Button
               onClick={onButtonClick}
-              size="xl"
-              className="flex items-center gap-2"
+              size="lg"
+              className={cn("flex items-center gap-2", buttonClassName)}
             >
               {buttonIcon}
               {buttonLabel}
@@ -254,9 +258,13 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
       {activeFiltersCount > 0 && (
         <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
           <span className="font-medium">
-            {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""} active
+            {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""}{" "}
+            active
           </span>
-          <button onClick={resetFilters} className="text-primary hover:underline">
+          <button
+            onClick={resetFilters}
+            className="text-primary hover:underline"
+          >
             Clear all
           </button>
         </div>

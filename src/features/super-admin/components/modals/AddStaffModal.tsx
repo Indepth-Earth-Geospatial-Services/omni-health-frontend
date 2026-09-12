@@ -28,6 +28,9 @@ import type { CreateStaffRequest } from "@/features/super-admin/services/super-a
 import { toast } from "sonner";
 import { useSuperAdminStaffSchema } from "@/features/super-admin/hooks/seStaffQuery";
 import type { LucideIcon } from "lucide-react";
+import Tabs from "@/features/super-admin/components/ui/Tabs";
+import { FacilitySearchDropdown } from "@/features/super-admin/components/ui/FacilitySearchDropdown";
+import BulkImportStaffPanel from "@/components/shared/modals/BulkImportStaffPanel";
 
 interface Facility {
   facility_id: string;
@@ -183,6 +186,8 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedFacilityId, setSelectedFacilityId] = useState("");
+  const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
+  const [bulkFacilityId, setBulkFacilityId] = useState("");
 
   const facilityDropdownRef = useRef<HTMLDivElement>(null);
   const selectDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -373,6 +378,8 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
     setErrors({});
     setIsFacilityDropdownOpen(false);
     setOpenDropdown(null);
+    setActiveTab("single");
+    setBulkFacilityId("");
     onClose();
   };
 
@@ -563,7 +570,37 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
           </button>
         </div>
 
+        <div className="shrink-0 px-6 pt-4">
+          <Tabs
+            tabs={[
+              { label: "Single Add", value: "single" },
+              { label: "Bulk Import", value: "bulk" },
+            ]}
+            activeTab={activeTab}
+            onTabChange={(value) => setActiveTab(value as "single" | "bulk")}
+            className="py-0"
+          />
+        </div>
+
         {/* Content */}
+        {activeTab === "bulk" ? (
+          <div className="flex-1 overflow-y-auto p-6">
+            <BulkImportStaffPanel
+              facilityId={bulkFacilityId}
+              disabled={!bulkFacilityId}
+              onSuccess={() => {
+                onSuccess?.();
+                handleClose();
+              }}
+              facilitySelector={
+                <FacilitySearchDropdown
+                  value={bulkFacilityId}
+                  onChange={setBulkFacilityId}
+                />
+              }
+            />
+          </div>
+        ) : (
         <div className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-2 gap-4">
             {/* Facility Selector — always shown first */}
@@ -658,8 +695,10 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
             {fieldsToRender.map((fieldKey) => renderField(fieldKey))}
           </div>
         </div>
+        )}
 
         {/* Footer */}
+        {activeTab === "single" && (
         <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 p-6">
           <Button
             variant="outline"
@@ -686,6 +725,7 @@ const AddStaffModal: React.FC<AddStaffModalProps> = ({
             )}
           </Button>
         </div>
+        )}
       </div>
     </>
   );

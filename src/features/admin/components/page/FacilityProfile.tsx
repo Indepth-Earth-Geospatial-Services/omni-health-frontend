@@ -51,7 +51,7 @@ export default function FacilityProfile() {
         <Button
           type="button"
           variant="default"
-          size="xl"
+          size="lg"
           className="shrink-0 text-sm sm:text-lg"
           onClick={() => setIsEditModalOpen(true)}
         >
@@ -95,7 +95,9 @@ export default function FacilityProfile() {
             onToggle={() => sections.toggle("operatingHours")}
           >
             <OperatingHoursContent
-              workingHours={facility?.working_hours as Record<string, string> | undefined}
+              workingHours={
+                facility?.working_hours as Record<string, string> | undefined
+              }
               isLoading={isLoading}
               isError={isError}
             />
@@ -339,11 +341,21 @@ function OperatingHoursContent({
 
   if (isError) {
     return (
-      <p className="pt-4 text-sm text-red-500">Failed to load operating hours</p>
+      <p className="pt-4 text-sm text-red-500">
+        Failed to load operating hours
+      </p>
     );
   }
 
-  const DAY_ORDER = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  const DAY_ORDER = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
   const entries = workingHours
     ? Object.entries(workingHours).sort(([a], [b]) => {
         const ai = DAY_ORDER.indexOf(a.toLowerCase());
@@ -369,7 +381,7 @@ function OperatingHoursContent({
             key={day}
             className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5 sm:px-4"
           >
-            <span className="truncate text-sm font-medium capitalize text-slate-700">
+            <span className="truncate text-sm font-medium text-slate-700 capitalize">
               {day}
             </span>
             <span

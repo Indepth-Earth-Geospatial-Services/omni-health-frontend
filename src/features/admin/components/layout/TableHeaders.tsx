@@ -139,7 +139,7 @@ const TableHeaders: React.FC<TableHeadersProps> = ({
             <Button
               onClick={onButtonClick}
               variant="default"
-              size="xl"
+              size="lg"
               className="shrink-0 text-sm sm:text-lg"
             >
               {buttonIcon}
