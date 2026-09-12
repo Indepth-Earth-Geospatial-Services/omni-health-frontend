@@ -10,6 +10,7 @@ import {
   Clock,
   CheckCircle2,
   ShieldAlert,
+  UserPlus,
 } from "lucide-react";
 import {
   useInvites,
@@ -18,6 +19,7 @@ import {
 } from "../../hooks/useInvites";
 import type { Invite, InviteStatus } from "../../services/super-admin.service";
 import { formatDate } from "@/lib/utils";
+import { Button } from "@/features/admin/components/ui/button";
 
 const STATUS_FILTERS: { value: InviteStatus | "all"; label: string }[] = [
   { value: "pending", label: "Pending" },
@@ -137,7 +139,12 @@ function InviteRow({ invite }: { invite: Invite }) {
   );
 }
 
-export default function InvitationsList() {
+interface InvitationsListProps {
+  /** Shows an "Invite User" button in the header when provided. */
+  onInviteClick?: () => void;
+}
+
+export default function InvitationsList({ onInviteClick }: InvitationsListProps) {
   const [status, setStatus] = useState<InviteStatus | "all">("pending");
 
   const { data, isLoading, isError } = useInvites(
@@ -161,21 +168,34 @@ export default function InvitationsList() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1">
-          {STATUS_FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => setStatus(filter.value)}
-              className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                status === filter.value
-                  ? "bg-primary text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap gap-1">
+            {STATUS_FILTERS.map((filter) => (
+              <button
+                key={filter.value}
+                type="button"
+                onClick={() => setStatus(filter.value)}
+                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  status === filter.value
+                    ? "bg-primary text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+
+          {onInviteClick && (
+            <Button
+              onClick={onInviteClick}
+              size="sm"
+              className="gap-1.5 text-xs"
             >
-              {filter.label}
-            </button>
-          ))}
+              <UserPlus size={14} />
+              Invite User
+            </Button>
+          )}
         </div>
       </div>
 

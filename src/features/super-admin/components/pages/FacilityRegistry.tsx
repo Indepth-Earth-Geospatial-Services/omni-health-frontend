@@ -246,6 +246,11 @@ export default function FacilityRegistry() {
         isDeleting={bulkDeleteMutation.isPending}
       />
 
+      {isLoading ? (
+        <div className="flex h-64 w-full items-center justify-center rounded-xl border border-slate-200 bg-white">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        </div>
+      ) : (
       <div className="flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
         <div
           className="relative overflow-x-auto"
@@ -279,19 +284,6 @@ export default function FacilityRegistry() {
             </thead>
 
             <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={8} className="p-8">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <Loader2 className="text-primary h-8 w-8 animate-spin" />
-                      <p className="text-sm text-slate-500">
-                        Loading facilities...
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
               {isError && (
                 <tr>
                   <td colSpan={8} className="p-8">
@@ -388,9 +380,9 @@ export default function FacilityRegistry() {
         <div className="flex items-center justify-between border-t border-slate-100 p-4">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            disabled={currentPage === 1 || isLoading}
+            disabled={currentPage === 1 || isLoading || isFetching}
             className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition ${
-              currentPage === 1 || isLoading
+              currentPage === 1 || isLoading || isFetching
                 ? "cursor-not-allowed bg-slate-50 text-slate-400"
                 : "bg-white text-slate-700 hover:bg-slate-50"
             }`}
@@ -412,9 +404,9 @@ export default function FacilityRegistry() {
             onClick={() =>
               setCurrentPage((prev) => Math.min(totalPages, prev + 1))
             }
-            disabled={currentPage >= totalPages || isLoading}
+            disabled={currentPage >= totalPages || isLoading || isFetching}
             className={`flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium transition ${
-              currentPage >= totalPages || isLoading
+              currentPage >= totalPages || isLoading || isFetching
                 ? "cursor-not-allowed bg-slate-50 text-slate-400"
                 : "bg-white text-slate-700 hover:bg-slate-50"
             }`}
@@ -423,6 +415,7 @@ export default function FacilityRegistry() {
           </button>
         </div>
       </div>
+      )}
 
       <AddFacilityModal
         isOpen={isModalOpen}

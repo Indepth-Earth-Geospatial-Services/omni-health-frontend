@@ -86,7 +86,7 @@ export default function AcceptInvitePage() {
           >
             <h2 className="mb-4 text-4xl leading-tight font-bold text-gray-900 xl:text-5xl">
               You have been invited to{" "}
-              <span className="text-primary">OmniHealth</span>
+              <span className="text-primary">GeoHealth</span>
             </h2>
             <p className="mb-8 text-lg text-gray-600">
               Set a password to activate your account and start managing

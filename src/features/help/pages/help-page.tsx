@@ -45,7 +45,7 @@ function HelpPage() {
             <HelpLine
               icon={<Mail size={24} color="#51A199" />}
               title="Email Support"
-              value={"support@omni-health.org"}
+              value={"support@geohealth.org"}
             />
           </div>
         </div>
