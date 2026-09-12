@@ -75,13 +75,6 @@ export const StaffRow = ({
       whileHover={{ backgroundColor: "#f8fafc" }}
       className="group border-b border-slate-100 transition-colors last:border-0"
     >
-      <td className="p-4">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-        />
-      </td>
-
       {/* S/NO */}
       <td className="p-4 text-sm text-slate-600">{serialNumber}</td>
 
@@ -110,7 +103,7 @@ export const StaffRow = ({
       </td>
 
       {/* Sex */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         <span
           className={`rounded-md px-2 py-1 text-xs font-medium ${
             item.gender?.toLowerCase() === "male" ||
@@ -127,13 +120,12 @@ export const StaffRow = ({
       </td>
 
       {/* Rank */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {toSentenceCase(item.rank_cadre) || "-"}
       </td>
 
       {/* G/L (Grade Level) */}
-      <td className="p-4 text-sm text-slate-600">
-        {/* {item.grade_level || "-"} */}
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {item.grade_level &&
         typeof item.grade_level === "string" &&
         item.grade_level !== "NaN" &&
@@ -148,35 +140,39 @@ export const StaffRow = ({
       </td>
 
       {/* Date of 1st Appt */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {item.date_first_appointment || "-"}
       </td>
 
       {/* Confirmation of Appt */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {item.date_confirmation || "-"}
       </td>
 
       {/* Date of Present Appt */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {item.date_present_appointment || "-"}
       </td>
 
       {/* Date of Birth */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {item.date_of_birth || "-"}
       </td>
 
       {/* LGA of Origin */}
-      <td className="p-4 text-sm text-slate-600">{item.lga_origin || "-"}</td>
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
+        {item.lga_origin || "-"}
+      </td>
 
       {/* Years in Present Station */}
-      <td className="p-4 text-sm text-slate-600">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
         {item.years_in_present_station || "-"}
       </td>
 
       {/* Phone Number */}
-      <td className="p-4 text-sm text-slate-600">{item.phone_number || "-"}</td>
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">
+        {item.phone_number || "-"}
+      </td>
 
       {/* Remark */}
       <td className="max-w-32 truncate p-4 text-sm text-slate-600">
@@ -184,7 +180,7 @@ export const StaffRow = ({
       </td>
 
       {/* Actions */}
-      <td className="sticky right-0 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] group-hover:bg-slate-50">
+      <td className="sticky right-0 z-10 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] group-hover:bg-slate-50">
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => onEdit?.(item)}

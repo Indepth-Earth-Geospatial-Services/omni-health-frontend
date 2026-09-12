@@ -2,7 +2,7 @@ import ForgotPasswordForm from "@/features/auth/components/forgot-password-form"
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Forgot Password | OmniHealth",
+  title: "Forgot Password | GeoHealth",
   description: "Reset your account password",
 };
 

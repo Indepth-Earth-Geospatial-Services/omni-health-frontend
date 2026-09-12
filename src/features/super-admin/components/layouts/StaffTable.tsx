@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpDown, Loader2, MinusSquare } from "lucide-react";
+import { ArrowUpDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import TableHeaders, { FilterState } from "./StaffTableHeader";
 import AddStaffModal from "../modals/AddStaffModal";
@@ -194,8 +194,8 @@ const StaffTables = () => {
         searchPlaceholder="Search by name..."
         showLGAFilter={false}
         showFacilitiesFilter={true}
-        showGenderFilter={true}
-        showStatusFilter={true}
+        showGenderFilter={false}
+        showStatusFilter={false}
         showDownload={true}
         buttonLabel="Add New Staff"
         onButtonClick={() => setIsAddStaffModalOpen(true)}
@@ -204,61 +204,58 @@ const StaffTables = () => {
         onFiltersChange={handleFiltersChange}
       />
       <div className="w-full rounded-xl border border-slate-200 bg-white">
-        <div className="relative overflow-auto" style={{ maxHeight: "720px" }}>
-          <table className="w-full border-collapse text-left">
-            <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
+        <div
+          className="relative overflow-auto"
+          style={{ maxHeight: "min(720px, 75vh)" }}
+        >
+          <table className="w-full min-w-[1700px] border-collapse text-left">
+            <thead className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
-                <th className="w-12 p-4">
-                  <MinusSquare
-                    size={18}
-                    className="rounded bg-teal-50 text-teal-500"
-                  />
-                </th>
-                <th className="w-12 p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="w-12 p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   S/NO
                 </th>
-                <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
+                <th className="cursor-pointer p-4 whitespace-nowrap transition-colors hover:text-slate-800">
                   <div className="font-inter flex items-center gap-2 text-[11.38px] font-medium text-[#475467]">
                     Names of Officers <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Sex
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Rank
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   G/L
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Qualification with Date
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Date of 1st Appt
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Confirmation of Appt
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Date of Present Appt
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Date of Birth
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   LGA of Origin
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Years in Present Station
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Phone Number
                 </th>
-                <th className="p-4 text-[11.38px] font-medium text-[#475467]">
+                <th className="p-4 text-[11.38px] font-medium whitespace-nowrap text-[#475467]">
                   Remark
                 </th>
-                <th className="sticky right-0 bg-slate-50 p-4 text-center text-[11.38px] font-medium text-[#475467] shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
+                <th className="sticky right-0 z-10 bg-slate-50 p-4 text-center text-[11.38px] font-medium whitespace-nowrap text-[#475467] shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
                   Actions
                 </th>
               </tr>
@@ -356,8 +353,8 @@ const TableWrapper = ({
       searchPlaceholder="Search by name..."
       showLGAFilter={false}
       showFacilitiesFilter={true}
-      showGenderFilter={true}
-      showStatusFilter={true}
+      showGenderFilter={false}
+      showStatusFilter={false}
       showDownload={true}
       buttonLabel="Add New Staff"
       onButtonClick={() => setIsAddStaffModalOpen(true)}

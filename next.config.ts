@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 // .env to point to a different deployment without touching this file.
 // const BACKEND_URL =
 //   process.env.BACKEND_URL ??
-//   "https://omni-health-backend-85732036737.africa-south1.run.app";
+//   "https://geohealth-backend-85732036737.africa-south1.run.app";
 
 const BACKEND_URL = process.env.BACKEND_URL;
 

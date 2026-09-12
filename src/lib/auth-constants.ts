@@ -7,13 +7,13 @@
  */
 
 /** Key used to persist auth state in sessionStorage (per-tab, cleared on tab close). */
-export const AUTH_STORAGE_KEY = "omni_health_auth";
+export const AUTH_STORAGE_KEY = "geo_health_auth";
 
 /** Cookie that carries the raw JWT for middleware route protection. */
-export const AUTH_COOKIE_NAME = "omni_health_token";
+export const AUTH_COOKIE_NAME = "geo_health_token";
 
 /** Cookie that carries serialised role + facilityIds for middleware RBAC. */
-export const AUTH_DATA_COOKIE_NAME = "omni_health_auth_data";
+export const AUTH_DATA_COOKIE_NAME = "geo_health_auth_data";
 
 /**
  * Single source of truth for role → dashboard path mapping.

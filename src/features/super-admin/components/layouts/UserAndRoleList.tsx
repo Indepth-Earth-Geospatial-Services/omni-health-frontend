@@ -1,13 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  MinusSquare,
-  Building2,
-} from "lucide-react";
+import { memo, useCallback, useMemo, useState } from "react";
+import { ArrowUpDown, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { useUserActions } from "../../hooks/use-user-actions";
 import { UserActionsDropdown } from "../ui/UserActionsDropdown";
@@ -23,12 +17,115 @@ import {
   getInitials,
   AVATAR_GRADIENTS,
 } from "../../utils/user-helpers";
+import type { User } from "../../services/super-admin.service";
 
 interface UserAndRoleListProps {
   searchQuery?: string;
   statusFilter?: string;
   suspensionFilter?: "all" | "active" | "suspended";
 }
+
+/** Shared base classes so every header cell lines up the same way — same
+ *  font, size, and color; only the alignment modifier differs per column. */
+const TH_BASE =
+  "font-inter-medium font-inter p-4 text-[11.38px] text-[#475467]";
+
+interface UserRowProps {
+  user: User;
+  rowNumber: number;
+  avatarGradient: string;
+  isDropdownOpen: boolean;
+  onDropdownOpenChange: (userId: string, open: boolean) => void;
+  onViewProfile: (user: User) => void;
+  onSuspend: (user: User, mode: "suspend" | "unsuspend") => void;
+  onChangeRole: (user: User) => void;
+  onDeactivate: (user: User) => void;
+  onAssignLga: (user: User) => void;
+  onUnassignLga: (user: User) => void;
+}
+
+/**
+ * Its own component, wrapped in `memo`, so that toggling one row's actions
+ * dropdown (or any other row's) doesn't re-render every other row — before
+ * this, `openDropdownId` lived in the parent and every state change there
+ * re-ran the whole `.map()`, rebuilding every row's JSX regardless of
+ * whether that row's own props actually changed. All callback props are
+ * stable references from the parent (`useCallback`/`useState` setters), so
+ * `memo`'s shallow comparison actually has a chance to skip work.
+ */
+const UserRow = memo(function UserRow({
+  user,
+  rowNumber,
+  avatarGradient,
+  isDropdownOpen,
+  onDropdownOpenChange,
+  onViewProfile,
+  onSuspend,
+  onChangeRole,
+  onDeactivate,
+  onAssignLga,
+  onUnassignLga,
+}: UserRowProps) {
+  return (
+    <tr className="group border-b border-slate-100 transition-colors">
+      <td className="p-4 text-sm whitespace-nowrap text-slate-600">{rowNumber}</td>
+      <td className="p-4">
+        <div className="flex items-center gap-3 whitespace-nowrap">
+          <div
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br ${avatarGradient} text-xs font-bold text-white shadow-sm`}
+          >
+            {getInitials(user.full_name)}
+          </div>
+          <div>
+            <p className="font-dmsans text-[13.69px] font-medium text-slate-900">
+              {user.full_name}
+            </p>
+            <p className="font-dmsans mt-0.5 text-[12.64px] font-normal text-[#475467]">
+              {user.email}
+            </p>
+          </div>
+        </div>
+      </td>
+      <td className="p-4 text-center whitespace-nowrap">
+        <span
+          className={`rounded-full border px-4 py-1 text-xs font-medium ${getRoleBadgeColor(user.role)}`}
+        >
+          {user.role.replace("_", " ").toUpperCase()}
+        </span>
+      </td>
+      <td className="p-4 text-sm font-medium whitespace-nowrap text-slate-600">
+        {formatDate(user.created_at)}
+      </td>
+      <td className="p-4 text-center whitespace-nowrap">
+        {user.is_active ? (
+          <span className="bg-primary rounded-full border px-4 py-1 text-xs font-medium text-white">
+            Active
+          </span>
+        ) : (
+          <span className="rounded-full border bg-[#E2E4E9] px-4 py-1 text-xs font-medium text-gray-600">
+            Not Active
+          </span>
+        )}
+      </td>
+      <td className="p-4 text-center whitespace-nowrap">
+        <div className="relative flex items-center justify-center gap-1">
+          <UserActionsDropdown
+            user={user}
+            isOpen={isDropdownOpen}
+            onOpenChange={(open) => onDropdownOpenChange(user.user_id, open)}
+            onViewProfile={() => onViewProfile(user)}
+            onSuspend={() => onSuspend(user, "suspend")}
+            onUnsuspend={() => onSuspend(user, "unsuspend")}
+            onChangeRole={() => onChangeRole(user)}
+            onDeactivate={() => onDeactivate(user)}
+            onAssignLga={() => onAssignLga(user)}
+            onUnassignLga={() => onUnassignLga(user)}
+          />
+        </div>
+      </td>
+    </tr>
+  );
+});
 
 export default function UserAndRoleList({
   searchQuery = "",
@@ -37,51 +134,54 @@ export default function UserAndRoleList({
 }: UserAndRoleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [expandedFacilities, setExpandedFacilities] = useState<Set<string>>(
-    new Set(),
-  );
-
-  const toggleFacilities = (userId: string) => {
-    setExpandedFacilities((prev) => {
-      const next = new Set(prev);
-      if (next.has(userId)) {
-        next.delete(userId);
-      } else {
-        next.add(userId);
-      }
-      return next;
-    });
-  };
 
   // Fetch users with proper pagination (limit 50 for reasonable performance)
   const { data, isLoading, isError, error, isFetching, refetch } =
     useSuperAdminUsers({ page: currentPage, limit: 50 });
 
   const userActions = useUserActions({ onSuccess: refetch });
+  const {
+    openProfileModal,
+    openSuspendModal,
+    openChangeRoleModal,
+    openDeactivateModal,
+    openAssignFacilityModal,
+    openUnassignLgaModal,
+  } = userActions;
 
   // Extract data from query response
-  const users = data?.users ?? [];
-  const pagination = data?.pagination ?? { total_records: 0, total_pages: 1, current_page: 1 };
+  const users = useMemo(() => data?.users ?? [], [data?.users]);
+  const pagination = data?.pagination ?? {
+    total_records: 0,
+    total_pages: 1,
+    current_page: 1,
+  };
 
-  // Client-side filtering (on the page's current batch)
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      !searchQuery ||
-      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+  // Client-side filtering (on the page's current batch) — memoized so it
+  // only reruns when the inputs actually change, not on every render this
+  // component's parent (or an unrelated row's dropdown) triggers.
+  const filteredUsers = useMemo(
+    () =>
+      users.filter((user) => {
+        const matchesSearch =
+          !searchQuery ||
+          user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "true" && user.is_active) ||
-      (statusFilter === "false" && !user.is_active);
+        const matchesStatus =
+          statusFilter === "all" ||
+          (statusFilter === "true" && user.is_active) ||
+          (statusFilter === "false" && !user.is_active);
 
-    const matchesSuspension =
-      suspensionFilter === "all" ||
-      (suspensionFilter === "active" && !user.is_suspended) ||
-      (suspensionFilter === "suspended" && user.is_suspended);
+        const matchesSuspension =
+          suspensionFilter === "all" ||
+          (suspensionFilter === "active" && !user.is_suspended) ||
+          (suspensionFilter === "suspended" && user.is_suspended);
 
-    return matchesSearch && matchesStatus && matchesSuspension;
-  });
+        return matchesSearch && matchesStatus && matchesSuspension;
+      }),
+    [users, searchQuery, statusFilter, suspensionFilter],
+  );
 
   // Use server-side pagination
   const totalRecords = pagination.total_records;
@@ -89,20 +189,60 @@ export default function UserAndRoleList({
   const effectivePage = currentPage;
   const startIndex = (effectivePage - 1) * 50;
 
-  // Close dropdown when clicking anywhere
-  useEffect(() => {
-    const handleClickOutside = () => setOpenDropdownId(null);
-    if (openDropdownId) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
-    }
-  }, [openDropdownId]);
+  // Stable callbacks handed down to every row — defined once here (not
+  // inline in the .map() below) so `UserRow`'s memo comparison sees the same
+  // function reference across renders instead of a fresh closure every time.
+  const handleDropdownOpenChange = useCallback((userId: string, open: boolean) => {
+    setOpenDropdownId(open ? userId : null);
+  }, []);
+  const handleViewProfile = useCallback(
+    (user: User) => {
+      openProfileModal(user);
+      setOpenDropdownId(null);
+    },
+    [openProfileModal],
+  );
+  const handleSuspend = useCallback(
+    (user: User, mode: "suspend" | "unsuspend") => {
+      openSuspendModal(user, mode);
+      setOpenDropdownId(null);
+    },
+    [openSuspendModal],
+  );
+  const handleChangeRole = useCallback(
+    (user: User) => {
+      openChangeRoleModal(user);
+      setOpenDropdownId(null);
+    },
+    [openChangeRoleModal],
+  );
+  const handleDeactivate = useCallback(
+    (user: User) => {
+      openDeactivateModal(user);
+      setOpenDropdownId(null);
+    },
+    [openDeactivateModal],
+  );
+  const handleAssignLga = useCallback(
+    (user: User) => {
+      openAssignFacilityModal(user);
+      setOpenDropdownId(null);
+    },
+    [openAssignFacilityModal],
+  );
+  const handleUnassignLga = useCallback(
+    (user: User) => {
+      openUnassignLgaModal(user);
+      setOpenDropdownId(null);
+    },
+    [openUnassignLgaModal],
+  );
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white p-12">
-        <p className="text-sm text-slate-500">Loading users...</p>
+      <div className="flex h-64 w-full items-center justify-center rounded-xl border border-slate-200 bg-white">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -126,213 +266,46 @@ export default function UserAndRoleList({
   return (
     <>
       <div className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
-        {isFetching && !isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50">
-            <p className="text-sm text-slate-500">Loading...</p>
-          </div>
-        )}
-
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full min-w-[820px] border-collapse text-left">
             <thead className="border-b border-slate-200 bg-slate-50">
               <tr className="text-sm font-medium text-slate-500">
-                <th className="w-12 p-4">
-                  <MinusSquare
-                    size={18}
-                    className="rounded bg-teal-50 text-teal-500"
-                  />
-                </th>
-                <th className="w-12 p-4 text-[11.38px] font-medium text-[#475467]">
-                  S/NO
-                </th>
-                <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
-                  <div className="font-inter-medium font-inter flex items-center gap-2 text-[11.38px] text-[#475467]">
+                <th className={`w-12 whitespace-nowrap ${TH_BASE}`}>S/NO</th>
+                <th className={`cursor-pointer transition-colors hover:text-slate-800 ${TH_BASE}`}>
+                  <div className="flex items-center gap-2 whitespace-nowrap">
                     Full Name <ArrowUpDown size={14} />
                   </div>
                 </th>
-                <th className="font-inter-medium font-inter p-4 text-center text-[11.38px] text-[#475467]">
-                  Role
-                </th>
-                <th className="font-inter-medium font-inter p-4 text-[11.38px] text-[#475467]">
-                  Managed Facilities
-                </th>
-                <th className="font-inter-medium font-inter p-4 text-[11.38px] text-[#475467]">
-                  Created Date
-                </th>
-                <th className="font-inter-medium font-inter p-4 text-center text-[11.38px] text-[#475467]">
-                  Status
-                </th>
-                <th className="font-inter-medium font-inter p-4 text-center text-[11.38px] text-[#475467]">
-                  Actions
-                </th>
+                <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Role</th>
+                <th className={`whitespace-nowrap ${TH_BASE}`}>Created Date</th>
+                <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Status</th>
+                <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-500">
+                  <td colSpan={6} className="p-8 text-center text-slate-500">
                     No users found
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user, idx) => (
-                  <React.Fragment key={user.user_id}>
-                    {/* ── Main row ── */}
-                    <tr className="group border-b border-slate-100 transition-colors">
-                      <td className="p-4">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                        />
-                      </td>
-                      <td className="p-4 text-sm text-slate-600">
-                        {startIndex + idx + 1}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br ${AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]} text-xs font-bold text-white shadow-sm`}
-                          >
-                            {getInitials(user.full_name)}
-                          </div>
-                          <div>
-                            <p className="font-dmsans text-[13.69px] font-medium text-slate-900">
-                              {user.full_name}
-                            </p>
-                            <p className="font-dmsans mt-0.5 text-[12.64px] font-normal text-[#475467]">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 text-center">
-                        <span
-                          className={`rounded-full border px-4 py-1 text-xs font-medium ${getRoleBadgeColor(user.role)}`}
-                        >
-                          {user.role.replace("_", " ").toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        {user.managed_facilities.length > 0 ? (
-                          <div className="flex flex-col gap-1">
-                            {user.managed_facilities.slice(0, 2).map((f) => (
-                              <div
-                                key={f.facility_id}
-                                className="flex items-center gap-2 text-xs text-slate-600"
-                              >
-                                <Building2
-                                  size={12}
-                                  className="shrink-0 text-slate-400"
-                                />
-                                <span className="max-w-45 truncate">
-                                  {f.facility_name}
-                                </span>
-                              </div>
-                            ))}
-                            {user.managed_facilities.length > 2 && (
-                              <button
-                                onClick={() => toggleFacilities(user.user_id)}
-                                className="mt-1 w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700"
-                              >
-                                {expandedFacilities.has(user.user_id)
-                                  ? "Hide facilities"
-                                  : `+${user.managed_facilities.length - 2} more`}
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-400">
-                            No facilities
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm font-medium text-slate-600">
-                        {formatDate(user.created_at)}
-                      </td>
-                      <td className="p-4 text-center">
-                        {user.is_active ? (
-                          <span className="bg-primary rounded-full border px-4 py-1 text-xs font-medium text-white">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="rounded-full border bg-[#E2E4E9] px-4 py-1 text-xs font-medium text-gray-600">
-                            Not Active
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 text-center">
-                        <div className="relative flex items-center justify-center gap-1">
-                          <UserActionsDropdown
-                            user={user}
-                            isOpen={openDropdownId === user.user_id}
-                            onToggle={() =>
-                              setOpenDropdownId(
-                                openDropdownId === user.user_id
-                                  ? null
-                                  : user.user_id,
-                              )
-                            }
-                            onViewProfile={() => {
-                              userActions.openProfileModal(user);
-                              setOpenDropdownId(null);
-                            }}
-                            onSuspend={() => {
-                              userActions.openSuspendModal(user, "suspend");
-                              setOpenDropdownId(null);
-                            }}
-                            onUnsuspend={() => {
-                              userActions.openSuspendModal(user, "unsuspend");
-                              setOpenDropdownId(null);
-                            }}
-                            onChangeRole={() => {
-                              userActions.openChangeRoleModal(user);
-                              setOpenDropdownId(null);
-                            }}
-                            onDeactivate={() => {
-                              userActions.openDeactivateModal(user);
-                              setOpenDropdownId(null);
-                            }}
-                            onAssignLga={() => {
-                              userActions.openAssignFacilityModal(user);
-                              setOpenDropdownId(null);
-                            }}
-                            onUnassignLga={() => {
-                              userActions.openUnassignLgaModal(user);
-                              setOpenDropdownId(null);
-                            }}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* ── Expanded facilities row ── */}
-                    {expandedFacilities.has(user.user_id) &&
-                      user.managed_facilities.length > 2 && (
-                        <tr className="border-b border-slate-100 bg-slate-50">
-                          <td colSpan={8} className="px-6 py-4">
-                            <p className="mb-2 text-[12px] font-semibold tracking-wide text-slate-400 uppercase">
-                              All assigned facilities (
-                              {user.managed_facilities.length})
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {user.managed_facilities.map((f) => (
-                                <span
-                                  key={f.facility_id}
-                                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600"
-                                >
-                                  <Building2
-                                    size={10}
-                                    className="text-slate-400"
-                                  />
-                                  {f.facility_name}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                  </React.Fragment>
+                  <UserRow
+                    key={user.user_id}
+                    user={user}
+                    rowNumber={startIndex + idx + 1}
+                    avatarGradient={AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]}
+                    isDropdownOpen={openDropdownId === user.user_id}
+                    onDropdownOpenChange={handleDropdownOpenChange}
+                    onViewProfile={handleViewProfile}
+                    onSuspend={handleSuspend}
+                    onChangeRole={handleChangeRole}
+                    onDeactivate={handleDeactivate}
+                    onAssignLga={handleAssignLga}
+                    onUnassignLga={handleUnassignLga}
+                  />
                 ))
               )}
             </tbody>

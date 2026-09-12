@@ -237,7 +237,7 @@ export default function AssignFacilityModal({
           <>
           {/* User card */}
           <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
-            <div className="from-primary to-primary/70 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white shadow-sm">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-400 text-sm font-bold text-white shadow-sm">
               {getInitials(user.full_name)}
             </div>
             <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
-# Omni Health Frontend
+# Geo Health Frontend
 
-Omni Health is a web application for exploring and comparing health facilities in Rivers State, Nigeria. It provides a user-friendly interface for users to find and learn about healthcare facilities in their area.
+Geo Health is a web application for exploring and comparing health facilities in Rivers State, Nigeria. It provides a user-friendly interface for users to find and learn about healthcare facilities in their area.
 
 ## Table of Contents
 
