@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Loader2, AlertCircle, HeartCrack, Hospital } from "lucide-react";
+import { Activity, Loader2, AlertCircle, Hospital } from "lucide-react";
 import InventoryItemModal from "../../feature/InventoryItemModal";
 import EditEquipmentModal from "../../feature/EditEquipmentModal";
 import EditInfrastructureModal from "../../feature/EditInfrastructureModal";
 import DeleteConfirmationModal from "../../feature/DeleteConfirmationModal";
-import { InventorySection } from "../ui/InventorySection";
+import { InventoryChecklist } from "../ui/InventoryChecklist";
 import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
 import {
   useEquipmentActions,
@@ -110,40 +110,50 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
         itemType={actions.deleteType}
       />
 
-      <div className="w-full">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-          {/* Medical Equipment */}
-          <InventorySection
-            title="Medical Equipment"
-            items={equipmentItems}
-            isOpen={isEquipmentOpen}
-            onToggle={() => setIsEquipmentOpen(!isEquipmentOpen)}
-            onAdd={() => actions.setIsEquipmentModalOpen(true)}
-            onEdit={actions.handleEditEquipment}
-            onDelete={(item) => actions.handleDeleteClick(item, "equipment")}
-            isAdding={actions.isAddingEquipment}
-            addButtonLabel="New Equipment"
-            icon={Activity}
-            itemIcon={HeartCrack}
-            emptyMessage="No equipment found. Add your first equipment item."
-          />
+      {/* Stacked rather than a 50/50 grid: equipment runs to ~84 items while
+          infrastructure is usually empty, so side-by-side wasted half the row. */}
+      <div className="flex w-full flex-col gap-6">
+        {/* Medical Equipment */}
+        <InventoryChecklist
+          title="Medical Equipment"
+          items={equipmentItems}
+          isOpen={isEquipmentOpen}
+          onToggle={() => setIsEquipmentOpen(!isEquipmentOpen)}
+          onAdd={() => actions.setIsEquipmentModalOpen(true)}
+          onEdit={actions.handleEditEquipment}
+          onDelete={(item) => actions.handleDeleteClick(item, "equipment")}
+          onSetQuantity={(name, qty) =>
+            actions.setItemQuantity("equipment", name, qty)
+          }
+          onSaveStockTake={(changes) =>
+            actions.saveStockTake("equipment", changes)
+          }
+          isAdding={actions.isAddingEquipment}
+          addButtonLabel="New Equipment"
+          icon={Activity}
+          emptyMessage="No equipment tracked yet. Add your first equipment item."
+        />
 
-          {/* Facility Infrastructure */}
-          <InventorySection
-            title="Facility Infrastructure"
-            items={infrastructureItems}
-            isOpen={isFacilityOpen}
-            onToggle={() => setIsFacilityOpen(!isFacilityOpen)}
-            onAdd={() => actions.setIsInfrastructureModalOpen(true)}
-            onEdit={actions.handleEditInfrastructure}
-            onDelete={(item) => actions.handleDeleteClick(item, "infrastructure")}
-            isAdding={actions.isAddingInfrastructure}
-            addButtonLabel="New Infrastructure"
-            icon={Activity}
-            itemIcon={Hospital}
-            emptyMessage="No infrastructure found. Add your first infrastructure item."
-          />
-        </div>
+        {/* Facility Infrastructure */}
+        <InventoryChecklist
+          title="Facility Infrastructure"
+          items={infrastructureItems}
+          isOpen={isFacilityOpen}
+          onToggle={() => setIsFacilityOpen(!isFacilityOpen)}
+          onAdd={() => actions.setIsInfrastructureModalOpen(true)}
+          onEdit={actions.handleEditInfrastructure}
+          onDelete={(item) => actions.handleDeleteClick(item, "infrastructure")}
+          onSetQuantity={(name, qty) =>
+            actions.setItemQuantity("infrastructure", name, qty)
+          }
+          onSaveStockTake={(changes) =>
+            actions.saveStockTake("infrastructure", changes)
+          }
+          isAdding={actions.isAddingInfrastructure}
+          addButtonLabel="New Infrastructure"
+          icon={Hospital}
+          emptyMessage="No infrastructure tracked yet. Add your first item."
+        />
       </div>
     </>
   );
