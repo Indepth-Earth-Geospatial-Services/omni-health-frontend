@@ -50,21 +50,35 @@ export default function FacilityRegistry() {
     },
   });
 
-  // Fetch all + paginate client-side when sorting OR filtering by category.
-  // Category filtering is done client-side using partial matching (mirrors the Map)
-  // so all facility_category variants ("Model Primary Health Care", "Primary Health
-  // Centre", etc.) are handled correctly regardless of what the API stores.
-  const isClientMode = !!filters.sortBy || filters.selectedCategory !== "all";
+  // Only sorting still needs the whole dataset: /facilities/search exposes no
+  // sort parameter, so ordering has to happen locally.
+  //
+  // Category used to force this mode too, because CATEGORY_OPTIONS sent
+  // "Model Primary Health Care" while facility_category stores "...Center", so
+  // the server filter matched nothing and a client-side partial match covered
+  // for it — at the cost of pulling all 271 facilities (797 KB, ~54 s) on every
+  // category change. With the value corrected the API filters it directly in
+  // under two seconds, and pagination stays server-side and accurate.
+  const isClientMode = !!filters.sortBy;
 
   const searchParams = useMemo(
     () => ({
       page: isClientMode ? 1 : currentPage,
       limit: isClientMode ? 1000 : itemsPerPage,
       name: filters.searchQuery || undefined,
-      // Category is intentionally omitted — handled client-side below
+      category:
+        filters.selectedCategory !== "all"
+          ? filters.selectedCategory
+          : undefined,
       lga_name: filters.selectedLGA !== "all" ? filters.selectedLGA : undefined,
     }),
-    [currentPage, filters.searchQuery, filters.selectedLGA, isClientMode],
+    [
+      currentPage,
+      filters.searchQuery,
+      filters.selectedCategory,
+      filters.selectedLGA,
+      isClientMode,
+    ],
   );
 
   const { data, isLoading, isError, error, isFetching } =
@@ -77,24 +91,10 @@ export default function FacilityRegistry() {
   const pagination = data?.pagination;
 
   const sortedFacilities = useMemo(() => {
-    // Client-side category filter — mirrors Map's partial matching so all
-    // facility_category variants are handled regardless of API stored value.
-    let result = rawFacilities;
-    if (filters.selectedCategory !== "all") {
-      const sc = filters.selectedCategory.toLowerCase();
-      result = result.filter((f) => {
-        const fc = (f.facility_category || "").toLowerCase();
-        if (sc.includes("post")) return fc.includes("post");
-        if (sc.includes("clinic")) return fc.includes("clinic") || fc.includes("cottage");
-        if (sc.includes("model") || sc.includes("primary"))
-          return fc.includes("model") || fc.includes("primary");
-        return fc.includes(sc);
-      });
-    }
+    // Category is filtered by the API now — only ordering is left to do here.
+    if (!filters.sortBy) return rawFacilities;
 
-    if (!filters.sortBy) return result;
-
-    const sorted = [...result];
+    const sorted = [...rawFacilities];
     sorted.sort((a, b) => {
       switch (filters.sortBy) {
         case "name_asc":
@@ -122,9 +122,9 @@ export default function FacilityRegistry() {
       }
     });
     return sorted;
-  }, [rawFacilities, filters.sortBy, filters.selectedCategory]);
+  }, [rawFacilities, filters.sortBy]);
 
-  // When in client mode (sorting or category filter), paginate client-side
+  // When sorting, the full set is in memory, so paginate client-side
   const facilities = useMemo(() => {
     if (!isClientMode) return sortedFacilities;
     const startIndex = (currentPage - 1) * itemsPerPage;

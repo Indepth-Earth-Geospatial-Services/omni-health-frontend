@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { Switch } from "@/features/admin/components/ui/switch";
 import SuperAdminMap from "../ui/SuperAdminMap";
 import { Facility } from "@/types/api-response";
-import { useFacilities } from "@/features/super-admin/hooks/useSuperAdminUsers";
+// TEMP: see src/features/super-admin/TEMP-chunked-facilities/README.md
+import { useFacilitiesForMap } from "@/features/super-admin/TEMP-chunked-facilities/useChunkedFacilities";
 import {
   MapPin,
   Phone,
@@ -17,6 +18,7 @@ import {
   Users,
   Stethoscope,
   ExternalLink,
+  AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/features/admin/components/ui/button";
@@ -37,14 +39,16 @@ export default function Map() {
   //   map page shows instantly from cache instead of re-fetching.
   // refetchInterval: 5 min — background poll keeps pins up-to-date silently.
   // refetchIntervalInBackground: false — stops polling when the tab is hidden.
-  const { data, isLoading, isError } = useFacilities(
-    { page: 1, limit: 1000 },
-    {
-      gcTime: 1000 * 60 * 30,
-      refetchInterval: 1000 * 60 * 5,
-      refetchIntervalInBackground: false,
-    },
-  );
+  //
+  // TEMP: these options apply in production, which still makes the single
+  // limit=1000 request. Local dev pages through in chunks instead, because the
+  // dev server's rewrite proxy times out at 30 s where Vercel's does not.
+  // See src/features/super-admin/TEMP-chunked-facilities/README.md
+  const { data, isLoading, isError } = useFacilitiesForMap({
+    gcTime: 1000 * 60 * 30,
+    refetchInterval: 1000 * 60 * 5,
+    refetchIntervalInBackground: false,
+  });
 
   // Auto-select facility from URL query param when data loads
   // Using queueMicrotask to defer state update and avoid cascading render warning
@@ -92,54 +96,21 @@ export default function Map() {
   const facilitiesWithCoords = facilities.filter((f) => f.lat && f.lon);
   const facilitiesWithoutCoords = facilities.filter((f) => !f.lat || !f.lon);
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex h-screen flex-1 items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-3">
-          <div className="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"></div>
-          <p className="text-sm text-slate-500">Loading facilities map...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (isError) {
-    return (
-      <div className="flex h-screen flex-1 items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="rounded-full bg-red-100 p-3">
-            <svg
-              className="h-8 w-8 text-red-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
-          <p className="text-sm font-medium text-red-600">
-            Failed to load facilities
-          </p>
-          <p className="text-xs text-slate-500">
-            Please try refreshing the page
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Loading and error no longer short-circuit the page. Map tiles come from
+  // Mapbox and are ready in about a second, so the map, layer toggles and
+  // statistics render straight away while facilities arrive behind them —
+  // rather than replacing the whole screen with a spinner for the ~54 s the
+  // facility request takes.
 
   return (
-    <div className="flex-1 overflow-y-auto bg-white p-6">
-      <div className="flex gap-4">
-        {/* Map container - fixed height using viewport units */}
-        <div className="h-[100vh] flex-1 overflow-hidden rounded-2xl border border-slate-200">
+    <div className="flex-1 overflow-y-auto bg-white p-4 sm:p-6">
+      {/* Stacks below lg so the map keeps full width on phones and tablets,
+          where a side panel would squeeze both into unusable columns. */}
+      <div className="flex flex-col gap-4 lg:flex-row">
+        {/* Map container. Viewport-relative on small screens; on lg it fills
+            the space left by the 64px header and the page padding, so the
+            layout fits without the page itself scrolling. */}
+        <div className="relative h-[55vh] min-h-80 w-full overflow-hidden rounded-2xl border border-slate-200 sm:h-[65vh] lg:h-[calc(100vh-7rem)] lg:min-w-0 lg:flex-1">
           <SuperAdminMap
             facilities={facilities as unknown as Facility[]}
             width="100%"
@@ -148,15 +119,56 @@ export default function Map() {
             onMarkerClick={handleMarkerClick}
             selectedFacility={selectedFacility}
           />
+
+          {/* Non-blocking status chip. The map stays pannable underneath, and
+              the count makes it obvious that pins are still arriving so a
+              half-populated map is not mistaken for a complete one. */}
+          {isLoading && (
+            <div className="pointer-events-none absolute top-3 left-1/2 z-10 w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 sm:top-4">
+              <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-white/95 px-3 py-1.5 shadow-lg backdrop-blur-sm sm:px-4 sm:py-2">
+                <div className="border-primary h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-t-transparent" />
+                <p className="truncate text-xs font-medium text-slate-600">
+                  Loading facilities
+                  {pagination?.total_records
+                    ? ` — ${facilities.length} of ${pagination.total_records}`
+                    : "…"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isError && (
+            <div className="absolute top-3 left-1/2 z-10 w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 sm:top-4">
+              <div className="flex items-center gap-2.5 rounded-full border border-red-200 bg-white/95 px-3 py-1.5 shadow-lg backdrop-blur-sm sm:px-4 sm:py-2">
+                <AlertTriangle size={15} className="shrink-0 text-red-500" />
+                <p className="truncate text-xs font-medium text-red-600">
+                  <span className="hidden sm:inline">
+                    Could not load facilities — the map is empty
+                  </span>
+                  <span className="sm:hidden">Could not load facilities</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="text-primary shrink-0 text-xs font-semibold hover:underline"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Layers Panel */}
-        <div className="w-full max-w-25 overflow-y-auto bg-white md:max-w-37.5 lg:max-w-sm">
-          <div className="rounded-lg border border-gray-200 px-6 py-4">
-            <h2 className="mb-6 text-base font-semibold text-slate-900">
+        {/* Layers Panel. Full width beneath the map on small screens; a fixed
+            column that scrolls independently once there is room beside it. */}
+        <div className="w-full bg-white lg:h-[calc(100vh-7rem)] lg:w-80 lg:shrink-0 lg:overflow-y-auto xl:w-96">
+          <div className="rounded-lg border border-gray-200 px-4 py-4 sm:px-6">
+            <h2 className="mb-4 text-base font-semibold text-slate-900 sm:mb-6">
               Layers
             </h2>
-            <div className="space-y-4">
+            {/* Side by side on wider phones/tablets to save vertical space,
+                back to a single column once the panel is narrow again. */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1">
               {/* Hospitals Layer */}
               {/* <div className="flex items-center justify-between">
                 <p className="text-sm text-slate-700">Hospitals</p>
@@ -199,7 +211,7 @@ export default function Map() {
             <h3 className="mb-3 text-sm font-semibold text-slate-900">
               Map Statistics
             </h3>
-            <div className="space-y-2 text-xs">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs lg:grid-cols-1">
               <div className="flex justify-between">
                 <span className="text-slate-500">Total Loaded:</span>
                 <span className="font-medium text-slate-700">

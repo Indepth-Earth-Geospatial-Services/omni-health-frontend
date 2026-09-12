@@ -39,7 +39,13 @@ export const SORT_OPTIONS = [
 export const CATEGORY_OPTIONS = [
   { value: "Health Post", label: "Health Post" },
   { value: "Health Clinic", label: "Health Clinic" },
-  { value: "Model Primary Health Care", label: "Model Primary Health Care" },
+  // "Center", not "Care" — this value is sent to the API as `category`, and it
+  // has to match what facility_category actually stores or the filter returns
+  // nothing.
+  {
+    value: "Model Primary Health Center",
+    label: "Model Primary Health Center",
+  },
 ];
 
 export const LGA_OPTIONS = [

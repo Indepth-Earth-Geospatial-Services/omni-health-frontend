@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Search, Plus, Download, Upload, Building2, X } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 import DownloadNominalRollModal from "../modals/DownloadNominalRollModal";
@@ -81,6 +81,8 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
     setDropdownRef,
   } = useStaffFilters({
     initialFilters: externalFilters,
+    // Only pages that actually render the dropdown pay for the facility list.
+    loadFacilities: showFacilitiesFilter,
     onFiltersChange,
     onSearch,
     onLGAFilter,
@@ -89,15 +91,30 @@ const StaffTableHeader: React.FC<StaffTableHeadersProps> = ({
     onStatusFilter,
   });
 
-  // Build facility options for dropdown
-  const facilityOptions = [
-    { value: "all", label: "All Facilities" },
-    ...facilities.map((f) => ({
-      value: f.facility_id,
-      label: f.facility_name,
-      icon: <Building2 size={14} className="text-slate-400" />,
-    })),
-  ];
+  // Build facility options for dropdown. This filter exists to narrow staff,
+  // so facilities that have none sink to the bottom rather than padding the
+  // top of a 271-entry list — and each row says how many it holds.
+  const facilityOptions = useMemo(
+    () => [
+      { value: "all", label: "All Facilities" },
+      ...[...facilities]
+        .sort((a, b) => {
+          const aEmpty = a.staff_count === 0;
+          const bEmpty = b.staff_count === 0;
+          if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+          return a.facility_name.localeCompare(b.facility_name);
+        })
+        .map((f) => ({
+          value: f.facility_id,
+          label:
+            f.staff_count > 0
+              ? `${f.facility_name} · ${f.staff_count} staff`
+              : `${f.facility_name} · no staff`,
+          icon: <Building2 size={14} className="text-slate-400" />,
+        })),
+    ],
+    [facilities],
+  );
 
   return (
     <div className="w-full bg-white py-4">

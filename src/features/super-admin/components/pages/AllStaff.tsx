@@ -1,100 +1,45 @@
 "use client";
-import { useMemo } from "react";
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
-import { Users, Building2, UserCheck, TrendingUp } from "lucide-react";
+import { Users, Building2 } from "lucide-react";
 import StaffTable from "@/features/super-admin/components/layouts/StaffTable";
-import {
-  useSuperAdminStaff,
-  useFacilities,
-} from "@/features/super-admin/hooks/useSuperAdminUsers";
+import { useSuperAdminStaff } from "@/features/super-admin/hooks/useSuperAdminUsers";
+import { useAnalyticsOverview } from "@/features/super-admin/hooks/useAnalyticsOverview";
 
 export default function StaffPage() {
-  // Fetch staff with small limit - we only need pagination.total_records for KPIs
-  const { data: allStaffData, isLoading: isLoadingStaff } = useSuperAdminStaff(
+  // Only pagination.total_records is needed, so ask for the smallest page the
+  // API will return rather than a full one.
+  const { data: staffData, isLoading: isLoadingStaff } = useSuperAdminStaff(
     1,
-    10,
+    1,
   );
 
-  // Fetch all facilities for KPI calculations
-  const { data: facilitiesData, isLoading: isLoadingFacilities } =
-    useFacilities({ limit: 1000 });
+  // The facility count comes from the analytics KPI endpoint — the same source
+  // the dashboard uses. The previous approach fetched up to 1000 facilities
+  // just to read a total off the response, which was slow enough that the
+  // cards sat on "-" indefinitely.
+  const { data: analyticsData, isLoading: isLoadingAnalytics } =
+    useAnalyticsOverview();
 
-  // Calculate KPI metrics
-  const kpiMetrics = useMemo(() => {
-    const totalStaff = allStaffData?.pagination?.total_records ?? 0;
-    const totalFacilities =
-      facilitiesData?.pagination?.total_records ??
-      facilitiesData?.facilities?.length ??
-      0;
-
-    // Calculate active staff
-    const activeStaff =
-      allStaffData?.staff?.filter((staff) => staff.is_active).length ?? 0;
-
-    // Calculate average staff per facility
-    const avgStaffPerFacility =
-      totalFacilities > 0 ? Math.round(totalStaff / totalFacilities) : 0;
-
-    // Calculate staff distribution ratio (Staff:Facility)
-    const staffDistribution =
-      totalFacilities > 0
-        ? `${Math.round(totalStaff / totalFacilities)}:1`
-        : "0:1";
-
-    // Calculate growth percentage (mock data - replace with actual historical data if available)
-    // This would typically come from comparing current month vs previous month
-    const staffGrowthPercentage = 4; // Mock: 4% growth this month
-
-    return {
-      totalStaff,
-      activeStaff,
-      totalFacilities,
-      avgStaffPerFacility,
-      staffDistribution,
-      staffGrowthPercentage,
-    };
-  }, [allStaffData, facilitiesData]);
-
-  const isLoading = isLoadingStaff || isLoadingFacilities;
+  const totalStaff = staffData?.pagination?.total_records ?? 0;
+  const totalFacilities = analyticsData?.total_facilities ?? 0;
 
   return (
     <div className="flex-1 overflow-y-auto bg-white">
       <main className="flex min-h-screen flex-col">
-        <div className="mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Each card tracks its own request, so a slow one never holds up
+              a value that has already arrived. */}
           <KPIStatsCards
             title="Total Staff"
-            value={isLoading ? "-" : kpiMetrics.totalStaff}
-            subtitle={`${kpiMetrics.staffGrowthPercentage}% This month`}
+            value={isLoadingStaff ? "-" : totalStaff}
+            subtitle="Medical personnel"
             icon={<Users size={24} />}
-            /*trend={{
-              value: `${kpiMetrics.staffGrowthPercentage}%`,
-              isPositive: kpiMetrics.staffGrowthPercentage > 0,
-            }}*/
-          />
-          <KPIStatsCards
-            title="Avg. Staff Per Facility"
-            value={isLoading ? "-" : kpiMetrics.avgStaffPerFacility}
-            subtitle={
-              kpiMetrics.totalFacilities > 0
-                ? `${kpiMetrics.totalStaff} staff / ${kpiMetrics.totalFacilities} facilities`
-                : ""
-            }
-            icon={<UserCheck size={24} />}
-            //trend={{ value: "Stable", isPositive: true }}
           />
           <KPIStatsCards
             title="Total Facilities"
-            value={isLoading ? "-" : kpiMetrics.totalFacilities}
-            subtitle=""
+            value={isLoadingAnalytics ? "-" : totalFacilities}
+            subtitle="Healthcare facilities"
             icon={<Building2 size={24} />}
-            //trend={{ value: "80%", isPositive: true }}
-          />
-          <KPIStatsCards
-            title="Staff Distribution"
-            value={isLoading ? "-" : kpiMetrics.staffDistribution}
-            subtitle={`Avg: ${kpiMetrics.avgStaffPerFacility} per facility`}
-            icon={<TrendingUp size={24} />}
-            //trend={{ value: "Stable", isPositive: true }}
           />
         </div>
         <StaffTable />
