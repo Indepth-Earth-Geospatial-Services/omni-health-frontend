@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ArrowRight, Building2, Loader2 } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "../ui/button";
 import { MultiSelectDropdown } from "@/features/super-admin/components/ui/MultiSelectDropdown";
 import { useMultiSelect } from "@/features/super-admin/hooks/use-multi-select";
 
@@ -95,7 +95,9 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
 
     onSubmit?.({
       ...formData,
-      facilityIds: showFacilitySelector ? facilitySelect.selectedIds : undefined,
+      facilityIds: showFacilitySelector
+        ? facilitySelect.selectedIds
+        : undefined,
     });
   };
 
@@ -224,7 +226,8 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                 </>
               ) : showFacilitySelector && facilitySelect.selectedCount > 1 ? (
                 <>
-                  {config.buttonText} to {facilitySelect.selectedCount} facilities
+                  {config.buttonText} to {facilitySelect.selectedCount}{" "}
+                  facilities
                   <ArrowRight size={18} />
                 </>
               ) : (

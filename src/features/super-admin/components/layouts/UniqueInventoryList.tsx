@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import DeleteConfirmationModal from "@/features/admin/feature/DeleteConfirmationModal";
+import DeleteConfirmationModal from "@/features/admin/components/modals/DeleteConfirmationModal";
 import {
   useFacilitiesByInventory,
   useDeleteInventoryItem,

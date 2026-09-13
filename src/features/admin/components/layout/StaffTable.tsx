@@ -1,7 +1,7 @@
 // StaffTable.tsx
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowUpDown, MinusSquare, PenIcon, Trash2 } from "lucide-react";
+import { ArrowUpDown, PenIcon, Trash2 } from "lucide-react";
 import { type StaffMember } from "@/features/admin/hooks/useAdminStaff";
 
 // --- Utils ---
@@ -72,77 +72,77 @@ const StaffTable: React.FC<StaffTableProps> = ({
     hasStatus,
   } = columnVisibility;
 
-  // The tall minimum keeps the pagination footer from jumping between pages,
-  // but 720px exceeds a phone's whole viewport — so it scales down on small
-  // screens rather than forcing a screenful of empty table.
   return (
-    <div className="relative min-h-96 overflow-x-auto sm:min-h-130 lg:min-h-180">
-      <table className="w-full border-collapse text-left">
+    <div
+      className="relative overflow-auto"
+      style={{ maxHeight: "min(720px, 75vh)" }}
+    >
+      <table className="w-full min-w-[1700px] border-collapse text-left">
         {/* --- Header --- */}
-        <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50">
+        <thead className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50">
           <tr className="text-sm font-medium text-slate-500">
-            <th className="w-12 p-4 text-[11.38px] text-[#475467]">S/N</th>
-            <th className="cursor-pointer p-4 transition-colors hover:text-slate-800">
+            <th className="w-12 p-4 text-[11.38px] whitespace-nowrap text-[#475467]">S/N</th>
+            <th className="cursor-pointer p-4 whitespace-nowrap transition-colors hover:text-slate-800">
               <div className="flex items-center gap-2 text-[11.38px] text-[#475467]">
                 Names of Officers <ArrowUpDown size={14} />
               </div>
             </th>
             {hasGender && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Sex</th>
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">Sex</th>
             )}
             {hasRank && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Rank</th>
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">Rank</th>
             )}
             {hasGradeLevel && (
-              <th className="p-4 text-[11.38px] text-[#475467]">G/L</th>
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">G/L</th>
             )}
             {hasQualifications && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Qualification with Date
               </th>
             )}
             {hasDateFirstAppt && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Date of 1st Appt
               </th>
             )}
             {hasConfirmationAppt && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Confirmation of Appt
               </th>
             )}
             {hasDatePresentAppt && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Date of Present Appt
               </th>
             )}
             {hasDateOfBirth && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Date of Birth
               </th>
             )}
             {hasLgaOfOrigin && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 LGA of Origin
               </th>
             )}
             {hasYearsInStation && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Years in Present Station
               </th>
             )}
             {hasPhone && (
-              <th className="p-4 text-[11.38px] text-[#475467]">
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">
                 Phone Number
               </th>
             )}
             {hasRemark && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Remark</th>
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">Remark</th>
             )}
             {hasStatus && (
-              <th className="p-4 text-[11.38px] text-[#475467]">Status</th>
+              <th className="p-4 text-[11.38px] whitespace-nowrap text-[#475467]">Status</th>
             )}
-            <th className="sticky right-0 bg-slate-50 p-4 text-center text-[11.38px] text-[#475467] shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
+            <th className="sticky right-0 z-10 bg-slate-50 p-4 text-center text-[11.38px] whitespace-nowrap text-[#475467] shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
               Actions
             </th>
           </tr>
@@ -187,13 +187,13 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   whileHover={{ backgroundColor: "#f8fafc" }}
                   className="group border-b border-slate-100 transition-colors last:border-0"
                 >
-                  <td className="p-4 text-sm font-medium text-slate-500">
+                  <td className="p-4 text-sm font-medium whitespace-nowrap text-slate-500">
                     {(currentPage - 1) * itemsPerPage + idx + 1}
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 whitespace-nowrap">
                       <div
-                        className={`h-10 w-10 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xs font-bold text-white shadow-sm`}
+                        className={`h-10 w-10 shrink-0 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-xs font-bold text-white shadow-sm`}
                       >
                         {initials}
                       </div>
@@ -216,7 +216,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
                   </td>
 
                   {hasGender && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       <span
                         className={`rounded-md px-2 py-1 text-xs font-medium ${item.gender?.toLowerCase() === "m" ? "bg-blue-100 text-blue-700" : "bg-pink-100 text-pink-700"}`}
                       >
@@ -225,12 +225,12 @@ const StaffTable: React.FC<StaffTableProps> = ({
                     </td>
                   )}
                   {hasRank && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {toSentenceCase(item.rank_cadre) || "-"}
                     </td>
                   )}
                   {hasGradeLevel && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.grade_level &&
                       typeof item.grade_level === "string" &&
                       item.grade_level !== "NaN" &&
@@ -251,37 +251,37 @@ const StaffTable: React.FC<StaffTableProps> = ({
                     </td>
                   )}
                   {hasDateFirstAppt && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.date_first_appointment || "-"}
                     </td>
                   )}
                   {hasConfirmationAppt && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.date_confirmation || "-"}
                     </td>
                   )}
                   {hasDatePresentAppt && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.date_present_appointment || "-"}
                     </td>
                   )}
                   {hasDateOfBirth && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.date_of_birth || "-"}
                     </td>
                   )}
                   {hasLgaOfOrigin && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.lga_origin || "-"}
                     </td>
                   )}
                   {hasYearsInStation && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.years_in_present_station ?? "-"}
                     </td>
                   )}
                   {hasPhone && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       {item.phone_number || "-"}
                     </td>
                   )}
@@ -291,7 +291,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
                     </td>
                   )}
                   {hasStatus && (
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 text-sm whitespace-nowrap text-slate-600">
                       <span
                         className={`rounded-md px-2 py-1 text-xs font-medium ${item.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
                       >
@@ -300,7 +300,7 @@ const StaffTable: React.FC<StaffTableProps> = ({
                     </td>
                   )}
 
-                  <td className="sticky right-0 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] group-hover:bg-slate-50">
+                  <td className="sticky right-0 z-10 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)] group-hover:bg-slate-50">
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => onEdit(item)}

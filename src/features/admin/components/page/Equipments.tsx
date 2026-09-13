@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Activity, Loader2, AlertCircle, Hospital } from "lucide-react";
-import InventoryItemModal from "../../feature/InventoryItemModal";
-import EditEquipmentModal from "../../feature/EditEquipmentModal";
-import EditInfrastructureModal from "../../feature/EditInfrastructureModal";
-import DeleteConfirmationModal from "../../feature/DeleteConfirmationModal";
+import InventoryItemModal from "../modals/InventoryItemModal";
+import EditEquipmentModal from "../modals/EditEquipmentModal";
+import EditInfrastructureModal from "../modals/EditInfrastructureModal";
+import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import { InventoryChecklist } from "../ui/InventoryChecklist";
 import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
 import {
@@ -132,9 +132,6 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           onAdd={() => actions.setIsEquipmentModalOpen(true)}
           onEdit={actions.handleEditEquipment}
           onDelete={(item) => actions.handleDeleteClick(item, "equipment")}
-          onSetQuantity={(name, qty) =>
-            actions.setItemQuantity("equipment", name, qty)
-          }
           onSaveStockTake={(changes) =>
             actions.saveStockTake("equipment", changes)
           }
@@ -154,9 +151,6 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           onAdd={() => actions.setIsInfrastructureModalOpen(true)}
           onEdit={actions.handleEditInfrastructure}
           onDelete={(item) => actions.handleDeleteClick(item, "infrastructure")}
-          onSetQuantity={(name, qty) =>
-            actions.setItemQuantity("infrastructure", name, qty)
-          }
           onSaveStockTake={(changes) =>
             actions.saveStockTake("infrastructure", changes)
           }

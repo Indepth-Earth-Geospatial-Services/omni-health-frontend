@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -8,7 +8,6 @@ import {
   Pencil,
   Trash2,
   Search,
-  Minus,
   Loader2,
   ClipboardList,
   X,
@@ -28,7 +27,6 @@ interface InventoryChecklistProps {
   onAdd: () => void;
   onEdit: (item: InventoryItem) => void;
   onDelete: (item: InventoryItem) => void;
-  onSetQuantity: (itemName: string, quantity: number) => Promise<void>;
   onSaveStockTake: (
     changes: { itemName: string; quantity: number }[],
   ) => Promise<void>;
@@ -40,9 +38,6 @@ interface InventoryChecklistProps {
   emptyMessage: string;
 }
 
-/** How long the stepper waits after the last click before writing. */
-const STEPPER_SAVE_DELAY = 700;
-
 export function InventoryChecklist({
   title,
   items,
@@ -51,7 +46,6 @@ export function InventoryChecklist({
   onAdd,
   onEdit,
   onDelete,
-  onSetQuantity,
   onSaveStockTake,
   isAdding,
   addButtonLabel,
@@ -64,17 +58,12 @@ export function InventoryChecklist({
   const [isStockTake, setIsStockTake] = useState(false);
   const [isSavingStockTake, setIsSavingStockTake] = useState(false);
 
-  /** Quantities shown while a write is in flight, so the number moves at once. */
-  const [drafts, setDrafts] = useState<Record<string, number>>({});
   /** Stock-take edits, keyed by item name. */
   const [stockTakeDrafts, setStockTakeDrafts] = useState<
     Record<string, string>
   >({});
 
-  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-
-  const quantityOf = (item: InventoryItem) =>
-    drafts[item.name] ?? Number(item.quantity) ?? 0;
+  const quantityOf = (item: InventoryItem) => Number(item.quantity) || 0;
 
   const inStockCount = items.filter((i) => Number(i.quantity) > 0).length;
   const missingCount = items.length - inStockCount;
@@ -90,27 +79,6 @@ export function InventoryChecklist({
       })
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [items, filter, search]);
-
-  /**
-   * Move the number immediately and write once the clicking stops — a stepper
-   * that fired a request per tap would send five writes for "0 → 5".
-   */
-  const step = (item: InventoryItem, delta: number) => {
-    const next = Math.max(0, quantityOf(item) + delta);
-    setDrafts((prev) => ({ ...prev, [item.name]: next }));
-
-    clearTimeout(saveTimers.current[item.name]);
-    saveTimers.current[item.name] = setTimeout(() => {
-      void onSetQuantity(item.name, next).finally(() => {
-        // Drop the draft so the row falls back to the refetched server value.
-        setDrafts((prev) => {
-          const rest = { ...prev };
-          delete rest[item.name];
-          return rest;
-        });
-      });
-    }, STEPPER_SAVE_DELAY);
-  };
 
   const startStockTake = () => {
     setStockTakeDrafts(
@@ -156,7 +124,7 @@ export function InventoryChecklist({
             <p className="mt-0.5 text-xs text-slate-500">
               {items.length === 0
                 ? "Nothing tracked yet"
-                : `${inStockCount} of ${items.length} in stock · ${missingCount} missing`}
+                : `${inStockCount} of ${items.length} functional · ${missingCount} non-functional`}
             </p>
           </div>
         </div>
@@ -273,8 +241,12 @@ export function InventoryChecklist({
                   <div className="flex shrink-0 gap-1">
                     {(
                       [
-                        ["in-stock", "In stock", inStockCount],
-                        ["missing", "Missing", missingCount],
+                        ["in-stock", "Functional", inStockCount],
+                        // Hidden until there's a real functional/non-functional
+                        // status field in the database — right now this is only
+                        // inferred from quantity <= 0. Uncomment once that data
+                        // exists.
+                        // ["missing", "Non-functional", missingCount],
                         ["all", "All", items.length],
                       ] as const
                     ).map(([value, label, count]) => (
@@ -320,8 +292,8 @@ export function InventoryChecklist({
                     {search
                       ? `Nothing matches “${search}”`
                       : filter === "in-stock"
-                        ? "No items are in stock yet."
-                        : "Nothing is missing — every item has a count."}
+                        ? "No functional items yet."
+                        : "Nothing is non-functional — every item is functional."}
                   </p>
                 ) : (
                   visibleItems.map((item) => {
@@ -353,34 +325,15 @@ export function InventoryChecklist({
                           {item.displayName}
                         </p>
 
-                        {/* Stepper — the common action, no modal in the way */}
-                        <div className="flex shrink-0 items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => step(item, -1)}
-                            disabled={isEmpty}
-                            aria-label={`Decrease ${item.displayName}`}
-                            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-200 disabled:opacity-30"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span
-                            className={cn(
-                              "w-8 text-center text-sm font-semibold tabular-nums",
-                              isEmpty ? "text-slate-300" : "text-slate-800",
-                            )}
-                          >
-                            {qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => step(item, 1)}
-                            aria-label={`Increase ${item.displayName}`}
-                            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-200"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
+                        {/* Read-only count — editing it is the pencil's job now */}
+                        <span
+                          className={cn(
+                            "w-8 shrink-0 text-center text-sm font-semibold tabular-nums",
+                            isEmpty ? "text-slate-300" : "text-slate-800",
+                          )}
+                        >
+                          {qty}
+                        </span>
 
                         {/* Always rendered — hover-only actions are unreachable
                             on touch devices. They just soften until hover. */}

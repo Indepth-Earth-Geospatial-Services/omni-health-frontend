@@ -22,7 +22,9 @@ import { authService } from "@/services/auth.service";
 import { useAuthStore, type User } from "@/features/auth/auth-store";
 import { getRoleDashboard } from "@/lib/auth-constants";
 import { toast } from "sonner";
-import FacilitySelectionModal from "./FacilitySelectionModal";
+// Facility selection modal disabled — see the comments below where it used
+// to be wired up. Admins are auto-signed into their first assigned facility.
+// import FacilitySelectionModal from "./FacilitySelectionModal";
 // import SocialLogin from "./social-login";
 
 // Shake animation variants
@@ -40,31 +42,34 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
-  const setCurrentFacilityId = useAuthStore(
-    (state) => state.setCurrentFacilityId,
-  );
-  const pendingFacilitySelection = useAuthStore(
-    (state) => state.pendingFacilitySelection,
-  );
-  const storeFacilityIds = useAuthStore((state) => state.facilityIds);
+  // Only used by the disabled facility-selection modal's onSelect below.
+  // const setCurrentFacilityId = useAuthStore(
+  //   (state) => state.setCurrentFacilityId,
+  // );
+  // const pendingFacilitySelection = useAuthStore(
+  //   (state) => state.pendingFacilitySelection,
+  // );
+  // const storeFacilityIds = useAuthStore((state) => state.facilityIds);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [shouldShake, setShouldShake] = useState(false);
-  const [showFacilityModal, setShowFacilityModal] = useState(false);
-  const [pendingFacilityIds, setPendingFacilityIds] = useState<string[]>([]);
+  // const [showFacilityModal, setShowFacilityModal] = useState(false);
+  // const [pendingFacilityIds, setPendingFacilityIds] = useState<string[]>([]);
 
-  // ✅ Restore facility selection modal on refresh
-  useEffect(() => {
-    if (
-      pendingFacilitySelection &&
-      storeFacilityIds &&
-      storeFacilityIds.length >= 2
-    ) {
-      setPendingFacilityIds(storeFacilityIds);
-      setShowFacilityModal(true);
-    }
-  }, [pendingFacilitySelection, storeFacilityIds]);
+  // Facility selection modal disabled: admins are auto-signed into the first
+  // facility assigned to them, so there is no pending selection to restore.
+  // They can switch facilities after login instead of choosing one here.
+  // useEffect(() => {
+  //   if (
+  //     pendingFacilitySelection &&
+  //     storeFacilityIds &&
+  //     storeFacilityIds.length >= 2
+  //   ) {
+  //     setPendingFacilityIds(storeFacilityIds);
+  //     setShowFacilityModal(true);
+  //   }
+  // }, [pendingFacilitySelection, storeFacilityIds]);
 
   // ✅ Show welcome message for verified users
   useEffect(() => {
@@ -155,13 +160,15 @@ export default function LoginForm() {
       const assignedLgas = response.assigned_lgas || null;
       login(response.access_token, facilityIds, user, assignedLgas);
 
-      // 6. Admin with multiple facilities: show facility selection modal
-      if (user.role === "admin" && facilityIds.length >= 2) {
-        setPendingFacilityIds(facilityIds);
-        setShowFacilityModal(true);
-        setIsLoading(false);
-        return;
-      }
+      // 6. Facility selection modal disabled: auth-store's login() already
+      // auto-selects the admin's first assigned facility, so there is
+      // nothing to prompt for here. They can switch facilities later.
+      // if (user.role === "admin" && facilityIds.length >= 2) {
+      //   setPendingFacilityIds(facilityIds);
+      //   setShowFacilityModal(true);
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       toast.success("Login successful!");
 
@@ -228,12 +235,13 @@ export default function LoginForm() {
     }
   }
 
-  const handleFacilitySelect = (facilityId: string) => {
-    setCurrentFacilityId(facilityId);
-    setShowFacilityModal(false);
-    toast.success("Login successful!");
-    router.push("/admin");
-  };
+  // Only used by the disabled facility-selection modal's onSelect below.
+  // const handleFacilitySelect = (facilityId: string) => {
+  //   setCurrentFacilityId(facilityId);
+  //   setShowFacilityModal(false);
+  //   toast.success("Login successful!");
+  //   router.push("/admin");
+  // };
 
   // Clear login error when user starts typing
   const handleInputChange = (
@@ -390,13 +398,15 @@ export default function LoginForm() {
         </form>
       </motion.div>
 
-      {showFacilityModal && (
+      {/* Facility selection modal disabled: admins are auto-signed into the
+          first facility assigned to them and can switch afterward. */}
+      {/* {showFacilityModal && (
         <FacilitySelectionModal
           isOpen={showFacilityModal}
           facilityIds={pendingFacilityIds}
           onSelect={handleFacilitySelect}
         />
-      )}
+      )} */}
     </>
   );
 }
