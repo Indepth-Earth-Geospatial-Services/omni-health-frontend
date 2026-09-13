@@ -241,13 +241,13 @@ export function InventoryChecklist({
                   <div className="flex shrink-0 gap-1">
                     {(
                       [
+                        ["all", "All", items.length],
                         ["in-stock", "Functional", inStockCount],
                         // Hidden until there's a real functional/non-functional
                         // status field in the database — right now this is only
                         // inferred from quantity <= 0. Uncomment once that data
                         // exists.
                         // ["missing", "Non-functional", missingCount],
-                        ["all", "All", items.length],
                       ] as const
                     ).map(([value, label, count]) => (
                       <button

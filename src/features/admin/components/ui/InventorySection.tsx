@@ -51,13 +51,15 @@ export function InventorySection({
           </div>
           <div className="text-left">
             <h3 className="text-2xl font-medium text-slate-700">{title}</h3>
-            <p className="mt-0.5 text-sm text-slate-500">{items.length} items</p>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {items.length} items
+            </p>
           </div>
         </div>
 
         <div className="flex flex-row items-center gap-4">
           <Button
-            size="xl"
+            size="lg"
             onClick={onAdd}
             className="text-lg"
             disabled={isAdding}

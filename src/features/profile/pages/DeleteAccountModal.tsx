@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, AlertTriangle, Trash2, Eye, EyeOff } from "lucide-react";
+import { X, AlertTriangle, Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 
 interface DeleteAccountModalProps {
@@ -15,6 +15,17 @@ interface DeleteAccountModalProps {
   isDeleting?: boolean;
 }
 
+function getInitials(name: string) {
+  return (
+    name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase() || "?"
+  );
+}
+
 const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   isOpen,
   onClose,
@@ -26,127 +37,155 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
   isDeleting = false,
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
+
+  const handleClose = () => {
+    if (isDeleting) return;
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        onClick={handleClose}
+      />
 
       {/* Modal */}
-      <div className="relative mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-        {/* Header with gradient */}
-        <div className="flex items-center justify-between bg-red-500 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <AlertTriangle size={22} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Confirm Deletion</h2>
-              <p className="mt-0.5 text-sm text-red-100">
-                This action cannot be undone
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={isDeleting}
-            className="rounded-lg p-2 transition-colors hover:bg-white/20 disabled:opacity-50"
-          >
-            <X size={20} className="text-white" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="space-y-4 p-6">
-          {/* Warning Message */}
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <div className="text-sm text-slate-700">
-              Are you sure you want to delete{" "}
-              <p className="font-semibold text-red-600">{UserName} ?</p>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">
-              All associated records and data will be permanently removed from
-              the system.
-            </p>
-          </div>
-
-          {/* User Info Card */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div
+        className="fixed top-1/2 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl"
+        style={{ maxHeight: "calc(100vh - 2rem)" }}
+      >
+        {/* Header */}
+        <div className="from-primary to-primary/80 relative overflow-hidden bg-linear-to-r px-6 py-5">
+          <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-white/10" />
+          <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600">
-                <span className="text-sm font-bold text-white">
-                  {UserName?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase() || "?"}
-                </span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                <AlertTriangle size={18} className="text-white" />
               </div>
               <div>
-                <p className="font-semibold text-slate-800">{UserName}</p>
-                <p className="text-xs text-slate-500">{UserEmail}</p>
+                <h2 className="text-base font-bold text-white">
+                  Confirm Deletion
+                </h2>
+                <p className="mt-0.5 text-xs text-white/70">
+                  This action cannot be undone
+                </p>
               </div>
+            </div>
+            <button
+              onClick={handleClose}
+              disabled={isDeleting}
+              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-50"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div
+          className="overflow-y-auto px-6 py-5"
+          style={{ maxHeight: "calc(100vh - 2rem - 140px)" }}
+        >
+          {/* User card */}
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-400 text-sm font-bold text-white shadow-sm">
+              {getInitials(UserName)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-800">
+                {UserName}
+              </p>
+              <p className="truncate text-xs text-slate-500">{UserEmail}</p>
             </div>
           </div>
 
-          {/* Password Confirmation */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">
-              Confirm your password to proceed
+          {/* Password confirmation */}
+          <div className="mb-5">
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Confirm your password to proceed{" "}
+              <span className="text-red-500">*</span>
             </label>
             <div className="relative">
+              {/* Honeypot: absorbs browser autofill so the search bar is never targeted */}
+              <input
+                type="text"
+                autoComplete="username"
+                tabIndex={-1}
+                aria-hidden="true"
+                readOnly
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  opacity: 0,
+                  pointerEvents: "none",
+                  border: "none",
+                  padding: 0,
+                }}
+              />
+              <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
+                <Lock size={16} className="text-slate-400" />
+              </div>
               <input
                 type={showPassword ? "text" : "password"}
                 value={ConfirmPassword}
                 onChange={(e) => onPasswordChange(e.target.value)}
                 disabled={isDeleting}
                 placeholder="Enter your password"
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-800 placeholder:text-slate-400 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100 disabled:opacity-50"
+                autoComplete="current-password"
+                name="delete-account-password"
+                className="focus:border-primary focus:ring-primary/20 w-full rounded-xl border border-slate-300 bg-white py-3 pr-10 pl-9 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isDeleting}
-              className="flex-1 border-slate-300 hover:bg-slate-50"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={onConfirm}
-              disabled={isDeleting || !ConfirmPassword}
-              className="flex-1 bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
-            >
-              {isDeleting ? (
-                <>
-                  <span className="mr-2 animate-spin">⏳</span>
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 size={16} />
-                  Delete Account
-                </>
-              )}
-            </Button>
+          {/* Warning note */}
+          <div className="flex gap-2.5 rounded-xl border border-red-100 bg-red-50 p-3.5">
+            <AlertTriangle
+              size={14}
+              className="mt-0.5 shrink-0 text-red-500"
+            />
+            <p className="text-xs text-red-700">
+              <strong>Warning:</strong> All associated records and data will
+              be permanently removed from the system.
+            </p>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+          <Button variant="outline" onClick={handleClose} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={isDeleting || !ConfirmPassword}
+            className="gap-2 bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                Deleting…
+              </>
+            ) : (
+              <>Delete Account</>
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

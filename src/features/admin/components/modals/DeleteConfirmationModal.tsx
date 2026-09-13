@@ -1,105 +1,131 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, Loader2, X } from "lucide-react";
+import { AlertTriangle, Loader2, Package, X } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface DeleteConfirmationModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    isDeleting: boolean;
-    itemName: string;
-    itemType: "equipment" | "infrastructure";
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+  itemName: string;
+  itemType: "equipment" | "infrastructure";
 }
 
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
-    isOpen,
-    onClose,
-    onConfirm,
-    isDeleting,
-    itemName,
-    itemType,
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+  itemName,
+  itemType,
 }) => {
-    if (!isOpen) return null;
+  const handleClose = () => {
+    if (isDeleting) return;
+    onClose();
+  };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50"
-                onClick={!isDeleting ? onClose : undefined}
-            />
+  if (!isOpen) return null;
 
-            {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-200">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                                <AlertTriangle size={20} className="text-red-600" />
-                            </div>
-                            <h2 className="text-xl font-semibold text-slate-900">
-                                Confirm Delete
-                            </h2>
-                        </div>
-                        {!isDeleting && (
-                            <button
-                                onClick={onClose}
-                                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
-                                <X size={20} className="text-slate-600" />
-                            </button>
-                        )}
-                    </div>
-                </div>
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        onClick={handleClose}
+      />
 
-                {/* Content */}
-                <div className="px-6 py-6">
-                    <p className="text-slate-700 mb-2">
-                        Are you sure you want to delete this {itemType}?
-                    </p>
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                        <p className="font-semibold text-slate-900">{itemName}</p>
-                    </div>
-                    <p className="text-sm text-red-600 mt-4">
-                        ⚠️ This action cannot be undone.
-                    </p>
-                </div>
-
-                {/* Actions */}
-                <div className="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="lg"
-                        onClick={onClose}
-                        disabled={isDeleting}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        size="lg"
-                        onClick={onConfirm}
-                        disabled={isDeleting}
-                        className="bg-red-600 hover:bg-red-700"
-                    >
-                        {isDeleting ? (
-                            <>
-                                <Loader2 size={18} className="animate-spin" />
-                                Deleting...
-                            </>
-                        ) : (
-                            <>Delete {itemType}</>
-                        )}
-                    </Button>
-                </div>
+      {/* Modal */}
+      <div
+        className="fixed top-1/2 left-1/2 z-50 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl"
+        style={{ maxHeight: "calc(100vh - 2rem)" }}
+      >
+        {/* Header */}
+        <div className="from-primary to-primary/80 relative overflow-hidden bg-linear-to-r px-6 py-5">
+          <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-white/10" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                <AlertTriangle size={18} className="text-white" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white">
+                  Confirm Delete
+                </h2>
+                <p className="mt-0.5 text-xs text-white/70">
+                  This will permanently remove the item from inventory
+                </p>
+              </div>
             </div>
+            <button
+              onClick={handleClose}
+              disabled={isDeleting}
+              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-50"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
-    );
+
+        {/* Scrollable content */}
+        <div
+          className="overflow-y-auto px-6 py-5"
+          style={{ maxHeight: "calc(100vh - 2rem - 140px)" }}
+        >
+          {/* Item card */}
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-400 text-white shadow-sm">
+              <Package size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-800">
+                {itemName}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-blue-700 uppercase">
+              {itemType}
+            </span>
+          </div>
+
+          {/* Warning note */}
+          <div className="flex gap-2.5 rounded-xl border border-red-100 bg-red-50 p-3.5">
+            <AlertTriangle
+              size={14}
+              className="mt-0.5 shrink-0 text-red-500"
+            />
+            <p className="text-xs text-red-700">
+              <strong>Warning:</strong> This action cannot be undone. Deleting
+              this {itemType} will permanently remove it from the
+              facility&apos;s inventory.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+          <Button variant="outline" onClick={handleClose} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="gap-2 bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                Deleting…
+              </>
+            ) : (
+              <>Delete {itemType}</>
+            )}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default DeleteConfirmationModal;
