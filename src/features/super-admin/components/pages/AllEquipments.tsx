@@ -12,7 +12,7 @@ import { useBatchAddInventoryItem } from "../../hooks/useFacilitiesByInventory";
 import UniqueInventoryList from "../layouts/UniqueInventoryList";
 import InventoryItemModal, {
   type InventoryFormData,
-} from "@/features/admin/feature/InventoryItemModal";
+} from "../../../admin/components/modals/InventoryItemModal";
 import { toast } from "sonner";
 
 export default function EquipmentPage() {

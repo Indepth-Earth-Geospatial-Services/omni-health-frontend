@@ -11,19 +11,44 @@ import {
 interface FacilityImageButtonProps {
   facilityId: string;
   facilityName?: string;
-  imageUrl: string | null;
+  /** Every image the backend has on file for this facility (up to 5 — it's
+   *  a gallery API). This button only shows one photo, so all but the most
+   *  recent upload get cleaned up rather than left orphaned server-side. */
+  imageUrls: string[];
+  /** Used to cache-bust the displayed URL as a defensive extra — see
+   *  `withCacheBust` below. */
+  lastUpdated?: string;
+}
+
+/** Blob URLs are opaque, per-object references — appending a query string
+ *  to one breaks it, so only real server URLs get cache-busted. */
+function withCacheBust(url: string, token: string): string {
+  if (!token || url.startsWith("blob:")) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}_cb=${encodeURIComponent(token)}`;
 }
 
 export default function FacilityImageButton({
   facilityId,
   facilityName,
-  imageUrl,
+  imageUrls,
+  lastUpdated,
 }: FacilityImageButtonProps) {
+  // The backend appends new uploads to the end of the list, so the newest
+  // photo — the one this button just saved — is always the last entry, not
+  // the first. Reading `[0]` is what made a re-upload look like it "did
+  // nothing": it kept showing whichever image was uploaded first.
+  const currentUrl = imageUrls.length > 0 ? imageUrls[imageUrls.length - 1] : null;
+
   const [isOpen, setIsOpen] = useState(false);
   // previewUrl: optimistic local display (may be a blob: URL after upload)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl);
   // serverUrl: the last known URL confirmed to exist on the server (from prop)
-  const [serverUrl, setServerUrl] = useState<string | null>(imageUrl);
+  const [serverUrl, setServerUrl] = useState<string | null>(currentUrl);
+  // Bumped on every successful upload/delete so the same-session view is
+  // guaranteed fresh even if the backend doesn't advance `lastUpdated`.
+  const [bumpCount, setBumpCount] = useState(0);
+  const cacheBustToken = `${lastUpdated ?? ""}:${bumpCount}`;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,9 +56,9 @@ export default function FacilityImageButton({
   const deleteMutation = useDeleteFacilityImage(facilityId);
 
   useEffect(() => {
-    setPreviewUrl(imageUrl);
-    setServerUrl(imageUrl);
-  }, [imageUrl]);
+    setPreviewUrl(currentUrl);
+    setServerUrl(currentUrl);
+  }, [currentUrl]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -64,37 +89,50 @@ export default function FacilityImageButton({
       toast.error("Please select a valid image file.");
       return;
     }
+    // Captured before the upload — this is what has to be cleaned up once
+    // the new photo is confirmed, so the gallery never grows past one image.
+    const urlsToReplace = imageUrls;
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
     uploadMutation.mutate([file], {
       onSuccess: () => {
+        setBumpCount((n) => n + 1);
         toast.success("Facility image uploaded successfully.");
         setIsOpen(false);
+        urlsToReplace.forEach((url) => deleteMutation.mutate(url));
       },
       onError: () => {
         toast.error("Failed to upload image. Please try again.");
-        setPreviewUrl(imageUrl);
+        setPreviewUrl(currentUrl);
       },
     });
     e.target.value = "";
   };
 
   const handleDelete = () => {
-    if (!serverUrl) return;
-    deleteMutation.mutate(serverUrl, {
-      onSuccess: () => {
-        setPreviewUrl(null);
-        setServerUrl(null);
-        toast.success("Facility image removed.");
-        setIsOpen(false);
-      },
-      onError: () => {
-        toast.error("Failed to delete image. Please try again.");
-      },
+    if (imageUrls.length === 0) return;
+    setPreviewUrl(null);
+    setServerUrl(null);
+    setBumpCount((n) => n + 1);
+    setIsOpen(false);
+    // Clears every stored image, not just the one on screen — the same
+    // "this button owns a single photo" assumption applies here too.
+    imageUrls.forEach((url, idx) => {
+      deleteMutation.mutate(url, {
+        onSuccess: () => {
+          if (idx === 0) toast.success("Facility image removed.");
+        },
+        onError: () => {
+          if (idx === 0) toast.error("Failed to delete image. Please try again.");
+        },
+      });
     });
   };
 
   const isBusy = uploadMutation.isPending || deleteMutation.isPending;
+  const displayUrl = previewUrl
+    ? withCacheBust(previewUrl, cacheBustToken)
+    : null;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -111,9 +149,9 @@ export default function FacilityImageButton({
         onClick={() => setIsOpen((v) => !v)}
         className="ring-primary/20 hover:ring-primary/50 relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-lg ring-2 transition-all duration-200 focus:outline-none"
       >
-        {previewUrl ? (
+        {displayUrl ? (
           <img
-            src={previewUrl}
+            src={displayUrl}
             alt="Facility"
             className="h-full w-full object-cover"
           />
@@ -132,9 +170,9 @@ export default function FacilityImageButton({
         <div className="absolute top-[calc(100%+8px)] right-0 z-50 min-h-[86px] w-86 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
           {/* Image preview */}
           <div className="flex h-48 w-full items-center justify-center bg-slate-100">
-            {previewUrl ? (
+            {displayUrl ? (
               <img
-                src={previewUrl}
+                src={displayUrl}
                 alt="Facility preview"
                 className="h-full w-full object-cover"
               />

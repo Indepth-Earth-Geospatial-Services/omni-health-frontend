@@ -33,7 +33,9 @@ import {
 import { inviteService, type InvitePreview } from "@/services/invite.service";
 import { profileService } from "@/services/profile.service";
 import { useAuthStore, type User } from "@/features/auth/auth-store";
-import FacilitySelectionModal from "./FacilitySelectionModal";
+// Facility selection modal disabled — see the comments below where it used
+// to be wired up. Admins are auto-signed into their first assigned facility.
+// import FacilitySelectionModal from "./FacilitySelectionModal";
 import { getRoleDashboard } from "@/lib/auth-constants";
 import { ApiError, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
@@ -111,9 +113,10 @@ export default function AcceptInviteForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const login = useAuthStore((state) => state.login);
-  const setCurrentFacilityId = useAuthStore(
-    (state) => state.setCurrentFacilityId,
-  );
+  // Only used by the disabled facility-selection modal's onSelect below.
+  // const setCurrentFacilityId = useAuthStore(
+  //   (state) => state.setCurrentFacilityId,
+  // );
 
   const [linkState, setLinkState] = useState<LinkState>({ status: "loading" });
   const [showPassword, setShowPassword] = useState(false);
@@ -218,15 +221,19 @@ export default function AcceptInviteForm() {
 
       // AdminSessionGuard logs out any admin reaching /admin without a
       // facility selected, so resolve that here rather than navigating into a
-      // redirect loop. login() already set it when there is exactly one.
+      // redirect loop. login() already auto-selected the first facility when
+      // there is at least one, so only the zero-facility case needs handling.
       if (facilityIds.length === 0) {
         setPostAccept({ kind: "no-facility" });
         return;
       }
-      if (facilityIds.length > 1) {
-        setPostAccept({ kind: "choose-facility", facilityIds });
-        return;
-      }
+      // Facility selection modal disabled: login() already picked the first
+      // assigned facility, so an admin with several goes straight through
+      // and can switch facilities after login instead of choosing one here.
+      // if (facilityIds.length > 1) {
+      //   setPostAccept({ kind: "choose-facility", facilityIds });
+      //   return;
+      // }
 
       router.push(getRoleDashboard(user.role));
     } catch (error) {
@@ -259,18 +266,19 @@ export default function AcceptInviteForm() {
   // ── After the account exists ────────────────────────────────────────────────
   // These take priority over every link state below: the invite is spent, so
   // re-checking it would only report a 410.
-  if (postAccept?.kind === "choose-facility") {
-    return (
-      <FacilitySelectionModal
-        isOpen
-        facilityIds={postAccept.facilityIds}
-        onSelect={(facilityId) => {
-          setCurrentFacilityId(facilityId);
-          router.push("/admin");
-        }}
-      />
-    );
-  }
+  // Facility selection modal disabled — see the comment in onSubmit above.
+  // if (postAccept?.kind === "choose-facility") {
+  //   return (
+  //     <FacilitySelectionModal
+  //       isOpen
+  //       facilityIds={postAccept.facilityIds}
+  //       onSelect={(facilityId) => {
+  //         setCurrentFacilityId(facilityId);
+  //         router.push("/admin");
+  //       }}
+  //     />
+  //   );
+  // }
 
   if (postAccept?.kind === "no-facility") {
     return (

@@ -168,20 +168,6 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
   }, [itemToDelete, deleteType, deleteEquipmentMutation, deleteInfrastructureMutation]);
 
   /**
-   * Set one item's quantity without any modal or toast — for the inline
-   * stepper, where the changed number is its own feedback. POST upserts, so
-   * this is the same endpoint the edit modal uses.
-   */
-  const setItemQuantity = useCallback(
-    async (type: InventoryType, itemName: string, quantity: number) => {
-      const mutation =
-        type === "equipment" ? updateEquipmentMutation : updateInfrastructureMutation;
-      await mutation.mutateAsync({ item_name: itemName, quantity });
-    },
-    [updateEquipmentMutation, updateInfrastructureMutation],
-  );
-
-  /**
    * Save a stock take. Only changed rows are sent, so a typical audit is a
    * handful of requests rather than one per tracked item. Sequential on
    * purpose — these are writes, and ordering keeps the failure case legible.
@@ -268,7 +254,6 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
     handleUpdateInfrastructure,
     handleDeleteClick,
     handleConfirmDelete,
-    setItemQuantity,
     saveStockTake,
     closeEditEquipmentModal,
     closeEditInfrastructureModal,

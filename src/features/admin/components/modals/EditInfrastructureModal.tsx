@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "../ui/button";
 
 interface EditInfrastructureModalProps {
     isOpen: boolean;

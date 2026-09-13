@@ -101,95 +101,12 @@ export default function Header({ name, className }: HeaderProps) {
       </div>
       <div>
         <div className="flex items-center gap-4">
-          {/* Notification Bell */}
-          {/* <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="relative rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                  <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
-                  <span className="bg-primary relative inline-flex h-2 w-2 rounded-full"></span>
-                </span>
-              )}
-            </button>
-
-            {isDropdownOpen && (
-              <div className="absolute right-0 z-50 mt-2 w-96 rounded-xl border-2 border-slate-200 bg-white shadow-lg">
-                <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900">
-                      Notifications
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      {unreadCount} unread notifications
-                    </p>
-                  </div>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-primary flex items-center gap-1 text-xs font-medium hover:underline"
-                    >
-                      <Check size={14} />
-                      <span>Mark all read</span>
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-8 text-center">
-                      <p className="text-sm text-slate-500">No notifications</p>
-                    </div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <button
-                        key={notification.id}
-                        onClick={() => markAsRead(notification.id)}
-                        className={cn(
-                          "w-full border-b border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50",
-                          !notification.read && "bg-blue-50/50",
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900">
-                              {notification.title}
-                            </p>
-                            <p className="mt-0.5 text-xs text-slate-600">
-                              {notification.message}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-400">
-                              {notification.timestamp}
-                            </p>
-                          </div>
-                          {!notification.read && (
-                            <div className="bg-primary mt-1 h-2 w-2 rounded-full"></div>
-                          )}
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-
-                {notifications.length > 0 && (
-                  <div className="border-t border-slate-200 px-4 py-3">
-                    <button className="text-primary w-full text-center text-sm font-medium hover:underline">
-                      View all notifications
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div> */}
           {/* Facility Image */}
           <FacilityImageButton
             facilityId={facilityId ?? ""}
             facilityName={facility?.facility_name}
-            imageUrl={facility?.image_urls?.[0] ?? null}
+            imageUrls={facility?.image_urls ?? []}
+            lastUpdated={facility?.last_updated}
           />
         </div>
       </div>
