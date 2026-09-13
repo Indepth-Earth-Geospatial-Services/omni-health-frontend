@@ -140,7 +140,6 @@ export default function AllUserPage() {
             value={inactiveUsers}
             subtitle=""
             icon={<Calendar size={24} />}
-
           />
           <KPIStatsCards
             title="Super Admins"
@@ -152,7 +151,7 @@ export default function AllUserPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
+        <div className="m-6">
           <Tabs
             tabs={tabs}
             activeTab={activeTab}

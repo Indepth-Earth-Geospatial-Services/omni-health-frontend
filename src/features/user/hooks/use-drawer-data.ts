@@ -22,14 +22,27 @@ export function useDrawerData(isGettingLocation: boolean) {
     rootMargin: "50px",
   });
 
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = lgaQuery;
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (inView && lgaQuery.hasNextPage && !lgaQuery.isFetchingNextPage) {
-        lgaQuery.fetchNextPage();
+      if (inView && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [inView, lgaQuery]);
+    // `lgaQuery` itself is a fresh object every render (React Query returns a
+    // new result object on essentially every render, including ones this
+    // effect shouldn't care about), so depending on it directly reran this
+    // effect constantly. Each rerun re-armed the same 100ms auto-fetch timer,
+    // and since the sentinel is in view for most of this page's life, that
+    // meant near-continuous fetchNextPage() calls racing each other — each
+    // one growing `allFacilities`, which in turn re-triggers the map's
+    // fitBounds/camera-animation effect (see use-map-camera.ts) on every new
+    // page. That combination of rapid-fire network + repeated camera resets
+    // is what froze the tab. Depending on the primitives themselves makes
+    // this effect only run when one of them actually changes.
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // 3. Derived Data
   const nearestFacility = nearestQuery.data?.facility;

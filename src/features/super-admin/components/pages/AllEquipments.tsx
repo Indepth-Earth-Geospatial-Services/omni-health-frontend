@@ -111,7 +111,9 @@ export default function EquipmentPage() {
         setIsEquipmentModalOpen(false);
       } catch (error: unknown) {
         const err = error as { message?: string };
-        toast.error(err?.message || "Failed to add equipment. Please try again.");
+        toast.error(
+          err?.message || "Failed to add equipment. Please try again.",
+        );
       }
     },
     [batchAddMutation, reportBatchResult],
@@ -170,8 +172,13 @@ export default function EquipmentPage() {
         </div>
 
         {/* Tabs - Equipment and Infrastructure */}
-        <div className="mb-6">
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="m-6">
+          <Tabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            size="lg"
+          />
         </div>
 
         {/* Equipment Tab - Displays unique equipment items with facility dropdown */}

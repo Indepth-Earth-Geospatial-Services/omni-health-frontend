@@ -3,33 +3,43 @@ import { useQuery } from "@tanstack/react-query";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
 import { FilterState } from "../components/layouts/StaffTableHeader"; // Adjust path as needed
 import type { StaffMember } from "@/services/admin.service";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export const useStaffQuery = (
   page: number,
   limit: number,
   filters: FilterState,
 ) => {
+  // The raw `filters.searchQuery` changes on every keystroke — putting it
+  // straight into the query key would make each letter a brand-new query
+  // (no cached data for it yet), so `isLoading` — not just `isFetching` —
+  // would flip true and blank the whole table while typing. Debouncing here
+  // means the key only changes once the user pauses, matching the pattern
+  // FacilityRegistry uses for its own search.
+  const debouncedSearch = useDebounce(filters.searchQuery, 500);
+  const effectiveFilters = { ...filters, searchQuery: debouncedSearch };
+
   const hasActiveFilters =
-    filters.searchQuery !== "" ||
-    filters.selectedFacility !== "all" ||
-    filters.selectedGender !== "all" ||
-    filters.selectedStatus !== "all";
+    effectiveFilters.searchQuery !== "" ||
+    effectiveFilters.selectedFacility !== "all" ||
+    effectiveFilters.selectedGender !== "all" ||
+    effectiveFilters.selectedStatus !== "all";
 
   return useQuery({
-    queryKey: ["all-staff", page, limit, filters],
+    queryKey: ["all-staff", page, limit, effectiveFilters],
     queryFn: async () => {
       // If facility is selected and we have filters, use search endpoint
-      if (filters.selectedFacility !== "all" && hasActiveFilters) {
+      if (effectiveFilters.selectedFacility !== "all" && hasActiveFilters) {
         return await superAdminService.searchStaff({
-          facility_id: filters.selectedFacility,
-          name: filters.searchQuery || undefined,
+          facility_id: effectiveFilters.selectedFacility,
+          name: effectiveFilters.searchQuery || undefined,
           gender:
-            filters.selectedGender !== "all"
-              ? filters.selectedGender
+            effectiveFilters.selectedGender !== "all"
+              ? effectiveFilters.selectedGender
               : undefined,
           is_active:
-            filters.selectedStatus !== "all"
-              ? filters.selectedStatus === "true"
+            effectiveFilters.selectedStatus !== "all"
+              ? effectiveFilters.selectedStatus === "true"
               : undefined,
           page,
           limit,
@@ -41,6 +51,12 @@ export const useStaffQuery = (
     },
     // Refetch when filters change (using 0 staleTime ensures fresh data on filter change)
     staleTime: 0,
+    // Without this, changing `page` (or the debounced filters) points at a
+    // query key with no cached data yet, so `isLoading` goes true and the
+    // whole table blanks out until the new page arrives. Keeping the
+    // previous page's data in place until the new page resolves is what
+    // lets the table stay visible with just a small "fetching" spinner.
+    placeholderData: (previousData) => previousData,
   });
 };
 

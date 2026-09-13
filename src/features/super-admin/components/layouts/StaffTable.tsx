@@ -36,11 +36,8 @@ const StaffTables = () => {
   });
 
   // --- Data Fetching ---
-  const { data, isLoading, isError, error, refetch } = useStaffQuery(
-    page,
-    limit,
-    filters,
-  );
+  const { data, isLoading, isError, error, isFetching, refetch } =
+    useStaffQuery(page, limit, filters);
 
   const pagination = data?.pagination;
   const totalPages = pagination?.total_pages ?? 1;
@@ -156,7 +153,11 @@ const StaffTables = () => {
   };
 
   // --- Render ---
-  if (isLoading) {
+  // Only the very first load has no data at all — `placeholderData` on
+  // useStaffQuery keeps the previous page in place across pagination and
+  // filter changes, so this can't retrigger on a page click; those show the
+  // small spinner next to the pagination footer instead (isFetching below).
+  if (isLoading && !data) {
     return (
       <TableWrapper
         filters={filters}
@@ -292,6 +293,7 @@ const StaffTables = () => {
           totalRecords={pagination?.total_records ?? 0}
           onPrevPage={() => page > 1 && setPage(page - 1)}
           onNextPage={() => page < totalPages && setPage(page + 1)}
+          isFetching={isFetching}
         />
       </div>
 

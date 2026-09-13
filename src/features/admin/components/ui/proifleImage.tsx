@@ -7,6 +7,7 @@ import {
   useUploadFacilityImages,
   useDeleteFacilityImage,
 } from "@/features/admin/hooks/useAdminStaff";
+import DeleteImageModal from "@/features/admin/components/modals/DeleteImageModal";
 
 interface FacilityImageButtonProps {
   facilityId: string;
@@ -41,6 +42,7 @@ export default function FacilityImageButton({
   const currentUrl = imageUrls.length > 0 ? imageUrls[imageUrls.length - 1] : null;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   // previewUrl: optimistic local display (may be a blob: URL after upload)
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl);
   // serverUrl: the last known URL confirmed to exist on the server (from prop)
@@ -109,12 +111,13 @@ export default function FacilityImageButton({
     e.target.value = "";
   };
 
-  const handleDelete = () => {
+  const confirmDelete = () => {
     if (imageUrls.length === 0) return;
     setPreviewUrl(null);
     setServerUrl(null);
     setBumpCount((n) => n + 1);
     setIsOpen(false);
+    setIsDeleteModalOpen(false);
     // Clears every stored image, not just the one on screen — the same
     // "this button owns a single photo" assumption applies here too.
     imageUrls.forEach((url, idx) => {
@@ -201,7 +204,7 @@ export default function FacilityImageButton({
 
             {serverUrl && (
               <button
-                onClick={handleDelete}
+                onClick={() => setIsDeleteModalOpen(true)}
                 disabled={isBusy}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 disabled:opacity-60"
               >
@@ -216,6 +219,14 @@ export default function FacilityImageButton({
           </div>
         </div>
       )}
+
+      <DeleteImageModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        isDeleting={deleteMutation.isPending}
+        imageUrl={displayUrl}
+      />
     </div>
   );
 }
