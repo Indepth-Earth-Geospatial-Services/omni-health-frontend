@@ -111,6 +111,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const displayFirst = profile?.first_name ?? user?.first_name ?? "";
   const displayLast = profile?.last_name ?? user?.last_name ?? "";
@@ -140,9 +141,15 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   };
 
   const handleLogout = async () => {
-    await logout();
-    onClose();
-    router.push("/login");
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      onClose();
+      router.push("/login");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const handleSaveName = () => {
@@ -421,10 +428,15 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           <div className="px-4 pb-6 sm:px-6">
             <button
               onClick={handleLogout}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+              disabled={isLoggingOut}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <LogOut size={16} />
-              Sign Out
+              {isLoggingOut ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <LogOut size={16} />
+              )}
+              {isLoggingOut ? "Signing Out…" : "Sign Out"}
             </button>
           </div>
         </DialogContent>

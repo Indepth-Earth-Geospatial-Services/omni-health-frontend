@@ -1,22 +1,31 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
-  Calendar,
   Activity,
+  Building2,
+  Check,
   Clock,
-  Users,
-  MapPin,
-  Stethoscope,
-  Star,
+  Hash,
+  ListChecks,
+  Loader2,
   Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Stethoscope,
+  Trash2,
+  Users,
+  X,
 } from "lucide-react";
-import { Button } from "../ui/button";
 import { useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import { useCollapsibleSections } from "@/hooks/use-collapsible-sections";
 import { CollapsibleSection, LoadingSkeleton } from "../ui/CollapsibleSection";
-import EditFacilityProfileModal from "../modals/EditFacilityProfileModal";
+import { useUpdateFacilityProfile } from "@/features/admin/hooks/useAdminStaff";
+import type { UpdateFacilityProfileRequest } from "@/services/admin.service";
+import { RIVERS_STATE_LGAS } from "@/features/super-admin/constants/lga";
 import {
   formatTimeRange,
   formatDate,
@@ -36,7 +45,6 @@ const SECTIONS = [
 ];
 
 export default function FacilityProfile() {
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const sections = useCollapsibleSections(SECTIONS);
 
   // Facility data
@@ -46,108 +54,51 @@ export default function FacilityProfile() {
 
   return (
     <div className="w-full">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-end">
-        <Button
-          type="button"
-          variant="default"
-          size="lg"
-          className="shrink-0 text-sm sm:text-lg"
-          onClick={() => setIsEditModalOpen(true)}
-        >
-          <Calendar size={18} />
-          Edit Profile
-        </Button>
-      </div>
-
-      <EditFacilityProfileModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        facilityId={facilityId}
-        currentData={facility}
-      />
-
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Facility Overview */}
-        <CollapsibleSection
-          title="Facility Overview"
-          description="Basic details about your facility"
-          icon={<Activity size={20} className="text-slate-600" />}
+        <FacilityOverviewCard
+          facility={facility}
+          facilityId={facilityId}
+          isLoading={isLoading}
+          isError={isError}
           isOpen={sections.isOpen("facilityOverview")}
           onToggle={() => sections.toggle("facilityOverview")}
-        >
-          <FacilityOverviewContent
-            facility={facility}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        </CollapsibleSection>
+        />
 
         {/* Right Column */}
         <div className="flex flex-col gap-6">
           {/* Operating Hours */}
-          <CollapsibleSection
-            title="Operating Hours"
-            description="When your facility is open"
-            icon={<Clock size={20} className="text-slate-600" />}
+          <OperatingHoursCard
+            facility={facility}
+            facilityId={facilityId}
+            isLoading={isLoading}
+            isError={isError}
             isOpen={sections.isOpen("operatingHours")}
             onToggle={() => sections.toggle("operatingHours")}
-          >
-            <OperatingHoursContent
-              workingHours={
-                facility?.working_hours as Record<string, string> | undefined
-              }
-              isLoading={isLoading}
-              isError={isError}
-            />
-          </CollapsibleSection>
-
-          {/* Staff Inventory */}
-          {/* <CollapsibleSection
-            title="Staff Inventory"
-            description="Number of Staff"
-            icon={<Users size={20} className="text-slate-600" />}
-            isOpen={sections.isOpen("staffInventory")}
-            onToggle={() => sections.toggle("staffInventory")}
-            maxHeight="360px"
-          >
-            <StaffInventoryContent />
-          </CollapsibleSection> */}
+          />
 
           {/* Services */}
-          <CollapsibleSection
-            title="Service List"
-            description="Medical services offered"
-            icon={<Stethoscope size={20} className="text-slate-600" />}
+          <ServicesCard
+            facility={facility}
+            facilityId={facilityId}
+            isLoading={isLoading}
             isOpen={sections.isOpen("services")}
             onToggle={() => sections.toggle("services")}
-            maxHeight="600px"
-          >
-            <ServicesContent
-              services={facility?.services_list}
-              isLoading={isLoading}
-            />
-          </CollapsibleSection>
+          />
         </div>
 
         {/* Specialists */}
-        <CollapsibleSection
-          title="Specialist Availability"
-          description="Healthcare professionals at your facility"
-          icon={<Users size={20} className="text-slate-600" />}
+        <SpecialistsCard
+          facility={facility}
+          facilityId={facilityId}
+          isLoading={isLoading}
+          isError={isError}
           isOpen={sections.isOpen("specialists")}
           onToggle={() => sections.toggle("specialists")}
-          maxHeight="560px"
-        >
-          <SpecialistsContent
-            specialists={facility?.specialists}
-            isLoading={isLoading}
-            isError={isError}
-          />
-        </CollapsibleSection>
+        />
 
-        {/* Activity Overview */}
+        {/* Activity Overview — genuinely read-only, no edit control */}
         <CollapsibleSection
           title="Activity Overview"
           description="Read-only system information"
@@ -167,11 +118,11 @@ export default function FacilityProfile() {
   );
 }
 
-// ============ Sub Components ============
+// ============ Shared types ============
 
-// Facility type for component props
 interface FacilityData {
   facility_id?: string;
+  hfr_id?: string;
   facility_name?: string;
   facility_category?: string;
   facility_lga?: string;
@@ -179,8 +130,6 @@ interface FacilityData {
   address?: string;
   lat?: number;
   lon?: number;
-  // average_rating?: number;
-  // total_reviews?: number;
   last_updated?: string | Date;
   working_hours?: {
     monday?: string;
@@ -193,6 +142,462 @@ interface FacilityData {
   };
   services_list?: string[];
   specialists?: string[];
+}
+
+interface CardBaseProps {
+  facility: FacilityData | undefined;
+  facilityId: string;
+  isLoading: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+// ============ Shared edit styling & controls ============
+
+const inputClass =
+  "focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white py-2.5 pr-4 pl-10 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50";
+
+const inputClassNoIcon =
+  "focus:border-primary focus:ring-primary/20 w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-600 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50";
+
+const labelClass =
+  "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+
+/** Edit / Save / Cancel controls for a card header. Every click stops
+ *  propagation so it never also fires the section's own open/close toggle. */
+function HeaderEditControls({
+  isEditing,
+  isSaving,
+  onEdit,
+  onCancel,
+  onSave,
+}: {
+  isEditing: boolean;
+  isSaving: boolean;
+  onEdit: () => void;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
+
+  if (!isEditing) {
+    return (
+      <button
+        type="button"
+        onClick={stop(onEdit)}
+        aria-label="Edit"
+        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-700"
+      >
+        <Pencil size={16} />
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={stop(onCancel)}
+        disabled={isSaving}
+        aria-label="Cancel"
+        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+      >
+        <X size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={stop(onSave)}
+        disabled={isSaving}
+        className="bg-primary hover:bg-primary/90 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
+      >
+        {isSaving ? (
+          <Loader2 size={13} className="animate-spin" />
+        ) : (
+          <Check size={13} />
+        )}
+        Save
+      </button>
+    </div>
+  );
+}
+
+function TagInput({
+  tags,
+  onAdd,
+  onRemove,
+  placeholder,
+  disabled,
+}: {
+  tags: string[];
+  onAdd: (val: string) => void;
+  onRemove: (idx: number) => void;
+  placeholder: string;
+  disabled?: boolean;
+}) {
+  const [input, setInput] = useState("");
+
+  const commit = () => {
+    const v = input.trim();
+    if (v && !tags.includes(v)) onAdd(v);
+    setInput("");
+  };
+
+  const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      commit();
+    }
+    if (e.key === "Backspace" && input === "" && tags.length > 0) {
+      onRemove(tags.length - 1);
+    }
+  };
+
+  return (
+    <div className="focus-within:border-primary focus-within:ring-primary/20 rounded-lg border border-slate-300 bg-white px-3 py-2 transition-colors focus-within:ring-2">
+      <div className="mb-1.5 flex flex-wrap gap-1.5">
+        {tags.map((tag, i) => (
+          <span
+            key={i}
+            className="text-primary bg-primary/10 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium"
+          >
+            {tag}
+            {!disabled && (
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="hover:text-red-500"
+              >
+                <X size={11} />
+              </button>
+            )}
+          </span>
+        ))}
+      </div>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKey}
+        onBlur={commit}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="w-full bg-transparent text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
+      />
+      <p className="mt-1 text-[10px] text-slate-400">
+        Press Enter or comma to add
+      </p>
+    </div>
+  );
+}
+
+// ============ Facility Overview ============
+
+interface OverviewFormState {
+  facility_name: string;
+  hfr_id: string;
+  facility_category: string;
+  lga_id?: number;
+  town: string;
+  address: string;
+  phone: string;
+  email: string;
+  lat: number;
+  lon: number;
+}
+
+function overviewFormFromFacility(facility?: FacilityData): OverviewFormState {
+  // The GET response only carries the LGA name (`facility_lga`), not its id,
+  // so the id has to be recovered by matching the name against the same
+  // Rivers-State list the dropdown is built from.
+  const matchedLga = facility?.facility_lga
+    ? RIVERS_STATE_LGAS.find(
+        (l) => l.label.toLowerCase() === facility.facility_lga!.toLowerCase(),
+      )
+    : undefined;
+
+  return {
+    facility_name: facility?.facility_name || "",
+    hfr_id: facility?.hfr_id || "",
+    facility_category: facility?.facility_category || "",
+    lga_id: matchedLga ? Number(matchedLga.value) : undefined,
+    town: facility?.town || "",
+    address: facility?.address || "",
+    phone: facility?.contact_info?.phone || "",
+    email: facility?.contact_info?.email || "",
+    lat: facility?.lat || 0,
+    lon: facility?.lon || 0,
+  };
+}
+
+function FacilityOverviewCard({
+  facility,
+  facilityId,
+  isLoading,
+  isError,
+  isOpen,
+  onToggle,
+}: CardBaseProps & { isError: boolean }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState<OverviewFormState>(() =>
+    overviewFormFromFacility(),
+  );
+  const mutation = useUpdateFacilityProfile();
+
+  const startEdit = () => {
+    setForm(overviewFormFromFacility(facility));
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    const data: UpdateFacilityProfileRequest = {
+      facility_name: form.facility_name,
+      hfr_id: form.hfr_id,
+      facility_category: form.facility_category,
+      lga_id: form.lga_id,
+      town: form.town,
+      address: form.address,
+      contact_info: { phone: form.phone, email: form.email },
+      lat: form.lat,
+      lon: form.lon,
+    };
+    mutation.mutate(
+      { facilityId, data },
+      { onSuccess: () => setIsEditing(false) },
+    );
+  };
+
+  return (
+    <CollapsibleSection
+      title="Facility Overview"
+      description="Basic details about your facility"
+      icon={<Activity size={20} className="text-slate-600" />}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      headerAction={
+        !isLoading &&
+        !isError && (
+          <HeaderEditControls
+            isEditing={isEditing}
+            isSaving={mutation.isPending}
+            onEdit={startEdit}
+            onCancel={() => setIsEditing(false)}
+            onSave={handleSave}
+          />
+        )
+      }
+    >
+      {isEditing ? (
+        <OverviewFormFields
+          form={form}
+          setForm={setForm}
+          disabled={mutation.isPending}
+        />
+      ) : (
+        <FacilityOverviewContent
+          facility={facility}
+          isLoading={isLoading}
+          isError={isError}
+        />
+      )}
+    </CollapsibleSection>
+  );
+}
+
+function OverviewFormFields({
+  form,
+  setForm,
+  disabled,
+}: {
+  form: OverviewFormState;
+  setForm: React.Dispatch<React.SetStateAction<OverviewFormState>>;
+  disabled: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <label className={labelClass}>Facility Name</label>
+        <div className="relative">
+          <Building2
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="text"
+            value={form.facility_name}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, facility_name: e.target.value }))
+            }
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>HFR ID</label>
+        <div className="relative">
+          <Hash
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="text"
+            value={form.hfr_id}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, hfr_id: e.target.value }))
+            }
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Category</label>
+        <div className="relative">
+          <ListChecks
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="text"
+            value={form.facility_category}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, facility_category: e.target.value }))
+            }
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>LGA</label>
+        <select
+          value={form.lga_id ?? ""}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              lga_id: e.target.value ? Number(e.target.value) : undefined,
+            }))
+          }
+          disabled={disabled}
+          className={inputClassNoIcon}
+        >
+          <option value="">Select LGA</option>
+          {RIVERS_STATE_LGAS.map((l) => (
+            <option key={l.value} value={l.value}>
+              {l.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className={labelClass}>Town</label>
+        <div className="relative">
+          <MapPin
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="text"
+            value={form.town}
+            onChange={(e) => setForm((f) => ({ ...f, town: e.target.value }))}
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div className="sm:col-span-2">
+        <label className={labelClass}>Full Address</label>
+        <div className="relative">
+          <MapPin
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="text"
+            value={form.address}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, address: e.target.value }))
+            }
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Officer in-Charge / Phone</label>
+        <div className="relative">
+          <Phone
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="tel"
+            value={form.phone}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, phone: e.target.value }))
+            }
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Contact Email</label>
+        <div className="relative">
+          <Mail
+            size={15}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, email: e.target.value }))
+            }
+            disabled={disabled}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Latitude</label>
+        <input
+          type="number"
+          step="any"
+          value={form.lat}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, lat: parseFloat(e.target.value) || 0 }))
+          }
+          disabled={disabled}
+          className={inputClassNoIcon}
+        />
+      </div>
+      <div>
+        <label className={labelClass}>Longitude</label>
+        <input
+          type="number"
+          step="any"
+          value={form.lon}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, lon: parseFloat(e.target.value) || 0 }))
+          }
+          disabled={disabled}
+          className={inputClassNoIcon}
+        />
+      </div>
+    </div>
+  );
 }
 
 interface FacilityOverviewContentProps {
@@ -263,20 +668,6 @@ function FacilityOverviewContent({
               </span>
             </div>
           </div>
-          {/* <div>
-            <label className="mb-1 block text-sm text-slate-500">
-              Average Rating
-            </label>
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[#868C98]">
-              <Star size={16} className="fill-yellow-400 text-yellow-400" />
-              <span className="font-medium text-slate-700">
-                {facility?.average_rating || 0}
-              </span>
-              <span className="text-xs text-slate-400">
-                ({facility?.total_reviews || 0} reviews)
-              </span>
-            </div>
-          </div> */}
           <FieldDisplay
             label="Last Updated"
             value={formatDate(String(facility?.last_updated || ""))}
@@ -317,6 +708,137 @@ function FieldDisplay({
         {value || "Not available"}
       </div>
     </div>
+  );
+}
+
+// ============ Operating Hours ============
+
+type WorkingHourRow = { day: string; hours: string };
+
+function workingHoursRowsFromFacility(
+  facility?: FacilityData,
+): WorkingHourRow[] {
+  const wh = facility?.working_hours;
+  if (wh && typeof wh === "object" && Object.keys(wh).length > 0) {
+    return Object.entries(wh).map(([day, hours]) => ({
+      day,
+      hours: String(hours ?? ""),
+    }));
+  }
+  return [{ day: "", hours: "" }];
+}
+
+function OperatingHoursCard({
+  facility,
+  facilityId,
+  isLoading,
+  isError,
+  isOpen,
+  onToggle,
+}: CardBaseProps & { isError: boolean }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [rows, setRows] = useState<WorkingHourRow[]>(() =>
+    workingHoursRowsFromFacility(),
+  );
+  const mutation = useUpdateFacilityProfile();
+
+  const startEdit = () => {
+    setRows(workingHoursRowsFromFacility(facility));
+    setIsEditing(true);
+  };
+
+  const updateRow = (idx: number, key: "day" | "hours", value: string) =>
+    setRows((r) => r.map((row, i) => (i === idx ? { ...row, [key]: value } : row)));
+  const addRow = () => setRows((r) => [...r, { day: "", hours: "" }]);
+  const removeRow = (idx: number) => setRows((r) => r.filter((_, i) => i !== idx));
+
+  const handleSave = () => {
+    const working_hours = rows.reduce<Record<string, string>>(
+      (acc, { day, hours }) =>
+        day.trim() ? { ...acc, [day.trim()]: hours.trim() } : acc,
+      {},
+    );
+    mutation.mutate(
+      { facilityId, data: { working_hours } },
+      { onSuccess: () => setIsEditing(false) },
+    );
+  };
+
+  return (
+    <CollapsibleSection
+      title="Operating Hours"
+      description="When your facility is open"
+      icon={<Clock size={20} className="text-slate-600" />}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      headerAction={
+        !isLoading &&
+        !isError && (
+          <HeaderEditControls
+            isEditing={isEditing}
+            isSaving={mutation.isPending}
+            onEdit={startEdit}
+            onCancel={() => setIsEditing(false)}
+            onSave={handleSave}
+          />
+        )
+      }
+    >
+      {isEditing ? (
+        <div className="space-y-2 pt-2">
+          {rows.map((row, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Clock
+                  size={13}
+                  className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="text"
+                  value={row.day}
+                  onChange={(e) => updateRow(i, "day", e.target.value)}
+                  placeholder="Day(s), e.g. Mon–Fri"
+                  disabled={mutation.isPending}
+                  className={inputClass}
+                />
+              </div>
+              <input
+                type="text"
+                value={row.hours}
+                onChange={(e) => updateRow(i, "hours", e.target.value)}
+                placeholder="Hours, e.g. 8am–5pm"
+                disabled={mutation.isPending}
+                className={`${inputClassNoIcon} flex-1`}
+              />
+              <button
+                type="button"
+                onClick={() => removeRow(i)}
+                disabled={rows.length === 1 || mutation.isPending}
+                className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addRow}
+            disabled={mutation.isPending}
+            className="text-primary flex items-center gap-1.5 text-xs font-medium hover:underline disabled:opacity-50"
+          >
+            <Plus size={13} /> Add row
+          </button>
+        </div>
+      ) : (
+        <OperatingHoursContent
+          workingHours={
+            facility?.working_hours as Record<string, string> | undefined
+          }
+          isLoading={isLoading}
+          isError={isError}
+        />
+      )}
+    </CollapsibleSection>
   );
 }
 
@@ -400,22 +922,67 @@ function OperatingHoursContent({
   );
 }
 
-// function StaffInventoryContent() {
-//   return (
-//     <div className="py-8 text-center">
-//       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-//         <Users size={28} className="text-[#868C98]" />
-//       </div>
-//       <p className="font-geist mb-1 text-[15px] font-normal text-[#868C98]">
-//         Staff inventory data is not available
-//       </p>
-//       <p className="font-geist text-[13px] font-normal text-[#868C98]/70">
-//         Staff category counts will appear here once the data is provided by the
-//         backend.
-//       </p>
-//     </div>
-//   );
-// }
+// ============ Services ============
+
+function ServicesCard({
+  facility,
+  facilityId,
+  isLoading,
+  isOpen,
+  onToggle,
+}: CardBaseProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const mutation = useUpdateFacilityProfile();
+
+  const startEdit = () => {
+    setTags(facility?.services_list ?? []);
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    mutation.mutate(
+      { facilityId, data: { services_list: tags } },
+      { onSuccess: () => setIsEditing(false) },
+    );
+  };
+
+  return (
+    <CollapsibleSection
+      title="Service List"
+      description="Medical services offered"
+      icon={<Stethoscope size={20} className="text-slate-600" />}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      maxHeight="600px"
+      headerAction={
+        !isLoading && (
+          <HeaderEditControls
+            isEditing={isEditing}
+            isSaving={mutation.isPending}
+            onEdit={startEdit}
+            onCancel={() => setIsEditing(false)}
+            onSave={handleSave}
+          />
+        )
+      }
+    >
+      {isEditing ? (
+        <div className="pt-4 pb-2">
+          <TagInput
+            tags={tags}
+            onAdd={(v) => setTags((t) => [...t, v])}
+            onRemove={(idx) => setTags((t) => t.filter((_, i) => i !== idx))}
+            placeholder="e.g. Maternity, Immunisation…"
+            disabled={mutation.isPending}
+          />
+        </div>
+      ) : (
+        <ServicesContent services={facility?.services_list} isLoading={isLoading} />
+      )}
+    </CollapsibleSection>
+  );
+}
 
 function ServicesContent({
   services,
@@ -453,6 +1020,74 @@ function ServicesContent({
         </span>
       ))}
     </div>
+  );
+}
+
+// ============ Specialists ============
+
+function SpecialistsCard({
+  facility,
+  facilityId,
+  isLoading,
+  isError,
+  isOpen,
+  onToggle,
+}: CardBaseProps & { isError: boolean }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const mutation = useUpdateFacilityProfile();
+
+  const startEdit = () => {
+    setTags(facility?.specialists ?? []);
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    mutation.mutate(
+      { facilityId, data: { specialists: tags } },
+      { onSuccess: () => setIsEditing(false) },
+    );
+  };
+
+  return (
+    <CollapsibleSection
+      title="Specialist Availability"
+      description="Healthcare professionals at your facility"
+      icon={<Users size={20} className="text-slate-600" />}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      maxHeight="560px"
+      headerAction={
+        !isLoading &&
+        !isError && (
+          <HeaderEditControls
+            isEditing={isEditing}
+            isSaving={mutation.isPending}
+            onEdit={startEdit}
+            onCancel={() => setIsEditing(false)}
+            onSave={handleSave}
+          />
+        )
+      }
+    >
+      {isEditing ? (
+        <div className="pt-4 pb-2">
+          <TagInput
+            tags={tags}
+            onAdd={(v) => setTags((t) => [...t, v])}
+            onRemove={(idx) => setTags((t) => t.filter((_, i) => i !== idx))}
+            placeholder="e.g. Cardiologist, Paediatrician…"
+            disabled={mutation.isPending}
+          />
+        </div>
+      ) : (
+        <SpecialistsContent
+          specialists={facility?.specialists}
+          isLoading={isLoading}
+          isError={isError}
+        />
+      )}
+    </CollapsibleSection>
   );
 }
 
@@ -533,6 +1168,8 @@ function SpecialistsContent({
     </div>
   );
 }
+
+// ============ Activity (read-only) ============
 
 function ActivityContent({
   facility,

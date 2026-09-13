@@ -2,7 +2,7 @@
 
 import { ScrollReveal } from "../shared/ScrollReveal";
 import { FeatureCard } from "../shared/FeatureCard";
-import { MapPin, Building2, BarChart3, UserCheck } from "lucide-react";
+import { MapPin, Building2, GitCompareArrows, Navigation } from "lucide-react";
 
 export default function DemoSection() {
   return (
@@ -17,7 +17,7 @@ export default function DemoSection() {
 
         <ScrollReveal direction="up" delay={200}>
           <p className="text-sm md:text-base lg:text-lg text-center text-gray-600 max-w-2xl mx-auto mb-8 sm:mb-12 md:mb-16 px-4">
-            Four simple steps from search to appointment
+            Find the right healthcare facility in four simple steps no sign-up required
           </p>
         </ScrollReveal>
 
@@ -26,8 +26,8 @@ export default function DemoSection() {
           <ScrollReveal direction="up" delay={0}>
             <FeatureCard
               icon={<MapPin className="text-primary" size={24} />}
-              title="Detect Location"
-              description="LGA-based automatic location detection or manual area selection"
+              title="Detect Your Location"
+              description="Automatic location detection, or search any LGA manually to see facilities in that area"
               size="md"
               bgColor="bg-[#B8D8D4]"
             />
@@ -37,7 +37,7 @@ export default function DemoSection() {
             <FeatureCard
               icon={<Building2 className="text-primary" size={24} />}
               title="Explore Nearby Facilities"
-              description="Browse verified facilities within proximity with real-time status"
+              description="Browse verified facilities with services, working hours, and contact details"
               size="md"
               bgColor="bg-[#B8D8D4]"
             />
@@ -45,9 +45,9 @@ export default function DemoSection() {
 
           <ScrollReveal direction="up" delay={200}>
             <FeatureCard
-              icon={<BarChart3 className="text-primary" size={24} />}
-              title="Compare Performance Metrics"
-              description="Review ratings, capacity, wait times, and specialization data"
+              icon={<GitCompareArrows className="text-primary" size={24} />}
+              title="Compare Facilities Side-by-Side"
+              description="Select two facilities to compare services, distance, and directions before you decide"
               size="md"
               bgColor="bg-[#B8D8D4]"
             />
@@ -55,9 +55,9 @@ export default function DemoSection() {
 
           <ScrollReveal direction="up" delay={300}>
             <FeatureCard
-              icon={<UserCheck className="text-primary" size={24} />}
-              title="Request Specialist Appointment"
-              description="Direct booking requests with available specialists at your chosen facility"
+              icon={<Navigation className="text-primary" size={24} />}
+              title="Get Directions or Call"
+              description="Reach out directly call the facility or get turn-by-turn directions, no booking needed"
               size="md"
               bgColor="bg-[#B8D8D4]"
             />

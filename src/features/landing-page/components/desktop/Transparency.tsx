@@ -2,7 +2,7 @@
 
 import { ScrollReveal } from "../shared/ScrollReveal";
 import { FeatureCard } from "../shared/FeatureCard";
-import { Syringe, MapPin, Hospital } from "lucide-react";
+import { Syringe, MapPin, ClipboardList } from "lucide-react";
 
 export default function Transparency() {
     return (
@@ -27,7 +27,7 @@ export default function Transparency() {
                         <FeatureCard
                             icon={<Syringe className="text-primary" size={24} />}
                             title="Centralized Health Facility Registry"
-                            description="Complete database of verified medical facilities with real-time operational status and service offerings"
+                            description="Complete database of verified medical facilities with up-to-date service offerings and facility information"
                             size="lg"
                             bgColor="bg-[#B8D8D4]"
                         />
@@ -48,9 +48,9 @@ export default function Transparency() {
 
                     <ScrollReveal direction="up" delay={200}>
                         <FeatureCard
-                            icon={<Hospital className="text-primary" size={24} />}
-                            title="Specialist Access"
-                            description="Direct access to specialist availability, qualifications, and appointment scheduling across facilities"
+                            icon={<ClipboardList className="text-primary" size={24} />}
+                            title="Complete Facility Profiles"
+                            description="Every listing includes services offered, working hours, and contact details everything you need before you go"
                             size="lg"
                             bgColor="bg-[#B8D8D4]"
                         />

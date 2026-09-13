@@ -25,6 +25,14 @@ function clearRefreshTimer() {
   }
 }
 
+// Logout can be triggered from more than one place at once — a user clicking
+// "Sign Out" while a background request's 401 concurrently trips apiClient's
+// refresh-failure handler, for example. Without this guard each call reads
+// the token, races to POST /logout, and whichever loses finds the token
+// already cleared by the winner — producing the confusing "refresh token
+// already revoked" / "not authenticated" pair. Callers now share one promise.
+let _logoutPromise: Promise<void> | null = null;
+
 function scheduleTokenRefresh(token: string, refreshFn: () => Promise<void>) {
   clearRefreshTimer();
   if (typeof window === "undefined") return;
@@ -97,9 +105,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return;
     }
 
-    const isMultiFacilityAdmin = user.role === "admin" && facilityIds.length > 1;
-
-    const currentFacilityId = isMultiFacilityAdmin ? null : (facilityIds[0] ?? null);
+    // Facility-selection prompt disabled: an admin with several facilities is
+    // auto-signed into the first one assigned to them instead of being asked
+    // to pick. They can still switch facilities after login.
+    // const isMultiFacilityAdmin = user.role === "admin" && facilityIds.length > 1;
+    // const currentFacilityId = isMultiFacilityAdmin ? null : (facilityIds[0] ?? null);
+    const isMultiFacilityAdmin = false;
+    const currentFacilityId = facilityIds[0] ?? null;
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem(
@@ -187,29 +199,42 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   logout: async () => {
-    clearRefreshTimer();
-    const { token } = get();
-    try {
-      await authService.logout(token ?? undefined);
-    } catch (error) {
-      console.error("Logout API error:", error);
-    } finally {
-      // ✅ Clear local storage and cookies
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem(AUTH_STORAGE_KEY);
-        deleteCookie(AUTH_COOKIE_NAME);
-        deleteCookie(AUTH_DATA_COOKIE_NAME);
-      }
+    // Already logged out (or a logout is already running) — share that
+    // result instead of firing a second POST /logout with a stale/cleared
+    // token, which is what produced the "already revoked" / "not
+    // authenticated" error pair.
+    if (_logoutPromise) return _logoutPromise;
+    if (!get().isAuthenticated) return;
 
-      set({
-        ...initialState,
-        isHydrated: true,
-      });
+    _logoutPromise = (async () => {
+      clearRefreshTimer();
+      const { token } = get();
+      try {
+        await authService.logout(token ?? undefined);
+      } catch (error) {
+        console.error("Logout API error:", error);
+      } finally {
+        // ✅ Clear local storage and cookies
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem(AUTH_STORAGE_KEY);
+          deleteCookie(AUTH_COOKIE_NAME);
+          deleteCookie(AUTH_DATA_COOKIE_NAME);
+        }
 
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("auth:logout"));
+        set({
+          ...initialState,
+          isHydrated: true,
+        });
+
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("auth:logout"));
+        }
+
+        _logoutPromise = null;
       }
-    }
+    })();
+
+    return _logoutPromise;
   },
 
   refreshToken: async () => {
