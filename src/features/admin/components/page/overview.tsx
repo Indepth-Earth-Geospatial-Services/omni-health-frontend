@@ -5,8 +5,8 @@ import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import {
   Users,
   ChevronRight,
-  Bed,
   Package,
+  Hospital,
   UserCog,
   Clock,
   MapPin,
@@ -25,28 +25,6 @@ import {
 } from "@/features/admin/hooks/useAdminStaff";
 import { useFacility } from "@/hooks/use-facilities";
 import { useRouter } from "next/navigation";
-
-/**
- * Helper function to count all bed-related items in inventory
- */
-const countBedsFromInventory = (
-  inventory: Record<string, number | unknown> | undefined,
-): number => {
-  if (!inventory) return 0;
-
-  let totalBeds = 0;
-  Object.entries(inventory).forEach(([key, value]) => {
-    const keyLower = key.toLowerCase();
-    if (keyLower.includes("bed") || keyLower.includes("cot")) {
-      const val = Number(value);
-      if (!isNaN(val)) {
-        totalBeds += val;
-      }
-    }
-  });
-
-  return totalBeds;
-};
 
 export default function Overview() {
   const facilityId = useCurrentFacilityId();
@@ -71,52 +49,24 @@ export default function Overview() {
   const kpiMetrics = useMemo(() => {
     const staffList = staffData?.staff || [];
     const totalStaff = staffList.length;
-    const activeStaff = staffList.filter((s) => s.is_active === true).length;
-    const inactiveStaff = staffList.filter((s) => s.is_active === false).length;
 
     // --- Specialists Logic (From Facility Data) ---
     // The endpoint returns an array of strings: ["doctors", "nurses", "pharmacy_technicia", ...]
     const facilitySpecialists = facility?.specialists || [];
     const specialistsCount = facilitySpecialists.length;
 
-    // --- Bed Logic ---
-    const facilityInfrastructure = facility?.inventory?.infrastructure || {};
-    const totalBeds = countBedsFromInventory(
-      facilityInfrastructure as Record<string, number>,
-    );
-
     // --- Inventory Logic ---
     const equipment = inventoryData?.inventory?.equipment || {};
     const infrastructure = inventoryData?.inventory?.infrastructure || {};
 
     const equipmentItems = Object.keys(equipment).length;
-    const equipmentCount = Object.values(equipment).reduce((sum, qty) => {
-      const val = Number(qty);
-      return sum + (isNaN(val) ? 0 : val);
-    }, 0);
-
     const infrastructureItems = Object.keys(infrastructure).length;
-    const infrastructureCount = Object.values(infrastructure).reduce(
-      (sum, qty) => {
-        const val = Number(qty);
-        return sum + (isNaN(val) ? 0 : val);
-      },
-      0,
-    );
-
-    const totalInventory = equipmentCount + infrastructureCount;
 
     return {
       totalStaff,
-      activeStaff,
-      inactiveStaff,
       specialists: specialistsCount,
-      totalBeds,
       equipmentItems,
-      equipmentCount,
       infrastructureItems,
-      infrastructureCount,
-      totalInventory,
       facilitySpecialists, // Full list of strings
     };
   }, [staffData, inventoryData, facility]);
@@ -131,32 +81,24 @@ export default function Overview() {
           <KPIStatsCards
             title="Total Staff"
             value={isLoading ? "-" : kpiMetrics.totalStaff}
-            subtitle={`${kpiMetrics.activeStaff} Active, ${kpiMetrics.inactiveStaff} Inactive`}
             icon={<Users size={24} />}
             detailsHref="/admin/staff"
           />
           <KPIStatsCards
-            title="Available Beds"
-            value={isLoading ? "-" : kpiMetrics.totalBeds}
-            subtitle="From equipment inventory"
-            icon={<Bed size={24} />}
-            detailsHref="/admin/facility"
+            title="Equipment"
+            value={isLoading ? "-" : kpiMetrics.equipmentItems}
+            icon={<Package size={24} />}
+            detailsHref="/admin/equipments"
           />
           <KPIStatsCards
-            title="Inventory"
-            value={
-              isLoading
-                ? "-"
-                : kpiMetrics.equipmentItems + kpiMetrics.equipmentCount
-            }
-            subtitle={`${kpiMetrics.equipmentItems} Equipment, ${kpiMetrics.infrastructureItems} Infrastructure`}
-            icon={<Package size={24} />}
+            title="Infrastructure"
+            value={isLoading ? "-" : kpiMetrics.infrastructureItems}
+            icon={<Hospital size={24} />}
             detailsHref="/admin/equipments"
           />
           <KPIStatsCards
             title="Specialist"
             value={isLoading ? "-" : kpiMetrics.specialists}
-            subtitle="Healthcare professionals"
             icon={<UserCog size={24} />}
             detailsHref="/admin/facility"
           />

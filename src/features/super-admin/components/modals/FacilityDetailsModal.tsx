@@ -4,13 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
 import type { StaffMember } from "@/services/admin.service";
-import SlideInModal from "./SlideInModal";
 import { Button } from "@/features/admin/components/ui/button";
 import {
+  Building2,
   Phone,
   Mail,
   Edit,
-  MessageSquare,
   MapPinIcon,
   Bed,
   Users,
@@ -108,30 +107,50 @@ export default function FacilityDetailsModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <SlideInModal isOpen={isOpen} onClose={onClose} width="lg">
-      <div className="flex h-full flex-col">
-        {/* Header with facility name and close button */}
-        <div className="flex items-center justify-between border-slate-200 px-6 py-4">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">
-              {facility.facility_name || "Facility Details"}
-            </h2>
-            <p className="mt-0.5 text-sm text-slate-500">
-              {/* {facility.hfr_id || "N/A"} */}
-              {facility.facility_id || "N/A"}
-            </p>
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div
+        className="fixed top-1/2 left-1/2 z-50 flex w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        style={{ maxHeight: "calc(100vh - 2rem)" }}
+      >
+        {/* Header */}
+        <div className="from-primary to-primary/80 relative shrink-0 overflow-hidden bg-linear-to-r px-6 py-5">
+          <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-white/10" />
+          <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-white/10" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20">
+                <Building2 size={18} className="text-white" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-bold text-white">
+                  {facility.facility_name || "Facility Details"}
+                </h2>
+                <p className="mt-0.5 truncate text-xs text-white/70">
+                  {facility.facility_id || "N/A"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="shrink-0 rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 transition-colors hover:bg-slate-100"
-          >
-            <X size={20} className="text-slate-600" />
-          </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 px-6 py-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-slate-100 px-6 py-3">
           <Button
             onClick={handleEditFacility}
             size="sm"
@@ -168,7 +187,7 @@ export default function FacilityDetailsModal({
         </div>
 
         {/* Tabs */}
-        <div className="mx-4 rounded-2xl border bg-[#F6F8FA] px-3 py-2">
+        <div className="mx-6 mt-3 shrink-0 rounded-2xl border bg-[#F6F8FA] px-3 py-2">
           <div className="flex justify-around gap-1">
             <button
               onClick={() => setActiveTab("overview")}
@@ -691,12 +710,12 @@ export default function FacilityDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 p-4">
-          <Button onClick={onClose} variant="default" className="" size="lg">
-            Cancel
+        <div className="flex shrink-0 justify-end border-t border-slate-100 px-6 py-4">
+          <Button onClick={onClose} size="lg">
+            Close
           </Button>
         </div>
       </div>
-    </SlideInModal>
+    </>
   );
 }

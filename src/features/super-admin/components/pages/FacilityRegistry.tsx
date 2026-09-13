@@ -5,6 +5,7 @@ import {
   ArrowUpDown,
   ChevronRight,
   ChevronLeft,
+  Eye,
   PenIcon,
   Loader2,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import {
 } from "@/features/super-admin/components/types/types";
 import AddFacilityModal from "../modals/AddFacilityModal";
 import FacilityDetailsModal from "../modals/FacilityDetailsModal";
+import ConfirmationModal from "@/components/shared/modals/ConfirmationModal";
 import { useFacilities } from "../../hooks/useSuperAdminUsers";
 import { formatDate, formatRelativeDate } from "@/lib/format-date";
 import {
@@ -32,6 +34,7 @@ export default function FacilityRegistry() {
     useState<FacilityFilterState>(INITIAL_FILTER_STATE);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
@@ -42,6 +45,7 @@ export default function FacilityRegistry() {
       const label = ids.length === 1 ? "1 facility" : `${ids.length} facilities`;
       toast.success(`${label} deleted`);
       setSelectedIds(new Set());
+      setIsBulkDeleteModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
     },
     onError: (error: unknown) => {
@@ -142,6 +146,14 @@ export default function FacilityRegistry() {
   const allOnPageSelected =
     facilities.length > 0 && facilities.every((f) => selectedIds.has(f.facility_id));
 
+  // Selection only ever spans the current page (see allOnPageSelected above),
+  // so looking the ids up against `facilities` is enough to show what's
+  // actually about to be deleted.
+  const selectedFacilitiesForDelete = useMemo(
+    () => facilities.filter((f) => selectedIds.has(f.facility_id)),
+    [facilities, selectedIds],
+  );
+
   const handleCheckboxToggle = useCallback(
     (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
@@ -168,8 +180,31 @@ export default function FacilityRegistry() {
 
   const handleBulkDelete = useCallback(() => {
     if (selectedIds.size === 0) return;
+    setIsBulkDeleteModalOpen(true);
+  }, [selectedIds]);
+
+  const handleConfirmBulkDelete = useCallback(() => {
     bulkDeleteMutation.mutate(Array.from(selectedIds));
   }, [selectedIds, bulkDeleteMutation]);
+
+  const handleCloseBulkDeleteModal = useCallback(() => {
+    if (bulkDeleteMutation.isPending) return;
+    setIsBulkDeleteModalOpen(false);
+  }, [bulkDeleteMutation.isPending]);
+
+  // A single selection shows its own name/LGA, matching every other
+  // ConfirmationModal usage; several selections list "Name — LGA" for each
+  // instead, since there's no single item to name.
+  const bulkDeleteItemName =
+    selectedFacilitiesForDelete.length === 1
+      ? selectedFacilitiesForDelete[0].facility_name || "Unnamed facility"
+      : `${selectedFacilitiesForDelete.length} facilities selected`;
+  const bulkDeleteItemDetails =
+    selectedFacilitiesForDelete.length === 1
+      ? selectedFacilitiesForDelete[0].facility_lga || "No LGA"
+      : selectedFacilitiesForDelete
+          .map((f) => `${f.facility_name || "Unnamed"} — ${f.facility_lga || "No LGA"}`)
+          .join(", ");
 
   // ── Other handlers ────────────────────────────────────────────────────────
   const handleSearch = useCallback((value: string) => {
@@ -317,8 +352,7 @@ export default function FacilityRegistry() {
                 facilities.map((facility) => (
                   <tr
                     key={facility.facility_id}
-                    onClick={() => handleRowClick(facility)}
-                    className={`cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50 ${
+                    className={`border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50 ${
                       selectedIds.has(facility.facility_id) ? "bg-teal-50/50" : ""
                     }`}
                   >
@@ -364,7 +398,15 @@ export default function FacilityRegistry() {
                     <td className="sticky right-0 bg-white p-4 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center justify-center gap-2">
                         <button
+                          onClick={() => handleRowClick(facility)}
+                          aria-label={`View ${facility.facility_name || "facility"} details`}
+                          className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
                           onClick={(e) => handleEdit(facility, e)}
+                          aria-label={`Edit ${facility.facility_name || "facility"}`}
                           className="hover:text-primary rounded-lg p-2 text-slate-400 transition hover:bg-teal-50"
                         >
                           <PenIcon size={18} />
@@ -428,6 +470,21 @@ export default function FacilityRegistry() {
         onClose={() => setIsDetailsModalOpen(false)}
         facility={selectedFacility}
         onEditFacility={handleEditFromDetails}
+      />
+
+      <ConfirmationModal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={handleCloseBulkDeleteModal}
+        onConfirm={handleConfirmBulkDelete}
+        title="Delete Facilities"
+        message={`Are you sure you want to delete ${selectedIds.size} ${selectedIds.size === 1 ? "facility" : "facilities"}?`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isLoading={bulkDeleteMutation.isPending}
+        variant="danger"
+        itemName={bulkDeleteItemName}
+        itemDetails={bulkDeleteItemDetails}
       />
     </>
   );

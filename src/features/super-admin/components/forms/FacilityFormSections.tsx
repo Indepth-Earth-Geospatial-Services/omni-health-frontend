@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { CornerDownLeft, X } from "lucide-react";
 import { Input } from "@/features/super-admin/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -277,6 +278,94 @@ export function LocationDetailsSection({
   );
 }
 
+/**
+ * Type a value, press Enter (or comma) to turn it into a badge with its own
+ * remove button — same interaction as the Service List editor on the admin
+ * facility profile page. The underlying form field stays a newline-joined
+ * string (`use-facility-form.ts` already splits/joins on "\n" for the API
+ * payload), so this only changes how it's edited, not how it's stored.
+ */
+function TagInput({
+  id,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const [draft, setDraft] = useState("");
+  const tags = value
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const commit = () => {
+    const v = draft.trim();
+    if (v && !tags.includes(v)) {
+      onChange([...tags, v].join("\n"));
+    }
+    setDraft("");
+  };
+
+  const removeTag = (idx: number) => {
+    onChange(tags.filter((_, i) => i !== idx).join("\n"));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      commit();
+    }
+    // Backspace only ever edits the draft text — removing an already-added
+    // tag requires clicking its own remove button, never a stray keystroke.
+  };
+
+  return (
+    <div className="mt-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-slate-200">
+      {tags.length > 0 && (
+        <div className="mb-1.5 flex flex-wrap gap-1.5">
+          {tags.map((tag, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(i)}
+                className="hover:text-red-500"
+              >
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="relative">
+        <input
+          id={id}
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={commit}
+          placeholder={placeholder}
+          className="w-full bg-transparent pr-16 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+        />
+        {draft.trim() !== "" && (
+          <span className="pointer-events-none absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+            <CornerDownLeft size={10} />
+            Enter
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ServicesSection({
   formData,
   onInputChange,
@@ -284,30 +373,24 @@ export function ServicesSection({
   return (
     <FormSection
       title="Services & Specialists"
-      description="Enter one item per line"
+      description="Type a name and press Enter to add it"
     >
       <FormField id="services_list" label="Services Offered">
-        <textarea
+        <TagInput
           id="services_list"
           value={formData.services_list}
-          onChange={(e) => onInputChange("services_list", e.target.value)}
-          placeholder={"General Outpatient\nMaternal Health\nEmergency Care"}
-          rows={4}
-          className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 resize-none"
+          onChange={(value) => onInputChange("services_list", value)}
+          placeholder="e.g. General Outpatient, Maternal Health…"
         />
-        <p className="mt-1 text-xs text-slate-400">One service per line</p>
       </FormField>
 
       <FormField id="specialists" label="Specialists">
-        <textarea
+        <TagInput
           id="specialists"
           value={formData.specialists}
-          onChange={(e) => onInputChange("specialists", e.target.value)}
-          placeholder={"Dr. Amara Okafor\nDr. Chidi Nwosu"}
-          rows={4}
-          className="mt-1.5 w-full rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 resize-none"
+          onChange={(value) => onInputChange("specialists", value)}
+          placeholder="e.g. Pediatrician, Gynecologist, General Surgeon…"
         />
-        <p className="mt-1 text-xs text-slate-400">One specialist per line</p>
       </FormField>
     </FormSection>
   );

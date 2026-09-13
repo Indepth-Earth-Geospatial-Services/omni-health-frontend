@@ -94,12 +94,20 @@ function parseWorkingHours(wh: Record<string, unknown>): WorkingHoursData {
       const close = String(v.close ?? v.closing_time ?? v.end ?? "");
       result[key] = { open, close, closed };
     } else if (typeof value === "string") {
-      const parts = value.split(/\s*[-–]\s*/);
-      result[key] = {
-        open: parts[0]?.trim() ?? "",
-        close: parts[1]?.trim() ?? "",
-        closed: !value.trim(),
-      };
+      const trimmed = value.trim();
+      // A bare "Closed" (or empty) string has no time to parse — treating it
+      // as `open: "Closed"` fed that literal word straight into a native
+      // <input type="time">, which is what the console warning was about.
+      if (!trimmed || trimmed.toLowerCase() === "closed") {
+        result[key] = { open: "", close: "", closed: true };
+      } else {
+        const parts = trimmed.split(/\s*[-–]\s*/);
+        result[key] = {
+          open: parts[0]?.trim() ?? "",
+          close: parts[1]?.trim() ?? "",
+          closed: false,
+        };
+      }
     }
   });
   return result;

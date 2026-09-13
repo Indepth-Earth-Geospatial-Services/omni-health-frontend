@@ -15,8 +15,31 @@ if (!BACKEND_URL) {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  // Without this, Next.js redirects away a request's trailing slash before
+  // the rewrite below ever sees it. That's harmless for routes the backend
+  // exposes both ways, but POST /facilities/ (create) is a distinct FastAPI
+  // route from GET /facilities (list) — stripping the slash turns the
+  // create request into one against the list-only route, which 405s.
+  skipTrailingSlashRedirect: true,
+
   async rewrites() {
     return [
+      // Explicit, non-wildcard rules for the one route that actually needs
+      // its trailing slash: FastAPI treats POST /facilities/ (create) and
+      // GET /facilities (list) as different routes, and the generic
+      // ":path*" wildcard rules below can drop a trailing slash when
+      // substituting it into the destination, which silently turned the
+      // create request into one against the list-only route (405, since
+      // that route has no POST handler). A literal source/destination pair
+      // has no wildcard capture to lose the slash from.
+      {
+        source: "/api/v1/facilities/",
+        destination: `${BACKEND_URL}/api/v1/facilities/`,
+      },
+      {
+        source: "/api/backend/facilities/",
+        destination: `${BACKEND_URL}/api/v1/facilities/`,
+      },
       {
         source: "/api/v1/:path*",
         destination: `${BACKEND_URL}/api/v1/:path*`,
