@@ -6,6 +6,7 @@ import {
   Building2,
   Check,
   Clock,
+  CornerDownLeft,
   Hash,
   ListChecks,
   Loader2,
@@ -250,9 +251,8 @@ function TagInput({
       e.preventDefault();
       commit();
     }
-    if (e.key === "Backspace" && input === "" && tags.length > 0) {
-      onRemove(tags.length - 1);
-    }
+    // Backspace only ever edits the draft text — removing an already-added
+    // tag requires clicking its own remove button, never a stray keystroke.
   };
 
   return (
@@ -276,19 +276,24 @@ function TagInput({
           </span>
         ))}
       </div>
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKey}
-        onBlur={commit}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="w-full bg-transparent text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
-      />
-      <p className="mt-1 text-[10px] text-slate-400">
-        Press Enter or comma to add
-      </p>
+      <div className="relative">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKey}
+          onBlur={commit}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="w-full bg-transparent pr-16 text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
+        />
+        {input.trim() !== "" && (
+          <span className="pointer-events-none absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+            <CornerDownLeft size={10} />
+            Enter
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -238,8 +238,12 @@ export default function UserAndRoleList({
     [openUnassignLgaModal],
   );
 
-  // Loading state
-  if (isLoading) {
+  // Loading state — only for the very first load. `placeholderData` on
+  // useSuperAdminUsers keeps the previous page's data in place across
+  // pagination, so `!data` can only be true here on that first fetch; every
+  // later page/filter change instead shows the small spinner next to the
+  // pagination footer below, with the table staying on screen throughout.
+  if (isLoading && !data) {
     return (
       <div className="flex h-64 w-full items-center justify-center rounded-xl border border-slate-200 bg-white">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
@@ -327,10 +331,16 @@ export default function UserAndRoleList({
           >
             <ChevronLeft size={16} /> Previous
           </button>
-          <div className="flex flex-col items-center">
-            <p className="text-sm font-medium text-slate-500 italic">
-              Page {effectivePage} {totalRecords > 0 ? `of ${totalPages}` : ""}
-            </p>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-slate-500 italic">
+                Page {effectivePage}{" "}
+                {totalRecords > 0 ? `of ${totalPages}` : ""}
+              </p>
+              {isFetching && (
+                <Loader2 className="text-primary h-3.5 w-3.5 animate-spin" />
+              )}
+            </div>
             <p className="text-xs text-slate-400">
               {totalRecords > 0
                 ? `Showing ${startIndex + 1}-${Math.min(startIndex + 50, totalRecords)} of ${totalRecords} users`
