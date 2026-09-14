@@ -8,6 +8,11 @@ import {
   useDeleteFacilityImage,
 } from "@/features/admin/hooks/useAdminStaff";
 import DeleteImageModal from "@/features/admin/components/modals/DeleteImageModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface FacilityImageButtonProps {
   facilityId: string;
@@ -39,7 +44,8 @@ export default function FacilityImageButton({
   // photo — the one this button just saved — is always the last entry, not
   // the first. Reading `[0]` is what made a re-upload look like it "did
   // nothing": it kept showing whichever image was uploaded first.
-  const currentUrl = imageUrls.length > 0 ? imageUrls[imageUrls.length - 1] : null;
+  const currentUrl =
+    imageUrls.length > 0 ? imageUrls[imageUrls.length - 1] : null;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -51,7 +57,6 @@ export default function FacilityImageButton({
   // guaranteed fresh even if the backend doesn't advance `lastUpdated`.
   const [bumpCount, setBumpCount] = useState(0);
   const cacheBustToken = `${lastUpdated ?? ""}:${bumpCount}`;
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadMutation = useUploadFacilityImages(facilityId);
@@ -61,19 +66,6 @@ export default function FacilityImageButton({
     setPreviewUrl(currentUrl);
     setServerUrl(currentUrl);
   }, [currentUrl]);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
 
   const initials = facilityName
     ? facilityName
@@ -126,7 +118,8 @@ export default function FacilityImageButton({
           if (idx === 0) toast.success("Facility image removed.");
         },
         onError: () => {
-          if (idx === 0) toast.error("Failed to delete image. Please try again.");
+          if (idx === 0)
+            toast.error("Failed to delete image. Please try again.");
         },
       });
     });
@@ -138,7 +131,7 @@ export default function FacilityImageButton({
     : null;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       <input
         ref={fileInputRef}
         type="file"
@@ -147,30 +140,36 @@ export default function FacilityImageButton({
         onChange={handleFileChange}
       />
 
-      {/* Avatar trigger */}
-      <button
-        onClick={() => setIsOpen((v) => !v)}
-        className="ring-primary/20 hover:ring-primary/50 relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-lg ring-2 transition-all duration-200 focus:outline-none"
-      >
-        {displayUrl ? (
-          <img
-            src={displayUrl}
-            alt="Facility"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="from-primary to-primary/80 flex h-full w-full items-center justify-center bg-gradient-to-br text-xl font-bold text-white">
-            {initials}
-          </div>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 opacity-0 transition-opacity hover:opacity-100">
-          <Camera size={18} className="text-white" />
-        </div>
-      </button>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        {/* Avatar trigger */}
+        <DropdownMenuTrigger asChild>
+          <button className="ring-primary/20 hover:ring-primary/50 relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-lg ring-2 transition-all duration-200 focus:outline-none">
+            {displayUrl ? (
+              <img
+                src={displayUrl}
+                alt="Facility"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="from-primary to-primary/80 flex h-full w-full items-center justify-center bg-gradient-to-br text-xl font-bold text-white">
+                {initials}
+              </div>
+            )}
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 opacity-0 transition-opacity hover:opacity-100">
+              <Camera size={18} className="text-white" />
+            </div>
+          </button>
+        </DropdownMenuTrigger>
 
-      {/* Dropdown panel */}
-      {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] right-0 z-50 min-h-[86px] w-86 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        {/* Dropdown panel — portaled to document.body (via DropdownMenuContent)
+            so it always renders above the page instead of being trapped
+            behind a sibling's stacking context, e.g. a sticky table header
+            elsewhere on the page. */}
+        <DropdownMenuContent
+          align="end"
+          sideOffset={8}
+          className="z-[100] min-h-[86px] w-86 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl"
+        >
           {/* Image preview */}
           <div className="flex h-48 w-full items-center justify-center bg-slate-100">
             {displayUrl ? (
@@ -217,8 +216,8 @@ export default function FacilityImageButton({
               </button>
             )}
           </div>
-        </div>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <DeleteImageModal
         isOpen={isDeleteModalOpen}
