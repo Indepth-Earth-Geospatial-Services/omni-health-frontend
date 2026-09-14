@@ -6,7 +6,14 @@ import type { NextConfig } from "next";
 //   process.env.BACKEND_URL ??
 //   "https://geohealth-backend-85732036737.africa-south1.run.app";
 
-const BACKEND_URL = process.env.BACKEND_URL;
+// Stripped of any trailing slash: if the deployed environment's BACKEND_URL
+// ever has one (e.g. copy-pasted from a browser address bar into a hosting
+// platform's env var config), every destination below would end up with a
+// double slash — "https://host//api/v1/facilities" — which routes
+// unpredictably (often surfacing as a 405, since it can still match *some*
+// handler, just not the one that supports the request's method). This only
+// changes behavior when a trailing slash was actually present.
+const BACKEND_URL = process.env.BACKEND_URL?.replace(/\/+$/, "");
 
 if (!BACKEND_URL) {
   throw new Error("BACKEND_URL must be defined");
