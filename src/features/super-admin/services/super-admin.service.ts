@@ -341,7 +341,6 @@ class SuperAdminService {
     EXPORT_STAFF: "/admin/export/staff", // Export staff to CSV or Excel
     EXPORT_USERS: "/admin/export/users", // Export users to CSV or Excel
     FACILITIES_SEARCH: "/facilities/search",
-    FACILITIES_BY_INVENTORY: "/facilities", // GET /facilities?inventory_item={name}&page={page}&limit={limit}
     UNIQUE_INVENTORY: "/admin/inventory/unique", // Get all unique equipment and infrastructure items
     ANALYTICS_OVERVIEW: "/admin/analytics/overview", // GET analytics KPIs and charts data
     ANALYTICS_FACILITIES: "/admin/analytics/facilities", // GET facilities analytics with rating and reviews
@@ -767,8 +766,16 @@ class SuperAdminService {
 
   /**
    * Search facilities by inventory item (equipment or infrastructure)
-   * GET /api/v1/facilities?inventory_item={name}&page={page}&limit={limit}
-   * Returns facilities that contain the specified equipment or infrastructure
+   * GET /api/v1/facilities/search?inventory_item={name}&page={page}&limit={limit}
+   * Returns facilities that contain the specified equipment or infrastructure.
+   *
+   * This used to call the bare `/facilities` list endpoint with
+   * `inventory_item` as a query param — that filter was never actually
+   * supported there (only `/facilities/search`, the same endpoint
+   * `searchFacilities` below already uses, documents `inventory_item` as a
+   * valid param). It happened to return something usable against whatever
+   * backend build local dev pointed at, but 405'd in production once hit
+   * against the real API.
    */
   async getFacilitiesByInventory(
     params: SearchFacilitiesByInventoryParams,
@@ -776,16 +783,13 @@ class SuperAdminService {
     try {
       const { inventory_item, page = 1, limit = 10 } = params;
 
-      const response = await apiClient.get(
-        this.ENDPOINTS.FACILITIES_BY_INVENTORY,
-        {
-          params: {
-            inventory_item,
-            page,
-            limit,
-          },
+      const response = await apiClient.get(this.ENDPOINTS.FACILITIES_SEARCH, {
+        params: {
+          inventory_item,
+          page,
+          limit,
         },
-      );
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching facilities by inventory:", error);
