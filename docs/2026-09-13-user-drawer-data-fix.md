@@ -104,3 +104,72 @@ need changing to revert — this was the only edit made to the "User" side of th
 Point them at this file. The whole change is the one dependency-array line shown above;
 everything else in `use-drawer-data.ts` (and the rest of `src/features/user/**`) is
 untouched.
+
+---
+
+# Change to `src/features/compare-facilities/hooks/useFacilityDirections.ts`
+
+**Date:** 2026-09-14
+**Status:** Applied to fix a real, reported console warning. Not a revert candidate for
+the same reason as above — it's a straightforward bug fix — but logged here at the
+client's request alongside the other narrow hook fix in this file.
+
+## What was reported
+
+Repeated console spam on `/compare-facilities`:
+
+```
+[QueriesObserver]: Duplicate Queries found. This might result in unexpected behavior.
+```
+
+## Why (the bug)
+
+`useFacilityDirections` fetches directions for both comparison slots (A and B) in a single
+`useQueries` call, one entry per slot:
+
+```ts
+// BEFORE
+const facilities = [facilityA, facilityB];
+return facilities.map((facility, index) => ({
+  queryKey: ["directions", userLocation, facility?.facility_id],
+  ...
+}));
+```
+
+Before the user has selected any facilities — the page's default state
+(`useCompareFacilities` initializes both slots to `null`) — `facility?.facility_id` is
+`undefined` for *both* array entries. That makes both queries resolve to the exact same
+key, `["directions", userLocation, undefined]`. TanStack's `QueriesObserver` checks its own
+`queries` array for duplicate query hashes on every render and warns exactly when two
+entries collide like that, which is why it fired repeatedly while no facilities were
+selected yet (the page's normal starting state, not an edge case).
+
+## The actual diff
+
+```ts
+// AFTER
+const facilities = [facilityA, facilityB];
+return facilities.map((facility, index) => ({
+  queryKey: [
+    "directions",
+    userLocation,
+    facility?.facility_id ?? `empty-${index}`,
+  ],
+  ...
+}));
+```
+
+Falling back to the slot index instead of leaving both keys as `undefined` keeps the two
+queries distinct whenever a slot is empty, while still legitimately sharing a cache entry
+if the same facility is ever picked for both slots (that case is a real duplicate, not a bug).
+
+## How to revert
+
+Open `src/features/compare-facilities/hooks/useFacilityDirections.ts` and change the
+`queryKey` line back to:
+
+```ts
+queryKey: ["directions", userLocation, facility?.facility_id],
+```
+
+removing the `?? \`empty-${index}\`` fallback. No other files need changing.

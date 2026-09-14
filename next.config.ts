@@ -70,9 +70,15 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        // Not scoped to a single cloud name's path segment (e.g.
+        // "/dw9sbvvab/...") because the backend has switched Cloudinary
+        // accounts before without notice — a hardcoded cloud name breaks
+        // every existing image again the next time that happens. The
+        // hostname restriction to res.cloudinary.com already limits this
+        // to Cloudinary's own CDN.
         protocol: "https",
         hostname: "res.cloudinary.com",
-        pathname: "/dw9sbvvab/image/upload/**",
+        pathname: "/**",
       },
     ],
   },
