@@ -173,3 +173,67 @@ queryKey: ["directions", userLocation, facility?.facility_id],
 ```
 
 removing the `?? \`empty-${index}\`` fallback. No other files need changing.
+
+---
+
+# Change to `src/services/facility.service.ts`
+
+**Date:** 2026-09-14
+**Status:** Production bug fix, same root cause as a fix already made earlier in
+`super-admin.service.ts`.
+
+## What was reported
+
+After deploying, the public/citizen side of the app failed to load facilities at all:
+
+```
+GET https://www.geohealth.ng/api/backend/facilities?limit=10&page=1 405 (Method Not Allowed)
+```
+
+Worked fine locally, broke only in production — same signature as the earlier inventory-page
+405.
+
+## Why (the bug)
+
+`FacilityService.getAllFacilities()` called the bare list endpoint:
+
+```ts
+// BEFORE
+const response = await apiClient.get(this.ENDPOINTS.HOME, { params }); // "/facilities"
+```
+
+The production backend does not accept `GET` on plain `/facilities` (it 405s there — that
+route is apparently POST-only, for facility creation). This is the exact same class of bug
+already found and fixed once this session in `getFacilitiesByInventory`
+(`super-admin.service.ts`), which was switched from `/facilities` to `/facilities/search`.
+`getAllFacilities` was the one call site that got missed at the time.
+
+## The actual diff
+
+```ts
+// AFTER
+const response = await apiClient.get(this.ENDPOINTS.SEARCH, { params }); // "/facilities/search"
+```
+
+`GetAllFacilities` and `SearchFacilities` are both aliases of the same `FacilityArray` type
+(`src/types/api-response.ts`), so no downstream type or consumer changes were needed —
+`filters` (name/category/performance_tier/service/lga_name) are the same params
+`/facilities/search` already accepts via `addFilterParams`.
+
+## How to revert
+
+Open `src/services/facility.service.ts`, in `getAllFacilities`, change:
+
+```ts
+const response = await apiClient.get(this.ENDPOINTS.SEARCH, { params });
+```
+
+back to:
+
+```ts
+const response = await apiClient.get(this.ENDPOINTS.HOME, { params });
+```
+
+No other files need changing. (Reverting this will restore the production 405 on every page
+that lists facilities for citizens — only do this if the backend's `/facilities` route is
+fixed to support GET, not as a way to "undo" this change.)

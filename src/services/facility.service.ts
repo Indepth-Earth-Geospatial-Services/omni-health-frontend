@@ -61,7 +61,12 @@ class FacilityService {
 
     this.addFilterParams(params, filters);
 
-    const response = await apiClient.get(this.ENDPOINTS.HOME, { params });
+    // Not ENDPOINTS.HOME ("/facilities") — the production backend 405s on
+    // GET there (it only accepts POST for facility creation on that exact
+    // route). "/facilities/search" is the one that actually supports listing,
+    // same fix already applied to getFacilitiesByInventory in
+    // super-admin.service.ts.
+    const response = await apiClient.get(this.ENDPOINTS.SEARCH, { params });
     return response.data;
   }
 
