@@ -11,7 +11,16 @@ export function useFacilityDirections(
   const queries = useMemo(() => {
     const facilities = [facilityA, facilityB];
     return facilities.map((facility, index) => ({
-      queryKey: ["directions", userLocation, facility?.facility_id],
+      // Falls back to the slot index (not just facility?.facility_id) so the
+      // two slots never collapse onto the same key — with both undefined,
+      // TanStack's QueriesObserver saw two identical query hashes in this
+      // useQueries array and warned "Duplicate Queries found" on every render
+      // before a facility was picked.
+      queryKey: [
+        "directions",
+        userLocation,
+        facility?.facility_id ?? `empty-${index}`,
+      ],
       queryFn: async () => {
         if (!userLocation || !facility?.lat || !facility?.lon) {
           return null;
