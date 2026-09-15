@@ -71,7 +71,8 @@ const RegistryHeader: React.FC<RegistryHeaderProps> = ({
       const fetchFacilities = async () => {
         setLoadingFacilities(true);
         try {
-          const response = await apiClient.get("/facilities", {
+          // Not the bare "/facilities" list route — production 405s GET there.
+          const response = await apiClient.get("/facilities/search", {
             params: { limit: 100 },
           });
           setFacilities(response.data.facilities || response.data || []);
