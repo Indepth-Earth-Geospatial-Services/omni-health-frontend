@@ -151,15 +151,21 @@ export default function FacilityDetailsModal({
 
         {/* Action Buttons */}
         <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-slate-100 px-6 py-3">
-          <Button
-            onClick={handleEditFacility}
-            size="sm"
-            variant="outline"
-            className="gap-1.5 text-xs"
-          >
-            <Edit size={14} />
-            Edit Facility
-          </Button>
+          {/* Omitted (not just disabled) when no onEditFacility is passed —
+              e.g. when a super-admin is browsing a facility read-only via
+              another admin's profile, where there's nowhere for "Edit" to
+              go and a dead button would be misleading. */}
+          {onEditFacility && (
+            <Button
+              onClick={handleEditFacility}
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+            >
+              <Edit size={14} />
+              Edit Facility
+            </Button>
+          )}
           {/* <Button
             onClick={handleContact}
             size="sm"

@@ -36,6 +36,10 @@ interface InventoryChecklistProps {
   buttonClassName?: string;
   icon: LucideIcon;
   emptyMessage: string;
+  /** Hides Add, Stock take, and the per-row Edit/Delete icons — for contexts
+   *  like a super-admin browsing an admin's facility, where there's nothing
+   *  for those actions to do and showing them would be misleading. */
+  readOnly?: boolean;
 }
 
 export function InventoryChecklist({
@@ -52,6 +56,7 @@ export function InventoryChecklist({
   buttonClassName,
   icon: Icon,
   emptyMessage,
+  readOnly = false,
 }: InventoryChecklistProps) {
   const [filter, setFilter] = useState<StockFilter>("in-stock");
   const [search, setSearch] = useState("");
@@ -130,7 +135,7 @@ export function InventoryChecklist({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {!isStockTake && items.length > 0 && (
+          {!readOnly && !isStockTake && items.length > 0 && (
             <button
               type="button"
               onClick={startStockTake}
@@ -140,16 +145,18 @@ export function InventoryChecklist({
               Stock take
             </button>
           )}
-          <Button
-            size="lg"
-            onClick={onAdd}
-            disabled={isAdding}
-            className={cn("shrink-0", buttonClassName)}
-          >
-            <Plus size={16} className="text-white" />
-            <span className="hidden sm:inline">{addButtonLabel}</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          {!readOnly && (
+            <Button
+              size="lg"
+              onClick={onAdd}
+              disabled={isAdding}
+              className={cn("shrink-0", buttonClassName)}
+            >
+              <Plus size={16} className="text-white" />
+              <span className="hidden sm:inline">{addButtonLabel}</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          )}
           <button
             type="button"
             onClick={onToggle}
@@ -337,24 +344,26 @@ export function InventoryChecklist({
 
                         {/* Always rendered — hover-only actions are unreachable
                             on touch devices. They just soften until hover. */}
-                        <div className="flex shrink-0 items-center gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                          <button
-                            type="button"
-                            onClick={() => onEdit(item)}
-                            aria-label={`Edit ${item.displayName}`}
-                            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Pencil size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDelete(item)}
-                            aria-label={`Delete ${item.displayName}`}
-                            className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+                        {!readOnly && (
+                          <div className="flex shrink-0 items-center gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                            <button
+                              type="button"
+                              onClick={() => onEdit(item)}
+                              aria-label={`Edit ${item.displayName}`}
+                              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDelete(item)}
+                              aria-label={`Delete ${item.displayName}`}
+                              className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })

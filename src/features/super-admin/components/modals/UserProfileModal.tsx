@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { X, Mail, MapPin, Building2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { X, Mail, MapPin, Building2, ChevronRight } from "lucide-react";
 import { Button } from "@/features/admin/components/ui/button";
 import type { User } from "../../services/super-admin.service";
 import { getInitials, getRoleBadgeColor } from "../../utils/user-helpers";
@@ -10,25 +11,6 @@ interface UserProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
-}
-
-function getStatusBadge(user: User) {
-  if (user.is_suspended) {
-    return {
-      label: "Suspended",
-      className: "border-amber-200 bg-amber-50 text-amber-700",
-    };
-  }
-  if (user.is_active) {
-    return {
-      label: "Active",
-      className: "border-green-200 bg-green-50 text-green-700",
-    };
-  }
-  return {
-    label: "Inactive",
-    className: "border-slate-200 bg-slate-100 text-slate-600",
-  };
 }
 
 /**
@@ -58,9 +40,19 @@ const UserProfileModal = memo(function UserProfileModal({
     [user?.managed_facilities],
   );
 
+  const router = useRouter();
+
   if (!isOpen || !user) return null;
 
-  const status = getStatusBadge(user);
+  // Sends a super-admin to the dedicated read-only facility page instead of
+  // opening a nested modal — that page has room for the full staff list,
+  // inventory, and analytics, none of which fit well inside this modal.
+  const handleViewFacility = (facilityId: string) => {
+    onClose();
+    router.push(
+      `/super-admin/facility-view?facility_id=${facilityId}&admin_name=${encodeURIComponent(user.full_name)}`,
+    );
+  };
 
   return (
     <>
@@ -123,20 +115,6 @@ const UserProfileModal = memo(function UserProfileModal({
             </span>
           </div>
 
-          {/* Role + Status */}
-          <div className="mb-5 grid grid-cols-2 gap-3">
-            <div>
-              <p className="mb-1.5 text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                Status
-              </p>
-              <span
-                className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}
-              >
-                {status.label}
-              </span>
-            </div>
-          </div>
-
           {/* Assigned LGAs */}
           <div className="mb-5">
             <p className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
@@ -165,25 +143,48 @@ const UserProfileModal = memo(function UserProfileModal({
 
           {/* Managed Facilities — the full batch. Previously a 2-item
               preview in the table row with its own expand/collapse; that
-              column is gone now that the complete list lives here. */}
+              column is gone now that the complete list lives here. Each row
+              opens that facility read-only, so a super-admin can see this
+              admin's facilities without leaving the profile view. Styled as
+              full-width rows with an explicit "View" + chevron (not a plain
+              tag/badge) so it reads as clickable at a glance. */}
           <div>
-            <p className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+            <p className="mb-1 text-xs font-semibold tracking-wide text-slate-400 uppercase">
               Managed Facilities
               {facilities.length > 0 && ` (${facilities.length})`}
             </p>
+            {facilities.length > 0 && (
+              <p className="mb-2 text-[11px] text-slate-400">
+                Click a facility to view its full details
+              </p>
+            )}
             {facilities.length > 0 ? (
-              <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50/50 p-2.5">
-                <div className="flex flex-wrap gap-1.5">
-                  {facilities.map((facility) => (
-                    <span
-                      key={facility.facility_id}
-                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600"
-                    >
-                      <Building2 size={10} className="text-slate-400" />
-                      {facility.facility_name}
+              <div className="max-h-64 space-y-1.5 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50/50 p-2">
+                {facilities.map((facility) => (
+                  <button
+                    key={facility.facility_id}
+                    onClick={() => handleViewFacility(facility.facility_id)}
+                    className="group hover:border-primary/40 hover:bg-primary/5 flex w-full items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition-colors"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                      <Building2 size={14} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium text-slate-700">
+                        {facility.facility_name}
+                      </p>
+                      {facility.facility_lga && (
+                        <p className="truncate text-[11px] text-slate-400">
+                          {facility.facility_lga}
+                        </p>
+                      )}
+                    </div>
+                    <span className="group-hover:text-primary flex shrink-0 items-center gap-0.5 text-[11px] font-medium text-slate-400">
+                      View
+                      <ChevronRight size={14} />
                     </span>
-                  ))}
-                </div>
+                  </button>
+                ))}
               </div>
             ) : (
               <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3.5 py-4 text-center text-xs text-slate-400">
