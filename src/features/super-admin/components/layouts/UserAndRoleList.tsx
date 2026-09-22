@@ -1,16 +1,22 @@
 "use client";
 
 import { memo, useCallback, useMemo, useState } from "react";
-import { ArrowUpDown, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
 import { useSuperAdminUsers } from "../../hooks/useSuperAdminUsers";
 import { useUserActions } from "../../hooks/use-user-actions";
 import { UserActionsDropdown } from "../ui/UserActionsDropdown";
-import UserProfileModal from "../modals/UserProfileModal";
 import ChangeUserRoleModal from "../modals/ChangeUserRoleModal";
 import DeactivateUserModal from "../modals/DeactivateUserModal";
 import SuspendUserModal from "../modals/SuspendUserModal";
 import AssignFacilityModal from "../modals/AssignFacility";
 import UnassignLgaModal from "../modals/UnassignLgaModal";
+import SelectFacilityModal from "../modals/SelectFacilityModal";
 import {
   formatDate,
   getRoleBadgeColor,
@@ -36,7 +42,7 @@ interface UserRowProps {
   avatarGradient: string;
   isDropdownOpen: boolean;
   onDropdownOpenChange: (userId: string, open: boolean) => void;
-  onViewProfile: (user: User) => void;
+  onViewFacilities: (user: User) => void;
   onSuspend: (user: User, mode: "suspend" | "unsuspend") => void;
   onChangeRole: (user: User) => void;
   onDeactivate: (user: User) => void;
@@ -59,7 +65,7 @@ const UserRow = memo(function UserRow({
   avatarGradient,
   isDropdownOpen,
   onDropdownOpenChange,
-  onViewProfile,
+  onViewFacilities,
   onSuspend,
   onChangeRole,
   onDeactivate,
@@ -108,12 +114,34 @@ const UserRow = memo(function UserRow({
         )}
       </td>
       <td className="p-4 text-center whitespace-nowrap">
+        {/* Active only once this user actually manages a facility — most
+            notably a super-admin, who normally has none. Disabled rather
+            than hidden so the column stays aligned across every row. */}
+        {(user.managed_facilities?.length ?? 0) > 0 ? (
+          <button
+            onClick={() => onViewFacilities(user)}
+            className="hover:border-primary/40 hover:bg-primary/5 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 transition-colors"
+          >
+            <Building2 size={12} className="text-slate-400" />
+            {user.managed_facilities.length} Facilit
+            {user.managed_facilities.length === 1 ? "y" : "ies"}
+          </button>
+        ) : (
+          <span
+            title="No facility assigned"
+            className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-400"
+          >
+            <Building2 size={12} className="text-slate-300" />
+            No Facility
+          </span>
+        )}
+      </td>
+      <td className="p-4 text-center whitespace-nowrap">
         <div className="relative flex items-center justify-center gap-1">
           <UserActionsDropdown
             user={user}
             isOpen={isDropdownOpen}
             onOpenChange={(open) => onDropdownOpenChange(user.user_id, open)}
-            onViewProfile={() => onViewProfile(user)}
             onSuspend={() => onSuspend(user, "suspend")}
             onUnsuspend={() => onSuspend(user, "unsuspend")}
             onChangeRole={() => onChangeRole(user)}
@@ -134,6 +162,9 @@ export default function UserAndRoleList({
 }: UserAndRoleListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [facilityPickerUser, setFacilityPickerUser] = useState<User | null>(
+    null,
+  );
 
   // Fetch users with proper pagination (limit 50 for reasonable performance)
   const { data, isLoading, isError, error, isFetching, refetch } =
@@ -141,7 +172,6 @@ export default function UserAndRoleList({
 
   const userActions = useUserActions({ onSuccess: refetch });
   const {
-    openProfileModal,
     openSuspendModal,
     openChangeRoleModal,
     openDeactivateModal,
@@ -195,13 +225,9 @@ export default function UserAndRoleList({
   const handleDropdownOpenChange = useCallback((userId: string, open: boolean) => {
     setOpenDropdownId(open ? userId : null);
   }, []);
-  const handleViewProfile = useCallback(
-    (user: User) => {
-      openProfileModal(user);
-      setOpenDropdownId(null);
-    },
-    [openProfileModal],
-  );
+  const handleViewFacilities = useCallback((user: User) => {
+    setFacilityPickerUser(user);
+  }, []);
   const handleSuspend = useCallback(
     (user: User, mode: "suspend" | "unsuspend") => {
       openSuspendModal(user, mode);
@@ -283,6 +309,7 @@ export default function UserAndRoleList({
                 <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Role</th>
                 <th className={`whitespace-nowrap ${TH_BASE}`}>Created Date</th>
                 <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Status</th>
+                <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Facility</th>
                 <th className={`text-center whitespace-nowrap ${TH_BASE}`}>Actions</th>
               </tr>
             </thead>
@@ -290,7 +317,7 @@ export default function UserAndRoleList({
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">
+                  <td colSpan={7} className="p-8 text-center text-slate-500">
                     No users found
                   </td>
                 </tr>
@@ -303,7 +330,7 @@ export default function UserAndRoleList({
                     avatarGradient={AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]}
                     isDropdownOpen={openDropdownId === user.user_id}
                     onDropdownOpenChange={handleDropdownOpenChange}
-                    onViewProfile={handleViewProfile}
+                    onViewFacilities={handleViewFacilities}
                     onSuspend={handleSuspend}
                     onChangeRole={handleChangeRole}
                     onDeactivate={handleDeactivate}
@@ -364,11 +391,14 @@ export default function UserAndRoleList({
       </div>
 
       {/* Modals */}
-      <UserProfileModal
-        isOpen={userActions.isProfileModalOpen}
-        onClose={userActions.closeAllModals}
-        user={userActions.selectedUser}
-      />
+      {/* Mounted only while open so its search box starts clean every time. */}
+      {facilityPickerUser && (
+        <SelectFacilityModal
+          onClose={() => setFacilityPickerUser(null)}
+          adminName={facilityPickerUser.full_name}
+          facilities={facilityPickerUser.managed_facilities}
+        />
+      )}
       <ChangeUserRoleModal
         isOpen={userActions.isChangeRoleModalOpen}
         onClose={userActions.closeAllModals}

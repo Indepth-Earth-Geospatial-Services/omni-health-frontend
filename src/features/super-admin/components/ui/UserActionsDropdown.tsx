@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Eye,
   ShieldOff,
   ShieldCheck,
   ArrowLeftRight,
@@ -21,7 +20,6 @@ interface UserActionsDropdownProps {
   user: User;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onViewProfile: () => void;
   onSuspend: () => void;
   onUnsuspend: () => void;
   onChangeRole: () => void;
@@ -34,7 +32,6 @@ export function UserActionsDropdown({
   user,
   isOpen,
   onOpenChange,
-  onViewProfile,
   onSuspend,
   onUnsuspend,
   onChangeRole,
@@ -61,14 +58,6 @@ export function UserActionsDropdown({
         className="w-48 bg-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <DropdownMenuItem
-          onClick={onViewProfile}
-          className="cursor-pointer text-slate-700"
-        >
-          <Eye size={16} className="text-slate-400" />
-          View Profile
-        </DropdownMenuItem>
-
         {!user.is_active ? (
           <DropdownMenuItem
             onClick={onUnsuspend}
