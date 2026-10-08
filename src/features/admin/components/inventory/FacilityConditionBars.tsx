@@ -58,7 +58,9 @@ export function FacilityConditionBars({
   if (rows.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-slate-500">
-        Nothing held to chart — every recorded item has a count of 0.
+        {data.length === 0
+          ? "Nothing recorded here yet."
+          : "Nothing held to chart — every recorded item has a count of 0."}
       </p>
     );
   }

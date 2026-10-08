@@ -10,7 +10,7 @@ import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
 import { useFacilityOptions } from "../../hooks/useFacilityOptions";
 import { useBatchAddInventoryItem } from "../../hooks/useFacilitiesByInventory";
 import UniqueInventoryList from "../layouts/UniqueInventoryList";
-import FacilityInventoryView from "../layouts/FacilityInventoryView";
+import FacilityInventoryView from "@/features/admin/components/inventory/FacilityInventoryView";
 import InventoryItemModal, {
   type InventoryFormData,
 } from "../../../admin/components/modals/InventoryItemModal";
