@@ -15,9 +15,14 @@ import {
 } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
-import type { InventoryItem } from "@/features/admin/hooks/use-equipment-actions";
+import type {
+  ConditionCounts,
+  InventoryItem,
+} from "@/features/admin/hooks/use-equipment-actions";
 
-type StockFilter = "in-stock" | "missing" | "all";
+type StockFilter = "functional" | "non-functional" | "all";
+
+type StockTakeChange = { item: InventoryItem } & ConditionCounts;
 
 interface InventoryChecklistProps {
   title: string;
@@ -27,9 +32,7 @@ interface InventoryChecklistProps {
   onAdd: () => void;
   onEdit: (item: InventoryItem) => void;
   onDelete: (item: InventoryItem) => void;
-  onSaveStockTake: (
-    changes: { itemName: string; quantity: number }[],
-  ) => Promise<void>;
+  onSaveStockTake: (changes: StockTakeChange[]) => Promise<void>;
   isAdding: boolean;
   addButtonLabel: string;
   /** Extra classes merged onto the "Add" button — e.g. to bump up its text size. */
@@ -37,6 +40,11 @@ interface InventoryChecklistProps {
   icon: LucideIcon;
   emptyMessage: string;
 }
+
+const toCount = (raw: string | undefined) => {
+  const n = Number(raw || 0);
+  return Number.isInteger(n) && n >= 0 ? n : null;
+};
 
 export function InventoryChecklist({
   title,
@@ -53,28 +61,27 @@ export function InventoryChecklist({
   icon: Icon,
   emptyMessage,
 }: InventoryChecklistProps) {
-  const [filter, setFilter] = useState<StockFilter>("in-stock");
+  const [filter, setFilter] = useState<StockFilter>("functional");
   const [search, setSearch] = useState("");
   const [isStockTake, setIsStockTake] = useState(false);
   const [isSavingStockTake, setIsSavingStockTake] = useState(false);
 
   /** Stock-take edits, keyed by item name. */
   const [stockTakeDrafts, setStockTakeDrafts] = useState<
-    Record<string, string>
+    Record<string, { functional: string; notFunctional: string }>
   >({});
 
-  const quantityOf = (item: InventoryItem) => Number(item.quantity) || 0;
-
-  const inStockCount = items.filter((i) => Number(i.quantity) > 0).length;
-  const missingCount = items.length - inStockCount;
+  // An item can be both: 3 working and 1 not working counts in each.
+  const functionalCount = items.filter((i) => i.functional > 0).length;
+  const nonFunctionalCount = items.filter((i) => i.notFunctional > 0).length;
 
   const visibleItems = useMemo(() => {
     const query = search.trim().toLowerCase();
     return items
       .filter((item) => {
-        const qty = Number(item.quantity) || 0;
-        if (filter === "in-stock" && qty <= 0) return false;
-        if (filter === "missing" && qty > 0) return false;
+        if (filter === "functional" && item.functional <= 0) return false;
+        if (filter === "non-functional" && item.notFunctional <= 0)
+          return false;
         return !query || item.displayName.toLowerCase().includes(query);
       })
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -82,18 +89,35 @@ export function InventoryChecklist({
 
   const startStockTake = () => {
     setStockTakeDrafts(
-      Object.fromEntries(items.map((i) => [i.name, String(Number(i.quantity) || 0)])),
+      Object.fromEntries(
+        items.map((i) => [
+          i.name,
+          {
+            functional: String(i.functional),
+            notFunctional: String(i.notFunctional),
+          },
+        ]),
+      ),
     );
     setIsStockTake(true);
   };
 
-  const stockTakeChanges = Object.entries(stockTakeDrafts)
-    .map(([itemName, raw]) => ({ itemName, quantity: Number(raw) }))
-    .filter(({ itemName, quantity }) => {
-      if (!Number.isFinite(quantity) || quantity < 0) return false;
-      const original = items.find((i) => i.name === itemName);
-      return original && Number(original.quantity) !== quantity;
-    });
+  const stockTakeInvalid = Object.values(stockTakeDrafts).some(
+    (d) => toCount(d.functional) === null || toCount(d.notFunctional) === null,
+  );
+
+  const stockTakeChanges: StockTakeChange[] = stockTakeInvalid
+    ? []
+    : items.flatMap((item) => {
+        const draft = stockTakeDrafts[item.name];
+        if (!draft) return [];
+        const functional = toCount(draft.functional)!;
+        const notFunctional = toCount(draft.notFunctional)!;
+        return functional === item.functional &&
+          notFunctional === item.notFunctional
+          ? []
+          : [{ item, functional, notFunctional }];
+      });
 
   const handleSaveStockTake = async () => {
     setIsSavingStockTake(true);
@@ -107,6 +131,19 @@ export function InventoryChecklist({
       setIsSavingStockTake(false);
     }
   };
+
+  const setStockTakeField = (
+    itemName: string,
+    field: "functional" | "notFunctional",
+    value: string,
+  ) =>
+    setStockTakeDrafts((prev) => ({
+      ...prev,
+      [itemName]: { ...prev[itemName], [field]: value },
+    }));
+
+  const stockTakeInputClass =
+    "focus:border-primary focus:ring-primary/20 w-16 shrink-0 rounded-md border border-slate-200 px-2 py-1 text-right text-sm tabular-nums focus:ring-2 focus:outline-none disabled:opacity-50";
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
@@ -123,8 +160,8 @@ export function InventoryChecklist({
             {/* The question an admin actually opens this page to answer. */}
             <p className="mt-0.5 text-xs text-slate-500">
               {items.length === 0
-                ? "Nothing tracked yet"
-                : `${inStockCount} of ${items.length} functional · ${missingCount} non-functional`}
+                ? "Nothing recorded yet"
+                : `${functionalCount} of ${items.length} functional · ${nonFunctionalCount} non-functional`}
             </p>
           </div>
         </div>
@@ -168,7 +205,8 @@ export function InventoryChecklist({
             <div className="flex flex-col">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-amber-50/60 px-4 py-3 sm:px-5">
                 <p className="text-xs text-amber-800">
-                  Enter the count for every item. Only changed rows are saved.
+                  Count what works and what doesn&apos;t for every item. Only
+                  changed rows are saved.
                 </p>
                 <button
                   type="button"
@@ -181,34 +219,75 @@ export function InventoryChecklist({
                 </button>
               </div>
 
-              <div className="grid max-h-150 grid-cols-1 gap-x-6 gap-y-1 overflow-y-auto px-4 py-3 sm:grid-cols-2 sm:px-5 xl:grid-cols-3">
-                {items.map((item) => (
-                  <label
-                    key={item.name}
-                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50"
-                  >
-                    <span className="truncate text-sm text-slate-700">
-                      {item.displayName}
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      inputMode="numeric"
-                      value={stockTakeDrafts[item.name] ?? ""}
-                      onChange={(e) =>
-                        setStockTakeDrafts((prev) => ({
-                          ...prev,
-                          [item.name]: e.target.value,
-                        }))
-                      }
-                      disabled={isSavingStockTake}
-                      className="focus:border-primary focus:ring-primary/20 w-16 shrink-0 rounded-md border border-slate-200 px-2 py-1 text-right text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
-                    />
-                  </label>
-                ))}
+              <div className="flex items-center justify-end gap-3 border-b border-slate-100 px-6 py-2 text-xs font-medium text-slate-500 sm:px-7">
+                <span className="w-16 text-right">Working</span>
+                <span className="w-16 text-right">Not working</span>
+              </div>
+
+              <div className="max-h-150 divide-y divide-slate-50 overflow-y-auto px-4 py-2 sm:px-5">
+                {items
+                  .slice()
+                  .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                  .map((item) => {
+                    const draft = stockTakeDrafts[item.name];
+                    return (
+                      <div
+                        key={item.name}
+                        className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50"
+                      >
+                        <span
+                          className="min-w-0 truncate text-sm text-slate-700"
+                          title={item.displayName}
+                        >
+                          {item.displayName}
+                        </span>
+                        <div className="flex shrink-0 items-center gap-3">
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            inputMode="numeric"
+                            aria-label={`${item.displayName} working`}
+                            value={draft?.functional ?? ""}
+                            onChange={(e) =>
+                              setStockTakeField(
+                                item.name,
+                                "functional",
+                                e.target.value,
+                              )
+                            }
+                            disabled={isSavingStockTake}
+                            className={stockTakeInputClass}
+                          />
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            inputMode="numeric"
+                            aria-label={`${item.displayName} not working`}
+                            value={draft?.notFunctional ?? ""}
+                            onChange={(e) =>
+                              setStockTakeField(
+                                item.name,
+                                "notFunctional",
+                                e.target.value,
+                              )
+                            }
+                            disabled={isSavingStockTake}
+                            className={stockTakeInputClass}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-4 py-3 sm:px-5">
+                {stockTakeInvalid && (
+                  <p className="mr-auto text-xs text-red-600">
+                    Counts must be whole numbers, 0 or more.
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsStockTake(false)}
@@ -238,16 +317,12 @@ export function InventoryChecklist({
             <>
               {items.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3 sm:px-5">
-                  <div className="flex shrink-0 gap-1">
+                  <div className="flex shrink-0 flex-wrap gap-1">
                     {(
                       [
                         ["all", "All", items.length],
-                        ["in-stock", "Functional", inStockCount],
-                        // Hidden until there's a real functional/non-functional
-                        // status field in the database — right now this is only
-                        // inferred from quantity <= 0. Uncomment once that data
-                        // exists.
-                        // ["missing", "Non-functional", missingCount],
+                        ["functional", "Functional", functionalCount],
+                        ["non-functional", "Non-functional", nonFunctionalCount],
                       ] as const
                     ).map(([value, label, count]) => (
                       <button
@@ -291,49 +366,76 @@ export function InventoryChecklist({
                   <p className="px-4 py-10 text-center text-sm text-slate-400">
                     {search
                       ? `Nothing matches “${search}”`
-                      : filter === "in-stock"
+                      : filter === "functional"
                         ? "No functional items yet."
-                        : "Nothing is non-functional — every item is functional."}
+                        : "Nothing is non-functional — every item works."}
                   </p>
                 ) : (
                   visibleItems.map((item) => {
-                    const qty = quantityOf(item);
-                    const isEmpty = qty <= 0;
+                    const { functional, notFunctional, total } = item;
+                    const isEmpty = total <= 0;
 
                     return (
                       <div
                         key={item.name}
                         className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-slate-50 sm:px-5"
                       >
-                        {/* Filled dot reads as "we have this" at a glance */}
+                        {/* Dot: green = some work, amber = held but none
+                            work, hollow = none held. */}
                         <span
                           aria-hidden
                           className={cn(
                             "h-2 w-2 shrink-0 rounded-full",
                             isEmpty
                               ? "bg-white ring-1 ring-slate-300"
-                              : "bg-emerald-500",
+                              : functional > 0
+                                ? "bg-emerald-500"
+                                : "bg-amber-500",
                           )}
                         />
 
-                        <p
-                          className={cn(
-                            "min-w-0 flex-1 truncate text-sm",
-                            isEmpty ? "text-slate-400" : "text-slate-800",
-                          )}
-                        >
-                          {item.displayName}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={cn(
+                              "truncate text-sm",
+                              isEmpty ? "text-slate-400" : "text-slate-800",
+                            )}
+                            title={item.displayName}
+                          >
+                            {item.displayName}
+                          </p>
+                          <p className="text-xs text-slate-400 tabular-nums">
+                            {total} total
+                          </p>
+                        </div>
 
-                        {/* Read-only count — editing it is the pencil's job now */}
-                        <span
-                          className={cn(
-                            "w-8 shrink-0 text-center text-sm font-semibold tabular-nums",
-                            isEmpty ? "text-slate-300" : "text-slate-800",
-                          )}
-                        >
-                          {qty}
-                        </span>
+                        {/* Read-only counts — editing is the pencil's job */}
+                        <div className="flex shrink-0 items-center gap-3 text-sm font-semibold tabular-nums">
+                          <span
+                            title="Working"
+                            className={cn(
+                              "text-right",
+                              functional > 0 ? "text-emerald-700" : "text-slate-300",
+                            )}
+                          >
+                            {functional}
+                            <span className="ml-1 hidden text-xs font-normal text-slate-400 sm:inline">
+                              working
+                            </span>
+                          </span>
+                          <span
+                            title="Not working"
+                            className={cn(
+                              "text-right",
+                              notFunctional > 0 ? "text-amber-700" : "text-slate-300",
+                            )}
+                          >
+                            {notFunctional}
+                            <span className="ml-1 hidden text-xs font-normal text-slate-400 sm:inline">
+                              not working
+                            </span>
+                          </span>
+                        </div>
 
                         {/* Always rendered — hover-only actions are unreachable
                             on touch devices. They just soften until hover. */}

@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
   keepPreviousData,
+  type QueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
 
@@ -11,15 +12,14 @@ import {
   type StaffMember,
   type CreateStaffData,
   type GetStaffResponse,
-  type AddEquipmentRequest,
-  type AddInfrastructureRequest,
-  type AddEquipmentResponse,
-  type AddInfrastructureResponse,
+  type InventoryWriteRequest,
+  type InventoryWriteResponse,
   type StaffSearchParams,
   type UpdateFacilityProfileRequest,
 } from "@/services/admin.service";
 
 import { FACILITY_KEYS } from "@/constants";
+import { inventoryCatalogueKeys } from "@/features/super-admin/hooks/useInventoryCatalogue";
 import { toast } from "sonner";
 
 // Query keys for admin staff
@@ -182,16 +182,23 @@ export const useFacilityInventory = (facilityId: string) => {
   });
 };
 
-// ... (Add/Delete/Update Equipment hooks remain unchanged) ...
+/**
+ * After any inventory write: the facility's own counts, and the cross-facility
+ * totals the super-admin inventory page shows.
+ */
+const invalidateInventory = (queryClient: QueryClient, facilityId: string) => {
+  queryClient.invalidateQueries({
+    queryKey: AdminInventoryKeys.facility(facilityId),
+  });
+  queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
+};
+
 export const useAddEquipment = (facilityId: string) => {
   const queryClient = useQueryClient();
-  return useMutation<AddEquipmentResponse, Error, AddEquipmentRequest>({
-    mutationFn: (data: AddEquipmentRequest) =>
+  return useMutation<InventoryWriteResponse, Error, InventoryWriteRequest>({
+    mutationFn: (data: InventoryWriteRequest) =>
       adminService.addEquipment({ facilityId, data }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: AdminInventoryKeys.facility(facilityId),
-      }),
+    onSuccess: () => invalidateInventory(queryClient, facilityId),
     onError: (error) => console.error("Failed to add equipment:", error),
   });
 };
@@ -199,16 +206,13 @@ export const useAddEquipment = (facilityId: string) => {
 export const useAddInfrastructure = (facilityId: string) => {
   const queryClient = useQueryClient();
   return useMutation<
-    AddInfrastructureResponse,
+    InventoryWriteResponse,
     Error,
-    AddInfrastructureRequest
+    InventoryWriteRequest
   >({
-    mutationFn: (data: AddInfrastructureRequest) =>
+    mutationFn: (data: InventoryWriteRequest) =>
       adminService.addInfrastructure({ facilityId, data }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: AdminInventoryKeys.facility(facilityId),
-      }),
+    onSuccess: () => invalidateInventory(queryClient, facilityId),
     onError: (error) => console.error("Failed to add infrastructure:", error),
   });
 };
@@ -218,10 +222,7 @@ export const useDeleteEquipment = (facilityId: string) => {
   return useMutation<void, Error, string>({
     mutationFn: (itemName: string) =>
       adminService.deleteEquipment({ facilityId, itemName }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: AdminInventoryKeys.facility(facilityId),
-      }),
+    onSuccess: () => invalidateInventory(queryClient, facilityId),
     onError: (error) => console.error("Failed to delete equipment:", error),
   });
 };
@@ -231,10 +232,7 @@ export const useDeleteInfrastructure = (facilityId: string) => {
   return useMutation<void, Error, string>({
     mutationFn: (itemName: string) =>
       adminService.deleteInfrastructure({ facilityId, itemName }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: AdminInventoryKeys.facility(facilityId),
-      }),
+    onSuccess: () => invalidateInventory(queryClient, facilityId),
     onError: (error) =>
       console.error("Failed to delete infrastructure:", error),
   });
@@ -242,13 +240,10 @@ export const useDeleteInfrastructure = (facilityId: string) => {
 
 export const useUpdateEquipment = (facilityId: string) => {
   const queryClient = useQueryClient();
-  return useMutation<AddEquipmentResponse, Error, AddEquipmentRequest>({
-    mutationFn: (data: AddEquipmentRequest) =>
+  return useMutation<InventoryWriteResponse, Error, InventoryWriteRequest>({
+    mutationFn: (data: InventoryWriteRequest) =>
       adminService.updateEquipment({ facilityId, data }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: AdminInventoryKeys.facility(facilityId),
-      }),
+    onSuccess: () => invalidateInventory(queryClient, facilityId),
     onError: (error) => console.error("Failed to update equipment:", error),
   });
 };
@@ -256,16 +251,13 @@ export const useUpdateEquipment = (facilityId: string) => {
 export const useUpdateInfrastructure = (facilityId: string) => {
   const queryClient = useQueryClient();
   return useMutation<
-    AddInfrastructureResponse,
+    InventoryWriteResponse,
     Error,
-    AddInfrastructureRequest
+    InventoryWriteRequest
   >({
-    mutationFn: (data: AddInfrastructureRequest) =>
+    mutationFn: (data: InventoryWriteRequest) =>
       adminService.updateInfrastructure({ facilityId, data }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: AdminInventoryKeys.facility(facilityId),
-      }),
+    onSuccess: () => invalidateInventory(queryClient, facilityId),
     onError: (error) =>
       console.error("Failed to update infrastructure:", error),
   });

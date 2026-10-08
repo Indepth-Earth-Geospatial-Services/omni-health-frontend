@@ -56,8 +56,6 @@ export function useFacilityComparison(
     const specialistsB = facilityB.specialists ?? [];
     const reviewsA = facilityA.total_reviews ?? 0;
     const reviewsB = facilityB.total_reviews ?? 0;
-    const bedsA = facilityA.inventory?.infrastructure?.inpatient_beds ?? 0;
-    const bedsB = facilityB.inventory?.infrastructure?.inpatient_beds ?? 0;
     const durationA = directionsA?.duration;
     const durationB = directionsB?.duration;
     const distanceA = directionsA?.distance;
@@ -68,7 +66,6 @@ export function useFacilityComparison(
     const maxServices = Math.max(servicesA.length, servicesB.length);
     const maxSpecialists = Math.max(specialistsA.length, specialistsB.length);
     const maxReviews = Math.max(reviewsA, reviewsB);
-    const maxBeds = Math.max(bedsA, bedsB);
     const maxDuration = Math.max(durationA ?? 0, durationB ?? 0);
     const maxDistance = Math.max(distanceA ?? 0, distanceB ?? 0);
 
@@ -232,24 +229,6 @@ export function useFacilityComparison(
     //   valueB: reviewsB,
     //   winner,
     // });
-
-    // 7. Inpatient Beds
-    winner = higherIsBetter(bedsA, bedsB, COMPARISON_THRESHOLDS.count);
-    if (winner === "A") {
-      reasonsA.push(`More inpatient capacity (${bedsA} vs ${bedsB} beds)`);
-    }
-    if (winner === "B") {
-      reasonsB.push(`More inpatient capacity (${bedsB} vs ${bedsA} beds)`);
-    }
-    scoreA += normalize(bedsA, 0, maxBeds) * COMPARISON_WEIGHTS.beds;
-    scoreB += normalize(bedsB, 0, maxBeds) * COMPARISON_WEIGHTS.beds;
-    detailedResults.push({
-      key: "beds",
-      label: "Inpatient Beds",
-      valueA: bedsA,
-      valueB: bedsB,
-      winner,
-    });
 
     return {
       reasonsA,

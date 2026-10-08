@@ -15,7 +15,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 }) => {
   const handleCallFacility = () => {
     if (phone) {
-      window.open(`tel:0${phone}`);
+      // `phone` may list several numbers, each already zero-prefixed.
+      window.open(`tel:${phone.split(",")[0].trim()}`);
     }
   };
 

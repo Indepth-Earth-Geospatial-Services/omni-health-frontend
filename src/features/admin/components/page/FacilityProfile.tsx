@@ -35,6 +35,7 @@ import {
 } from "../../utils/formatters";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
 import { MAPBOX_TOKEN } from "@/constants";
+import { formatPhones } from "@/lib/utils";
 
 // Section configuration
 const SECTIONS = [
@@ -138,7 +139,7 @@ interface FacilityData {
     [key: string]: string | undefined;
   };
   contact_info?: {
-    phone?: string;
+    phone?: string | string[];
     email?: string;
   };
   services_list?: string[];
@@ -330,7 +331,8 @@ function overviewFormFromFacility(facility?: FacilityData): OverviewFormState {
     lga_id: matchedLga ? Number(matchedLga.value) : undefined,
     town: facility?.town || "",
     address: facility?.address || "",
-    phone: facility?.contact_info?.phone || "",
+    // The API returns a list; the form edits it as one comma-separated line.
+    phone: formatPhones(facility?.contact_info?.phone),
     email: facility?.contact_info?.email || "",
     lat: facility?.lat || 0,
     lon: facility?.lon || 0,
@@ -659,7 +661,7 @@ function FacilityOverviewContent({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FieldDisplay
             label="Officer in-Charge / Phone"
-            value={facility?.contact_info?.phone}
+            value={formatPhones(facility?.contact_info?.phone)}
             small
           />
           <div>

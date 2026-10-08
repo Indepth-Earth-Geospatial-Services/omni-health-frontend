@@ -25,6 +25,17 @@ import {
 } from "@/features/admin/hooks/useAdminStaff";
 import { useFacility } from "@/hooks/use-facilities";
 import { useRouter } from "next/navigation";
+import type { InventoryCounts } from "@/services/admin.service";
+import { formatPhones } from "@/lib/utils";
+
+/** Items actually held (total above zero) and the units across them. */
+const summarizeCounts = (counts: InventoryCounts | undefined) => {
+  const held = Object.values(counts ?? {}).filter((c) => c.total > 0);
+  return {
+    items: held.length,
+    units: held.reduce((sum, c) => sum + c.total, 0),
+  };
+};
 
 export default function Overview() {
   const facilityId = useCurrentFacilityId();
@@ -56,17 +67,16 @@ export default function Overview() {
     const specialistsCount = facilitySpecialists.length;
 
     // --- Inventory Logic ---
-    const equipment = inventoryData?.inventory?.equipment || {};
-    const infrastructure = inventoryData?.inventory?.infrastructure || {};
-
-    const equipmentItems = Object.keys(equipment).length;
-    const infrastructureItems = Object.keys(infrastructure).length;
+    const equipment = summarizeCounts(inventoryData?.inventory?.equipment);
+    const infrastructure = summarizeCounts(
+      inventoryData?.inventory?.infrastructure,
+    );
 
     return {
       totalStaff,
       specialists: specialistsCount,
-      equipmentItems,
-      infrastructureItems,
+      equipment,
+      infrastructure,
       facilitySpecialists, // Full list of strings
     };
   }, [staffData, inventoryData, facility]);
@@ -86,13 +96,15 @@ export default function Overview() {
           />
           <KPIStatsCards
             title="Equipment"
-            value={isLoading ? "-" : kpiMetrics.equipmentItems}
+            value={isLoading ? "-" : kpiMetrics.equipment.items}
+            subtitle={isLoading ? undefined : `${kpiMetrics.equipment.units} units held`}
             icon={<Package size={24} />}
             detailsHref="/admin/equipments"
           />
           <KPIStatsCards
             title="Infrastructure"
-            value={isLoading ? "-" : kpiMetrics.infrastructureItems}
+            value={isLoading ? "-" : kpiMetrics.infrastructure.items}
+            subtitle={isLoading ? undefined : `${kpiMetrics.infrastructure.units} units held`}
             icon={<Hospital size={24} />}
             detailsHref="/admin/equipments"
           />
@@ -275,7 +287,7 @@ export default function Overview() {
                         Phone
                       </p>
                       <p className="truncate text-xs text-slate-700">
-                        {facility?.contact_info?.phone || "—"}
+                        {formatPhones(facility?.contact_info?.phone) || "—"}
                       </p>
                     </div>
                   </div>

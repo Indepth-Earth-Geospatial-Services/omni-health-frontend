@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, Loader2, AlertCircle, Hospital } from "lucide-react";
+import {
+  Activity,
+  Loader2,
+  AlertCircle,
+  Hospital,
+  ClipboardX,
+} from "lucide-react";
 import InventoryItemModal from "../modals/InventoryItemModal";
-import EditEquipmentModal from "../modals/EditEquipmentModal";
-import EditInfrastructureModal from "../modals/EditInfrastructureModal";
+import EditInventoryItemModal from "../modals/EditInventoryItemModal";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import { InventoryChecklist } from "../ui/InventoryChecklist";
 import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
 import {
   useEquipmentActions,
-  convertInventoryToArray,
+  toInventoryItems,
 } from "@/features/admin/hooks/use-equipment-actions";
+import { useInventoryCatalogue } from "@/features/super-admin/hooks/useInventoryCatalogue";
 
 interface EquipmentsPageProps {
   facilityId: string;
@@ -28,6 +34,9 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
     isError,
     error,
   } = useFacilityInventory(facilityId);
+
+  // Display names; rows fall back to a formatted key until it loads.
+  const { data: catalogue } = useInventoryCatalogue();
 
   // Equipment actions hook
   const actions = useEquipmentActions({ facilityId });
@@ -64,13 +73,19 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
     );
   }
 
-  // Convert inventory objects to arrays
-  const equipmentItems = convertInventoryToArray(
+  const equipmentItems = toInventoryItems(
     inventoryData?.inventory?.equipment,
+    catalogue,
   );
-  const infrastructureItems = convertInventoryToArray(
+  const infrastructureItems = toInventoryItems(
     inventoryData?.inventory?.infrastructure,
+    catalogue,
   );
+
+  // A facility the survey never reached returns two empty maps. That is "we
+  // don't know", not "this facility has nothing", so it gets its own state.
+  const isSurveyed =
+    equipmentItems.length > 0 || infrastructureItems.length > 0;
 
   return (
     <>
@@ -78,35 +93,29 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
       <InventoryItemModal
         isOpen={actions.isEquipmentModalOpen}
         onClose={() => actions.setIsEquipmentModalOpen(false)}
-        onSubmit={actions.handleAddEquipment}
+        onSubmit={(data) => actions.handleAdd("equipment", data)}
         isSubmitting={actions.isAddingEquipment}
         type="equipment"
+        excludeKeys={equipmentItems.map((i) => i.name)}
       />
 
       {/* Add Infrastructure Modal */}
       <InventoryItemModal
         isOpen={actions.isInfrastructureModalOpen}
         onClose={() => actions.setIsInfrastructureModalOpen(false)}
-        onSubmit={actions.handleAddInfrastructure}
+        onSubmit={(data) => actions.handleAdd("infrastructure", data)}
         isSubmitting={actions.isAddingInfrastructure}
         type="infrastructure"
+        excludeKeys={infrastructureItems.map((i) => i.name)}
       />
 
-      {/* Edit Equipment Modal */}
-      <EditEquipmentModal
-        isOpen={actions.isEditEquipmentModalOpen}
-        onClose={actions.closeEditEquipmentModal}
-        onSubmit={actions.handleUpdateEquipment}
-        isSubmitting={actions.isUpdatingEquipment}
-        initialData={actions.selectedItem}
-      />
-
-      {/* Edit Infrastructure Modal */}
-      <EditInfrastructureModal
-        isOpen={actions.isEditInfrastructureModalOpen}
-        onClose={actions.closeEditInfrastructureModal}
-        onSubmit={actions.handleUpdateInfrastructure}
-        isSubmitting={actions.isUpdatingInfrastructure}
+      {/* Edit Modal — one for both types */}
+      <EditInventoryItemModal
+        isOpen={actions.editType !== null}
+        onClose={actions.closeEditModal}
+        onSubmit={actions.handleUpdate}
+        isSubmitting={actions.isUpdating}
+        type={actions.editType ?? "equipment"}
         initialData={actions.selectedItem}
       />
 
@@ -120,9 +129,25 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
         itemType={actions.deleteType}
       />
 
-      {/* Stacked rather than a 50/50 grid: equipment runs to ~84 items while
-          infrastructure is usually empty, so side-by-side wasted half the row. */}
+      {/* Stacked rather than a 50/50 grid: equipment runs to ~78 items while
+          infrastructure is at most 6, so side-by-side wasted half the row. */}
       <div className="flex w-full flex-col gap-6">
+        {!isSurveyed && (
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-5 py-4">
+            <ClipboardX size={20} className="mt-0.5 shrink-0 text-slate-400" />
+            <div>
+              <p className="text-sm font-semibold text-slate-800">
+                No inventory survey has been done for this facility
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Nothing has been recorded yet — this doesn&apos;t mean the
+                facility has no equipment. Use the buttons below to record
+                items as you count them.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Medical Equipment */}
         <InventoryChecklist
           title="Medical Equipment"
@@ -130,7 +155,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           isOpen={isEquipmentOpen}
           onToggle={() => setIsEquipmentOpen(!isEquipmentOpen)}
           onAdd={() => actions.setIsEquipmentModalOpen(true)}
-          onEdit={actions.handleEditEquipment}
+          onEdit={(item) => actions.handleEdit("equipment", item)}
           onDelete={(item) => actions.handleDeleteClick(item, "equipment")}
           onSaveStockTake={(changes) =>
             actions.saveStockTake("equipment", changes)
@@ -139,7 +164,11 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           addButtonLabel="New Equipment"
           buttonClassName="shrink-0 text-sm sm:text-lg"
           icon={Activity}
-          emptyMessage="No equipment tracked yet. Add your first equipment item."
+          emptyMessage={
+            isSurveyed
+              ? "No equipment recorded. Add items from the catalogue."
+              : "Not surveyed yet."
+          }
         />
 
         {/* Facility Infrastructure */}
@@ -149,7 +178,7 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           isOpen={isFacilityOpen}
           onToggle={() => setIsFacilityOpen(!isFacilityOpen)}
           onAdd={() => actions.setIsInfrastructureModalOpen(true)}
-          onEdit={actions.handleEditInfrastructure}
+          onEdit={(item) => actions.handleEdit("infrastructure", item)}
           onDelete={(item) => actions.handleDeleteClick(item, "infrastructure")}
           onSaveStockTake={(changes) =>
             actions.saveStockTake("infrastructure", changes)
@@ -158,7 +187,11 @@ export default function EquipmentsPage({ facilityId }: EquipmentsPageProps) {
           addButtonLabel="New Infrastructure"
           buttonClassName="shrink-0 text-sm sm:text-lg"
           icon={Hospital}
-          emptyMessage="No infrastructure tracked yet. Add your first item."
+          emptyMessage={
+            isSurveyed
+              ? "No infrastructure recorded. Add items from the catalogue."
+              : "Not surveyed yet."
+          }
         />
       </div>
     </>

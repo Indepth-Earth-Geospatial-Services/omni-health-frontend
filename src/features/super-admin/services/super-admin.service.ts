@@ -215,7 +215,8 @@ export interface SearchFacilityParams {
   limit?: number;
 }
 
-// Unique Equipment and Infrastructure Response Type
+// Unique Equipment and Infrastructure Response Type — the fixed catalogue of
+// item keys (78 equipment, 6 infrastructure). Keys only, no display names.
 export interface UniqueEquipmentItem {
   equipment: string[];
   infrastructure: string[];
@@ -225,9 +226,40 @@ export interface GetUniqueEquipmentParams {
   // No parameters required
 }
 
-export interface FacilityInventory {
-  equipment: Record<string, any>;
-  infrastructure: Record<string, any>;
+/** One catalogue item with its totals across every facility. */
+export interface InventorySummaryItem {
+  item_name: string;
+  /** Catalogue display name — shown as returned, punctuation and all. */
+  name: string;
+  type: "equipment" | "infrastructure";
+  /** Facilities holding at least one. */
+  facilities_with_item: number;
+  /** Facilities whose survey recorded the item, including a count of 0. */
+  facilities_listing_item: number;
+  total_quantity: number;
+  total_functional: number;
+  total_not_functional: number;
+}
+
+export interface InventorySummaryParams {
+  search?: string;
+  type?: "equipment" | "infrastructure";
+  lga_id?: number;
+  sort_by?: "name" | "facilities" | "quantity";
+  order?: "asc" | "desc";
+  skip?: number;
+  limit?: number;
+}
+
+export interface InventorySummaryResponse {
+  message: string;
+  pagination: {
+    total_records: number;
+    current_page: number;
+    total_pages: number;
+    limit: number;
+  };
+  items: InventorySummaryItem[];
 }
 
 export interface Facility {
@@ -242,7 +274,6 @@ export interface Facility {
   lon: number;
   avg_daily_patients: number;
   doctor_patient_ratio: number;
-  inventory: FacilityInventory;
   services_list: string[];
   specialists: string[];
   image_urls: string[];
@@ -342,6 +373,7 @@ class SuperAdminService {
     EXPORT_USERS: "/admin/export/users", // Export users to CSV or Excel
     FACILITIES_SEARCH: "/facilities/search",
     UNIQUE_INVENTORY: "/admin/inventory/unique", // Get all unique equipment and infrastructure items
+    INVENTORY_SUMMARY: "/admin/inventory/summary", // Catalogue items with display names and cross-facility totals
     ANALYTICS_OVERVIEW: "/admin/analytics/overview", // GET analytics KPIs and charts data
     ANALYTICS_FACILITIES: "/admin/analytics/facilities", // GET facilities analytics with rating and reviews
     NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
@@ -370,6 +402,8 @@ class SuperAdminService {
     this.searchFacilities = this.searchFacilities.bind(this);
     this.getFacilitiesByInventory = this.getFacilitiesByInventory.bind(this);
     this.getUniqueInventory = this.getUniqueInventory.bind(this);
+    this.getInventorySummary = this.getInventorySummary.bind(this);
+    this.getAllInventorySummary = this.getAllInventorySummary.bind(this);
     this.suspendUser = this.suspendUser.bind(this);
     this.unsuspendUser = this.unsuspendUser.bind(this);
     this.changeUserRole = this.changeUserRole.bind(this);
@@ -761,6 +795,43 @@ class SuperAdminService {
     } catch (error) {
       console.error("Error fetching unique inventory:", error);
       throw error;
+    }
+  }
+
+  /**
+   * One page of the inventory summary
+   * GET /api/v1/admin/inventory/summary
+   * Always covers the whole catalogue — items no facility has recorded come
+   * back with zeros rather than being left out.
+   */
+  async getInventorySummary(
+    params: InventorySummaryParams = {},
+  ): Promise<InventorySummaryResponse> {
+    const response = await apiClient.get(this.ENDPOINTS.INVENTORY_SUMMARY, {
+      params,
+    });
+    return response.data;
+  }
+
+  /**
+   * Every summary item across all pages. The endpoint pages (default 50) and
+   * the catalogue is 84 items, so this asks for 100 at a time and keeps going
+   * only if the server caps the page lower than that.
+   */
+  async getAllInventorySummary(
+    params: Omit<InventorySummaryParams, "skip" | "limit"> = {},
+  ): Promise<InventorySummaryItem[]> {
+    const limit = 100;
+    const items: InventorySummaryItem[] = [];
+    for (let skip = 0; ; skip += limit) {
+      const page = await this.getInventorySummary({ ...params, skip, limit });
+      items.push(...page.items);
+      if (
+        page.items.length === 0 ||
+        items.length >= page.pagination.total_records
+      ) {
+        return items;
+      }
     }
   }
 

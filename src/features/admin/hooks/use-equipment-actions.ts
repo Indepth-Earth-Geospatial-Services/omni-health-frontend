@@ -10,25 +10,69 @@ import {
   useUpdateEquipment,
   useUpdateInfrastructure,
 } from "@/features/admin/hooks/useAdminStaff";
+import type {
+  InventoryCounts,
+  InventoryType,
+  InventoryWriteRequest,
+} from "@/services/admin.service";
+import {
+  itemDisplayName,
+  type InventoryCatalogue,
+} from "@/features/super-admin/hooks/useInventoryCatalogue";
 
 export interface InventoryItem {
+  /** Catalogue key — what the API reads and writes. */
   name: string;
   displayName: string;
-  quantity: string;
+  total: number;
+  functional: number;
+  notFunctional: number;
 }
 
-type InventoryType = "equipment" | "infrastructure";
+/** The two conditions a person actually counts. */
+export interface ConditionCounts {
+  functional: number;
+  notFunctional: number;
+}
 
 interface UseEquipmentActionsOptions {
   facilityId: string;
 }
 
+/**
+ * Write body for one item. `total` is left to default to the sum, except when
+ * the existing record holds more than its two conditions account for — that
+ * surplus is what the survey recorded, so it is carried over rather than
+ * silently dropped by an edit.
+ */
+export function toWriteRequest(
+  itemName: string,
+  next: ConditionCounts,
+  previous?: InventoryItem | null,
+): InventoryWriteRequest {
+  const surplus = previous
+    ? Math.max(0, previous.total - previous.functional - previous.notFunctional)
+    : 0;
+  return {
+    item_name: itemName,
+    functional: next.functional,
+    not_functional: next.notFunctional,
+    ...(surplus > 0 && {
+      total: next.functional + next.notFunctional + surplus,
+    }),
+  };
+}
+
+/** The API client rejects with an ApiError whose message is the backend's
+ *  `detail` — for a 409 that names the endpoint listing valid items. */
+const errorMessage = (error: unknown, fallback: string) =>
+  (error instanceof Error && error.message) || fallback;
+
 export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) {
   // Modal states
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
   const [isInfrastructureModalOpen, setIsInfrastructureModalOpen] = useState(false);
-  const [isEditEquipmentModalOpen, setIsEditEquipmentModalOpen] = useState(false);
-  const [isEditInfrastructureModalOpen, setIsEditInfrastructureModalOpen] = useState(false);
+  const [editType, setEditType] = useState<InventoryType | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Selected item states
@@ -44,98 +88,62 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
   const updateEquipmentMutation = useUpdateEquipment(facilityId);
   const updateInfrastructureMutation = useUpdateInfrastructure(facilityId);
 
-  // Add handlers
-  const handleAddEquipment = useCallback(
-    async (data: { name: string; quantity: string }) => {
+  // Add handlers — `name` is a catalogue key picked from the list, never free
+  // text, so the 409 path is only reachable through a stale catalogue.
+  const handleAdd = useCallback(
+    async (
+      type: InventoryType,
+      data: { name: string; displayName: string } & ConditionCounts,
+    ) => {
+      const mutation =
+        type === "equipment" ? addEquipmentMutation : addInfrastructureMutation;
       try {
-        await addEquipmentMutation.mutateAsync({
-          item_name: data.name,
-          quantity: parseInt(data.quantity, 10),
-        });
-        toast.success(`${data.name} added successfully!`, { duration: 4000 });
-        setTimeout(() => setIsEquipmentModalOpen(false), 300);
+        await mutation.mutateAsync(toWriteRequest(data.name, data));
+        toast.success(`${data.displayName} recorded.`, { duration: 4000 });
+        setTimeout(
+          () =>
+            type === "equipment"
+              ? setIsEquipmentModalOpen(false)
+              : setIsInfrastructureModalOpen(false),
+          300,
+        );
       } catch (error: unknown) {
-        const errorMessage =
-          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Failed to add equipment. Please try again.";
-        toast.error(errorMessage, { duration: 5000 });
+        toast.error(errorMessage(error, `Failed to add ${type}. Please try again.`), {
+          duration: 6000,
+        });
       }
     },
-    [addEquipmentMutation]
-  );
-
-  const handleAddInfrastructure = useCallback(
-    async (data: { name: string; quantity: string }) => {
-      try {
-        await addInfrastructureMutation.mutateAsync({
-          item_name: data.name,
-          quantity: parseInt(data.quantity, 10),
-        });
-        toast.success(`${data.name} added successfully!`, { duration: 4000 });
-        setTimeout(() => setIsInfrastructureModalOpen(false), 300);
-      } catch (error: unknown) {
-        const errorMessage =
-          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Failed to add infrastructure. Please try again.";
-        toast.error(errorMessage, { duration: 5000 });
-      }
-    },
-    [addInfrastructureMutation]
+    [addEquipmentMutation, addInfrastructureMutation],
   );
 
   // Edit handlers
-  const handleEditEquipment = useCallback((item: InventoryItem) => {
+  const handleEdit = useCallback((type: InventoryType, item: InventoryItem) => {
     setSelectedItem(item);
-    setIsEditEquipmentModalOpen(true);
+    setEditType(type);
   }, []);
 
-  const handleEditInfrastructure = useCallback((item: InventoryItem) => {
-    setSelectedItem(item);
-    setIsEditInfrastructureModalOpen(true);
-  }, []);
-
-  const handleUpdateEquipment = useCallback(
-    async (data: { name: string; quantity: string }) => {
+  const handleUpdate = useCallback(
+    async (counts: ConditionCounts) => {
+      if (!selectedItem || !editType) return;
       try {
-        await updateEquipmentMutation.mutateAsync({
-          item_name: data.name,
-          quantity: parseInt(data.quantity, 10),
-        });
-        toast.success(`${data.name} updated successfully!`, { duration: 4000 });
+        await (editType === "equipment"
+          ? updateEquipmentMutation
+          : updateInfrastructureMutation).mutateAsync(
+          toWriteRequest(selectedItem.name, counts, selectedItem),
+        );
+        toast.success(`${selectedItem.displayName} updated.`, { duration: 4000 });
         setTimeout(() => {
-          setIsEditEquipmentModalOpen(false);
+          setEditType(null);
           setSelectedItem(null);
         }, 300);
       } catch (error: unknown) {
-        const errorMessage =
-          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Failed to update equipment. Please try again.";
-        toast.error(errorMessage, { duration: 5000 });
+        toast.error(
+          errorMessage(error, `Failed to update ${editType}. Please try again.`),
+          { duration: 6000 },
+        );
       }
     },
-    [updateEquipmentMutation]
-  );
-
-  const handleUpdateInfrastructure = useCallback(
-    async (data: { name: string; quantity: string }) => {
-      try {
-        await updateInfrastructureMutation.mutateAsync({
-          item_name: data.name,
-          quantity: parseInt(data.quantity, 10),
-        });
-        toast.success(`${data.name} updated successfully!`, { duration: 4000 });
-        setTimeout(() => {
-          setIsEditInfrastructureModalOpen(false);
-          setSelectedItem(null);
-        }, 300);
-      } catch (error: unknown) {
-        const errorMessage =
-          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "Failed to update infrastructure. Please try again.";
-        toast.error(errorMessage, { duration: 5000 });
-      }
-    },
-    [updateInfrastructureMutation]
+    [selectedItem, editType, updateEquipmentMutation, updateInfrastructureMutation],
   );
 
   // Delete handlers
@@ -160,10 +168,10 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
         setItemToDelete(null);
       }, 300);
     } catch (error: unknown) {
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        `Failed to delete ${deleteType}. Please try again.`;
-      toast.error(errorMessage, { duration: 5000 });
+      toast.error(
+        errorMessage(error, `Failed to delete ${deleteType}. Please try again.`),
+        { duration: 5000 },
+      );
     }
   }, [itemToDelete, deleteType, deleteEquipmentMutation, deleteInfrastructureMutation]);
 
@@ -175,31 +183,29 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
   const saveStockTake = useCallback(
     async (
       type: InventoryType,
-      changes: { itemName: string; quantity: number }[],
+      changes: ({ item: InventoryItem } & ConditionCounts)[],
     ) => {
       if (changes.length === 0) return;
-      const mutation =
-        type === "equipment" ? updateEquipmentMutation : updateInfrastructureMutation;
+      const mutation = (type === "equipment"
+          ? updateEquipmentMutation
+          : updateInfrastructureMutation);
 
       let saved = 0;
       try {
-        for (const change of changes) {
-          await mutation.mutateAsync({
-            item_name: change.itemName,
-            quantity: change.quantity,
-          });
+        for (const { item, ...counts } of changes) {
+          await mutation.mutateAsync(toWriteRequest(item.name, counts, item));
           saved++;
         }
         toast.success(
           `Stock take saved — ${saved} item${saved === 1 ? "" : "s"} updated.`,
           { duration: 4000 },
         );
-      } catch {
+      } catch (error: unknown) {
         toast.error(
           saved > 0
-            ? `Saved ${saved} of ${changes.length} before failing. Please retry the rest.`
-            : "Could not save the stock take. Please try again.",
-          { duration: 5000 },
+            ? `Saved ${saved} of ${changes.length} before failing: ${errorMessage(error, "please retry the rest.")}`
+            : errorMessage(error, "Could not save the stock take. Please try again."),
+          { duration: 6000 },
         );
         throw new Error("stock-take-failed");
       }
@@ -208,13 +214,8 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
   );
 
   // Close handlers
-  const closeEditEquipmentModal = useCallback(() => {
-    setIsEditEquipmentModalOpen(false);
-    setSelectedItem(null);
-  }, []);
-
-  const closeEditInfrastructureModal = useCallback(() => {
-    setIsEditInfrastructureModalOpen(false);
+  const closeEditModal = useCallback(() => {
+    setEditType(null);
     setSelectedItem(null);
   }, []);
 
@@ -227,8 +228,7 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
     // Modal states
     isEquipmentModalOpen,
     isInfrastructureModalOpen,
-    isEditEquipmentModalOpen,
-    isEditInfrastructureModalOpen,
+    editType,
     isDeleteModalOpen,
     setIsEquipmentModalOpen,
     setIsInfrastructureModalOpen,
@@ -241,33 +241,36 @@ export function useEquipmentActions({ facilityId }: UseEquipmentActionsOptions) 
     // Loading states
     isAddingEquipment: addEquipmentMutation.isPending,
     isAddingInfrastructure: addInfrastructureMutation.isPending,
-    isUpdatingEquipment: updateEquipmentMutation.isPending,
-    isUpdatingInfrastructure: updateInfrastructureMutation.isPending,
+    isUpdating:
+      updateEquipmentMutation.isPending || updateInfrastructureMutation.isPending,
     isDeleting: deleteEquipmentMutation.isPending || deleteInfrastructureMutation.isPending,
 
     // Handlers
-    handleAddEquipment,
-    handleAddInfrastructure,
-    handleEditEquipment,
-    handleEditInfrastructure,
-    handleUpdateEquipment,
-    handleUpdateInfrastructure,
+    handleAdd,
+    handleEdit,
+    handleUpdate,
     handleDeleteClick,
     handleConfirmDelete,
     saveStockTake,
-    closeEditEquipmentModal,
-    closeEditInfrastructureModal,
+    closeEditModal,
     closeDeleteModal,
   };
 }
 
-// Helper to convert inventory object to array
-export function convertInventoryToArray(
-  inventory: Record<string, number> | undefined
+/**
+ * Inventory map → rows. Only keys present in the response become rows: an
+ * absent key means the survey recorded nothing for that item, which is not
+ * the same as recording none, so it is not rendered as a zero.
+ */
+export function toInventoryItems(
+  counts: InventoryCounts | undefined,
+  catalogue?: InventoryCatalogue,
 ): InventoryItem[] {
-  return Object.entries(inventory || {}).map(([name, quantity]) => ({
+  return Object.entries(counts ?? {}).map(([name, count]) => ({
     name,
-    displayName: name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-    quantity: quantity.toString(),
+    displayName: itemDisplayName(catalogue, name),
+    total: count.total,
+    functional: count.functional,
+    notFunctional: count.not_functional,
   }));
 }

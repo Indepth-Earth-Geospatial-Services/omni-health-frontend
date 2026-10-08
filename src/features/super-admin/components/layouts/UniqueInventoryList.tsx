@@ -35,7 +35,6 @@ const THEME: Record<
     panelBg: string;
     border: string;
     checkbox: string;
-    quantityBadge: string;
   }
 > = {
   equipment: {
@@ -44,7 +43,6 @@ const THEME: Record<
     panelBg: "bg-blue-50/60",
     border: "border-blue-200",
     checkbox: "border-blue-400 bg-blue-500",
-    quantityBadge: "bg-blue-100 text-blue-700",
   },
   infrastructure: {
     accent: "text-green-600",
@@ -52,7 +50,6 @@ const THEME: Record<
     panelBg: "bg-green-50/60",
     border: "border-green-200",
     checkbox: "border-green-400 bg-green-500",
-    quantityBadge: "bg-green-100 text-green-700",
   },
 };
 
@@ -385,17 +382,6 @@ function InventoryRow({
                         </span>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        <span
-                          title={`${facility.quantity} in stock at this facility`}
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                            facility.quantity > 0
-                              ? theme.quantityBadge
-                              : "bg-gray-100 text-gray-400",
-                          )}
-                        >
-                          {facility.quantity}
-                        </span>
                         <button
                           type="button"
                           onClick={() => setDeleteTarget([facility])}

@@ -104,10 +104,11 @@ export default function EquipmentPage() {
         const result = await batchAddMutation.mutateAsync({
           facilityIds: data.facilityIds,
           itemName: data.name,
-          quantity: parseInt(data.quantity, 10),
+          functional: data.functional,
+          notFunctional: data.notFunctional,
           type: "equipment",
         });
-        reportBatchResult(data.name, result);
+        reportBatchResult(data.displayName, result);
         setIsEquipmentModalOpen(false);
       } catch (error: unknown) {
         const err = error as { message?: string };
@@ -128,10 +129,11 @@ export default function EquipmentPage() {
         const result = await batchAddMutation.mutateAsync({
           facilityIds: data.facilityIds,
           itemName: data.name,
-          quantity: parseInt(data.quantity, 10),
+          functional: data.functional,
+          notFunctional: data.notFunctional,
           type: "infrastructure",
         });
-        reportBatchResult(data.name, result);
+        reportBatchResult(data.displayName, result);
         setIsInfrastructureModalOpen(false);
       } catch (error: unknown) {
         const err = error as { message?: string };

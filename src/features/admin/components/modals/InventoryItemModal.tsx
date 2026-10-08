@@ -1,12 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
-import { Building2, Check, Hospital, Loader2, Package, X } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import {
+  AlertCircle,
+  Building2,
+  Check,
+  Hospital,
+  Loader2,
+  Package,
+  X,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import { MultiSelectDropdown } from "@/features/super-admin/components/ui/MultiSelectDropdown";
+import { SearchableSelect } from "@/features/super-admin/components/ui/SearchableSelect";
 import { useMultiSelect } from "@/features/super-admin/hooks/use-multi-select";
-
-type InventoryType = "equipment" | "infrastructure";
+import {
+  useInventoryCatalogue,
+  type CatalogueItem,
+} from "@/features/super-admin/hooks/useInventoryCatalogue";
+import type { InventoryType } from "@/services/admin.service";
+import {
+  ConditionCountFields,
+  parseConditionDraft,
+  type ConditionDraft,
+} from "./ConditionCountFields";
 
 interface FacilityOption {
   facility_id: string;
@@ -19,6 +36,8 @@ interface InventoryItemModalProps {
   onSubmit?: (data: InventoryFormData) => void;
   isSubmitting?: boolean;
   type: InventoryType;
+  /** Catalogue keys already recorded at this facility — left out of the picker. */
+  excludeKeys?: string[];
   // Optional facility selection for super-admin — lets the same item be added
   // to several facilities at once instead of one modal round-trip each.
   showFacilitySelector?: boolean;
@@ -27,46 +46,62 @@ interface InventoryItemModalProps {
 }
 
 export interface InventoryFormData {
+  /** Catalogue key. */
   name: string;
-  quantity: string;
+  displayName: string;
+  functional: number;
+  notFunctional: number;
   facilityIds?: string[];
 }
 
 const typeConfig = {
   equipment: {
     title: "New Equipment",
-    description: "Provide details about the equipment",
-    nameLabel: "Equipment Name",
-    namePlaceholder: "Enter equipment name (e.g., Stethoscope)",
-    quantityLabel: "Quantity",
+    description: "Pick an item from the catalogue and record its condition",
+    nameLabel: "Equipment",
     buttonText: "Add Equipment",
-    loadingText: "Adding…",
     icon: Package,
   },
   infrastructure: {
     title: "New Infrastructure",
-    description: "Provide details about the facility infrastructure",
-    nameLabel: "Infrastructure Name",
-    namePlaceholder: "Enter infrastructure name (e.g., Baby Cot)",
-    quantityLabel: "Quantity/Capacity",
+    description: "Pick an item from the catalogue and record its condition",
+    nameLabel: "Infrastructure",
     buttonText: "Add Infrastructure",
-    loadingText: "Adding…",
     icon: Hospital,
   },
 };
 
-const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
-  isOpen,
+const EMPTY_DRAFT: ConditionDraft = { functional: "", notFunctional: "" };
+
+/**
+ * Mounted only while open, so every opening starts from an empty form rather
+ * than whatever the last one left behind.
+ */
+const InventoryItemModal: React.FC<InventoryItemModalProps> = (props) =>
+  props.isOpen ? <InventoryItemForm {...props} /> : null;
+
+const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
   onClose,
   onSubmit,
   isSubmitting = false,
   type,
+  excludeKeys,
   showFacilitySelector = false,
   facilities = [],
   isLoadingFacilities = false,
 }) => {
-  const [formData, setFormData] = useState({ name: "", quantity: "" });
+  const [itemKey, setItemKey] = useState<string | null>(null);
+  const [counts, setCounts] = useState<ConditionDraft>(EMPTY_DRAFT);
   const [error, setError] = useState("");
+
+  const catalogue = useInventoryCatalogue();
+
+  const options = useMemo(() => {
+    const excluded = new Set(excludeKeys);
+    return (catalogue.data?.items ?? []).filter(
+      (item) => item.type === type && !excluded.has(item.item_name),
+    );
+  }, [catalogue.data, type, excludeKeys]);
 
   const facilitySelect = useMultiSelect({
     items: facilities,
@@ -77,40 +112,36 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
   const config = typeConfig[type];
   const Icon = config.icon;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
-  };
-
   const handleClose = () => {
-    if (isSubmitting) return;
-    setFormData({ name: "", quantity: "" });
-    setError("");
-    facilitySelect.deselectAll();
-    onClose();
+    if (!isSubmitting) onClose();
   };
 
   const handleSubmit = () => {
-    if (isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
-      setError("Please enter a valid quantity");
+    const item = options.find((o) => o.item_name === itemKey);
+    if (!item) {
+      setError(`Choose the ${config.nameLabel.toLowerCase()} to record.`);
       return;
     }
-
+    const parsed = parseConditionDraft(counts);
+    if (!parsed) {
+      setError("Counts must be whole numbers, 0 or more.");
+      return;
+    }
     if (showFacilitySelector && facilitySelect.selectedIds.length === 0) {
       setError("Please select at least one facility");
       return;
     }
 
+    setError("");
     onSubmit?.({
-      ...formData,
+      name: item.item_name,
+      displayName: item.name,
+      ...parsed,
       facilityIds: showFacilitySelector
         ? facilitySelect.selectedIds
         : undefined,
     });
   };
-
-  if (!isOpen) return null;
 
   return (
     <>
@@ -146,6 +177,7 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             <button
               onClick={handleClose}
               disabled={isSubmitting}
+              aria-label="Close"
               className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-50"
             >
               <X size={18} />
@@ -187,51 +219,51 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
               />
             )}
 
-            {/* Name Input */}
-            <div>
-              <label
-                htmlFor="name"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
-              >
-                {config.nameLabel} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder={config.namePlaceholder}
+            {/* Item picker — the catalogue is fixed, so free text would only
+                produce 409s. */}
+            {catalogue.isError ? (
+              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                <span>
+                  The item catalogue could not be loaded, so items can&apos;t
+                  be added right now. Please try again later.
+                </span>
+              </div>
+            ) : (
+              <SearchableSelect<CatalogueItem>
+                items={options}
+                value={itemKey}
+                onChange={(key) => {
+                  setItemKey(key);
+                  if (error) setError("");
+                }}
+                getItemId={(item) => item.item_name}
+                getItemLabel={(item) => item.name}
+                label={config.nameLabel}
                 required
+                placeholder={`Select ${config.nameLabel.toLowerCase()}`}
+                searchPlaceholder="Search the catalogue…"
+                emptyText={
+                  excludeKeys?.length
+                    ? "Every catalogue item is already recorded"
+                    : "No matching items"
+                }
                 disabled={isSubmitting}
-                className="focus:border-primary focus:ring-primary/20 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50"
+                isLoading={catalogue.isLoading}
+                loadingText="Loading catalogue…"
+                icon={<Icon size={15} className="text-slate-400" />}
               />
-            </div>
+            )}
 
-            {/* Quantity Input */}
-            <div>
-              <label
-                htmlFor="quantity"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
-              >
-                {config.quantityLabel} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleInputChange}
-                placeholder="Enter quantity"
-                min="1"
-                required
-                disabled={isSubmitting}
-                className={`w-full rounded-xl border ${
-                  error ? "border-red-500" : "border-slate-300"
-                } focus:border-primary focus:ring-primary/20 bg-white px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50`}
-              />
-              {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
-            </div>
+            <ConditionCountFields
+              value={counts}
+              onChange={(next) => {
+                setCounts(next);
+                if (error) setError("");
+              }}
+              disabled={isSubmitting}
+              error={error || undefined}
+            />
           </div>
         </div>
 
@@ -247,14 +279,16 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
           <Button
             onClick={handleSubmit}
             disabled={
-              isSubmitting || (showFacilitySelector && isLoadingFacilities)
+              isSubmitting ||
+              catalogue.isError ||
+              (showFacilitySelector && isLoadingFacilities)
             }
             className="gap-2"
           >
             {isSubmitting ? (
               <>
                 <Loader2 size={15} className="animate-spin" />
-                {config.loadingText}
+                Adding…
               </>
             ) : showFacilitySelector && facilitySelect.selectedCount > 1 ? (
               <>
