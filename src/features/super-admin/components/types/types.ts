@@ -43,32 +43,33 @@ export const CATEGORY_OPTIONS = [
   // has to match what facility_category actually stores or the filter returns
   // nothing.
   {
-    value: "Model Primary Health Center",
-    label: "Model Primary Health Center",
+    value: "Model Primary Health Centre",
+    label: "Model Primary Health Centre",
   },
 ];
 
 export const LGA_OPTIONS = [
   { value: "Port Harcourt", label: "Port Harcourt" },
-  { value: "Obio/Akpor", label: "Obio/Akpor" },
+  { value: "Obio-Akpor", label: "Obio-Akpor" },
   { value: "Eleme", label: "Eleme" },
   { value: "Ikwerre", label: "Ikwerre" },
   { value: "Emohua", label: "Emohua" },
   { value: "Ahoada East", label: "Ahoada East" },
   { value: "Ahoada West", label: "Ahoada West" },
-  { value: "Ogba/Egbema/Ndoni", label: "Ogba/Egbema/Ndoni" },
+  { value: "Ogba-Egbema-Ndoni", label: "Ogba-Egbema-Ndoni" },
   { value: "Okrika", label: "Okrika" },
-  { value: "Ogu/Bolo", label: "Ogu/Bolo" },
+  { value: "Ogu-Bolo", label: "Ogu-Bolo" },
   { value: "Tai", label: "Tai" },
   { value: "Gokana", label: "Gokana" },
   { value: "Khana", label: "Khana" },
   { value: "Oyigbo", label: "Oyigbo" },
   { value: "Etche", label: "Etche" },
   { value: "Omuma", label: "Omuma" },
-  { value: "Abua/Odual", label: "Abua/Odual" },
+  { value: "Abua-Odual", label: "Abua-Odual" },
   { value: "Akuku-Toru", label: "Akuku-Toru" },
   { value: "Asari-Toru", label: "Asari-Toru" },
   { value: "Degema", label: "Degema" },
   { value: "Bonny", label: "Bonny" },
   { value: "Andoni", label: "Andoni" },
+  { value: "Opobo-Nkoro", label: "Opobo-Nkoro" },
 ];

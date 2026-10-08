@@ -1,66 +1,88 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Check, Hospital, Loader2, X } from "lucide-react";
+import React, { useState } from "react";
+import { Check, Hospital, Loader2, Package, X } from "lucide-react";
 import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
+import type { InventoryType } from "@/services/admin.service";
+import type {
+  ConditionCounts,
+  InventoryItem,
+} from "@/features/admin/hooks/use-equipment-actions";
+import {
+  ConditionCountFields,
+  parseConditionDraft,
+  type ConditionDraft,
+} from "./ConditionCountFields";
 
-interface EditInfrastructureModalProps {
+interface EditInventoryItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (infrastructureData: InfrastructureFormData) => void;
+  onSubmit?: (counts: ConditionCounts) => void;
   isSubmitting?: boolean;
-  initialData: { name: string; displayName: string; quantity: string } | null;
+  type: InventoryType;
+  initialData: InventoryItem | null;
 }
 
-interface InfrastructureFormData {
-  name: string;
-  quantity: string;
-}
+const typeConfig = {
+  equipment: {
+    title: "Edit Equipment",
+    label: "Equipment",
+    icon: Package,
+    badge: "border-blue-200 bg-blue-100 text-blue-700",
+  },
+  infrastructure: {
+    title: "Edit Infrastructure",
+    label: "Infrastructure",
+    icon: Hospital,
+    badge: "border-green-200 bg-green-100 text-green-700",
+  },
+};
 
-const EditInfrastructureModal: React.FC<EditInfrastructureModalProps> = ({
-  isOpen,
+/**
+ * One edit modal for both types. Mounted only while open and keyed by item,
+ * so the fields always start from the item being edited.
+ */
+const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = (props) =>
+  props.isOpen && props.initialData ? (
+    <EditInventoryItemForm key={props.initialData.name} {...props} />
+  ) : null;
+
+const EditInventoryItemForm: React.FC<EditInventoryItemModalProps> = ({
   onClose,
   onSubmit,
   isSubmitting = false,
+  type,
   initialData,
 }) => {
-  const [formData, setFormData] = useState<InfrastructureFormData>({
-    name: "",
-    quantity: "",
-  });
+  const [counts, setCounts] = useState<ConditionDraft>(() => ({
+    functional: String(initialData?.functional ?? 0),
+    notFunctional: String(initialData?.notFunctional ?? 0),
+  }));
   const [error, setError] = useState("");
 
-  // Sync form data when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name,
-        quantity: initialData.quantity,
-      });
-      setError("");
-    }
-  }, [initialData]);
+  const config = typeConfig[type];
+  const Icon = config.icon;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
-  };
+  const surplus = initialData
+    ? Math.max(
+        0,
+        initialData.total - initialData.functional - initialData.notFunctional,
+      )
+    : 0;
 
   const handleClose = () => {
-    if (isSubmitting) return;
-    onClose();
+    if (!isSubmitting) onClose();
   };
 
   const handleSubmit = () => {
-    if (isNaN(Number(formData.quantity)) || Number(formData.quantity) < 0) {
-      setError("Please enter a valid quantity");
+    const parsed = parseConditionDraft(counts);
+    if (!parsed) {
+      setError("Counts must be whole numbers, 0 or more.");
       return;
     }
-    onSubmit?.(formData);
+    onSubmit?.(parsed);
   };
-
-  if (!isOpen) return null;
 
   return (
     <>
@@ -82,20 +104,21 @@ const EditInfrastructureModal: React.FC<EditInfrastructureModalProps> = ({
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-                <Hospital size={18} className="text-white" />
+                <Icon size={18} className="text-white" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-white">
-                  Edit Infrastructure
+                  {config.title}
                 </h2>
                 <p className="mt-0.5 text-xs text-white/70">
-                  Update this item&apos;s quantity or capacity
+                  Update how many are functional and non-functional
                 </p>
               </div>
             </div>
             <button
               onClick={handleClose}
               disabled={isSubmitting}
+              aria-label="Close"
               className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-50"
             >
               <X size={18} />
@@ -111,41 +134,36 @@ const EditInfrastructureModal: React.FC<EditInfrastructureModalProps> = ({
           {/* Item card */}
           <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-400 text-white shadow-sm">
-              <Hospital size={18} />
+              <Icon size={18} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-800">
+              <p
+                className="truncate text-sm font-semibold text-slate-800"
+                title={initialData?.displayName}
+              >
                 {initialData?.displayName || "—"}
               </p>
             </div>
-            <span className="shrink-0 rounded-full border border-green-200 bg-green-100 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-green-700 uppercase">
-              Infrastructure
+            <span
+              className={cn(
+                "shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
+                config.badge,
+              )}
+            >
+              {config.label}
             </span>
           </div>
 
-          {/* Quantity/Capacity */}
-          <div>
-            <label
-              htmlFor="quantity"
-              className="mb-1.5 block text-sm font-medium text-slate-700"
-            >
-              Quantity/Capacity <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              id="quantity"
-              name="quantity"
-              value={formData.quantity}
-              onChange={handleInputChange}
-              placeholder="Enter quantity or capacity"
-              min="0"
-              disabled={isSubmitting}
-              className={`w-full rounded-xl border ${
-                error ? "border-red-500" : "border-slate-300"
-              } focus:border-primary focus:ring-primary/20 bg-white px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50`}
-            />
-            {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
-          </div>
+          <ConditionCountFields
+            value={counts}
+            onChange={(next) => {
+              setCounts(next);
+              if (error) setError("");
+            }}
+            disabled={isSubmitting}
+            surplus={surplus}
+            error={error || undefined}
+          />
         </div>
 
         {/* Footer */}
@@ -170,7 +188,7 @@ const EditInfrastructureModal: React.FC<EditInfrastructureModalProps> = ({
             ) : (
               <>
                 <Check size={15} />
-                Update Infrastructure
+                Update {config.label}
               </>
             )}
           </Button>
@@ -180,4 +198,4 @@ const EditInfrastructureModal: React.FC<EditInfrastructureModalProps> = ({
   );
 };
 
-export default EditInfrastructureModal;
+export default EditInventoryItemModal;

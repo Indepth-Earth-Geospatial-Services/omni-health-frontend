@@ -2,9 +2,6 @@ import type { NextConfig } from "next";
 
 // Read from env so the backend URL is never hardcoded — change BACKEND_URL in
 // .env to point to a different deployment without touching this file.
-// const BACKEND_URL =
-//   process.env.BACKEND_URL ??
-//   "https://geohealth-backend-85732036737.africa-south1.run.app";
 
 // Stripped of any trailing slash: if the deployed environment's BACKEND_URL
 // ever has one (e.g. copy-pasted from a browser address bar into a hosting

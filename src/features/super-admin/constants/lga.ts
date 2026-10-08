@@ -1,6 +1,7 @@
-// Single source of truth for Rivers State LGAs
+// Single source of truth for Rivers State LGAs — spelled exactly as the
+// backend returns facility_lga, so labels can be compared to API data.
 const RIVERS_LGA_NAMES = [
-  "Abua/Odual",
+  "Abua-Odual",
   "Ahoada East",
   "Ahoada West",
   "Akuku-Toru",
@@ -14,12 +15,12 @@ const RIVERS_LGA_NAMES = [
   "Gokana",
   "Ikwerre",
   "Khana",
-  "Obio/Akpor",
-  "Ogba/Egbema/Ndoni",
-  "Ogu/Bolo",
+  "Obio-Akpor",
+  "Ogba-Egbema-Ndoni",
+  "Ogu-Bolo",
   "Okrika",
   "Omuma",
-  "Opobo/Nkoro",
+  "Opobo-Nkoro",
   "Oyigbo",
   "Port Harcourt",
   "Tai",
@@ -55,7 +56,7 @@ export const LGA_FILTER_OPTIONS = [
 export const FACILITY_TYPES = [
   "Health Post",
   "Health Clinic",
-  "Model Primary Health Center",
+  "Model Primary Health Centre",
 ];
 
 // Nigerian states (limited for now)

@@ -1,5 +1,6 @@
 import { Facility } from "@/features/user/types";
 import { Button } from "@/components/ui/button";
+import { formatPhones, toPhoneList } from "@/lib/utils";
 import { Star, MapPin, Phone, Mail } from "lucide-react";
 
 interface FacilityInfoCardProps {
@@ -35,13 +36,13 @@ function FacilityInfoCard({
         )}
       </div>
       <div className="flex flex-col gap-y-4 pb-2 text-sm">
-        {facility.contact_info?.phone && (
+        {formatPhones(facility.contact_info?.phone) && (
           <a
-            href={`tel:${facility.contact_info.phone}`}
+            href={`tel:${toPhoneList(facility.contact_info?.phone)[0]}`}
             className="hover:text-primary flex items-center gap-1 text-gray-600"
           >
             <Phone className="mr-1 h-4 w-4" />
-            <span>{facility.contact_info.phone}</span>
+            <span>{formatPhones(facility.contact_info?.phone)}</span>
           </a>
         )}
         {facility.contact_info?.email && (

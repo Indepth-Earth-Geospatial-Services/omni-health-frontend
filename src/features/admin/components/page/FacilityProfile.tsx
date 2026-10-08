@@ -26,7 +26,10 @@ import { useCollapsibleSections } from "@/hooks/use-collapsible-sections";
 import { CollapsibleSection, LoadingSkeleton } from "../ui/CollapsibleSection";
 import { useUpdateFacilityProfile } from "@/features/admin/hooks/useAdminStaff";
 import type { UpdateFacilityProfileRequest } from "@/services/admin.service";
-import { RIVERS_STATE_LGAS } from "@/features/super-admin/constants/lga";
+import {
+  FACILITY_TYPES,
+  RIVERS_STATE_LGAS,
+} from "@/features/super-admin/constants/lga";
 import {
   formatTimeRange,
   formatDate,
@@ -35,6 +38,7 @@ import {
 } from "../../utils/formatters";
 import Map, { Marker, NavigationControl } from "react-map-gl/mapbox";
 import { MAPBOX_TOKEN } from "@/constants";
+import { formatPhones } from "@/lib/utils";
 
 // Section configuration
 const SECTIONS = [
@@ -138,7 +142,7 @@ interface FacilityData {
     [key: string]: string | undefined;
   };
   contact_info?: {
-    phone?: string;
+    phone?: string | string[];
     email?: string;
   };
   services_list?: string[];
@@ -330,7 +334,8 @@ function overviewFormFromFacility(facility?: FacilityData): OverviewFormState {
     lga_id: matchedLga ? Number(matchedLga.value) : undefined,
     town: facility?.town || "",
     address: facility?.address || "",
-    phone: facility?.contact_info?.phone || "",
+    // The API returns a list; the form edits it as one comma-separated line.
+    phone: formatPhones(facility?.contact_info?.phone),
     email: facility?.contact_info?.email || "",
     lat: facility?.lat || 0,
     lon: facility?.lon || 0,
@@ -467,15 +472,30 @@ function OverviewFormFields({
             size={15}
             className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400"
           />
-          <input
-            type="text"
+          {/* A fixed list: the data holds exactly these three, and free
+              text would let a typo become a fourth category. */}
+          <select
             value={form.facility_category}
             onChange={(e) =>
               setForm((f) => ({ ...f, facility_category: e.target.value }))
             }
             disabled={disabled}
             className={inputClass}
-          />
+          >
+            <option value="">Select category</option>
+            {/* Keep a legacy value selectable rather than silently blanking it. */}
+            {form.facility_category &&
+              !FACILITY_TYPES.includes(form.facility_category) && (
+                <option value={form.facility_category}>
+                  {form.facility_category}
+                </option>
+              )}
+            {FACILITY_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -659,7 +679,7 @@ function FacilityOverviewContent({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FieldDisplay
             label="Officer in-Charge / Phone"
-            value={facility?.contact_info?.phone}
+            value={formatPhones(facility?.contact_info?.phone)}
             small
           />
           <div>

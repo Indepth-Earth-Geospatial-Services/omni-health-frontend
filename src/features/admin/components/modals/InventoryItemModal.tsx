@@ -5,8 +5,12 @@ import { Building2, Check, Hospital, Loader2, Package, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { MultiSelectDropdown } from "@/features/super-admin/components/ui/MultiSelectDropdown";
 import { useMultiSelect } from "@/features/super-admin/hooks/use-multi-select";
-
-type InventoryType = "equipment" | "infrastructure";
+import type { InventoryType } from "@/services/admin.service";
+import {
+  ConditionCountFields,
+  parseConditionDraft,
+  type ConditionDraft,
+} from "./ConditionCountFields";
 
 interface FacilityOption {
   facility_id: string;
@@ -19,6 +23,9 @@ interface InventoryItemModalProps {
   onSubmit?: (data: InventoryFormData) => void;
   isSubmitting?: boolean;
   type: InventoryType;
+  /** Item keys already recorded at this facility. Adding one again would
+   *  overwrite its counts (the endpoint upserts), so it is refused here. */
+  excludeKeys?: string[];
   // Optional facility selection for super-admin — lets the same item be added
   // to several facilities at once instead of one modal round-trip each.
   showFacilitySelector?: boolean;
@@ -27,8 +34,11 @@ interface InventoryItemModalProps {
 }
 
 export interface InventoryFormData {
+  /** Item key derived from the typed name, e.g. "adult_weighing_scale". */
   name: string;
-  quantity: string;
+  displayName: string;
+  functional: number;
+  notFunctional: number;
   facilityIds?: string[];
 }
 
@@ -37,35 +47,57 @@ const typeConfig = {
     title: "New Equipment",
     description: "Provide details about the equipment",
     nameLabel: "Equipment Name",
-    namePlaceholder: "Enter equipment name (e.g., Stethoscope)",
-    quantityLabel: "Quantity",
+    namePlaceholder: "e.g. Adult Weighing Scale",
     buttonText: "Add Equipment",
-    loadingText: "Adding…",
     icon: Package,
   },
   infrastructure: {
     title: "New Infrastructure",
     description: "Provide details about the facility infrastructure",
     nameLabel: "Infrastructure Name",
-    namePlaceholder: "Enter infrastructure name (e.g., Baby Cot)",
-    quantityLabel: "Quantity/Capacity",
+    namePlaceholder: "e.g. Baby Cots",
     buttonText: "Add Infrastructure",
-    loadingText: "Adding…",
     icon: Hospital,
   },
 };
 
-const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
-  isOpen,
+const EMPTY_DRAFT: ConditionDraft = { functional: "", notFunctional: "" };
+
+/**
+ * A typed name in the backend's key form: "Aluminium Pot & Utensils" ->
+ * "aluminium_pot_and_utensils", "Artery Forceps (Medium)" ->
+ * "artery_forceps_medium". The backend only accepts its own catalogue keys
+ * and answers anything else with a 409 naming the problem, which the actions
+ * hook shows as a toast.
+ */
+export function toItemKey(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+/**
+ * Mounted only while open, so every opening starts from an empty form rather
+ * than whatever the last one left behind.
+ */
+const InventoryItemModal: React.FC<InventoryItemModalProps> = (props) =>
+  props.isOpen ? <InventoryItemForm {...props} /> : null;
+
+const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
   onClose,
   onSubmit,
   isSubmitting = false,
   type,
+  excludeKeys,
   showFacilitySelector = false,
   facilities = [],
   isLoadingFacilities = false,
 }) => {
-  const [formData, setFormData] = useState({ name: "", quantity: "" });
+  const [itemName, setItemName] = useState("");
+  const [counts, setCounts] = useState<ConditionDraft>(EMPTY_DRAFT);
   const [error, setError] = useState("");
 
   const facilitySelect = useMultiSelect({
@@ -77,40 +109,43 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
   const config = typeConfig[type];
   const Icon = config.icon;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
-  };
-
   const handleClose = () => {
-    if (isSubmitting) return;
-    setFormData({ name: "", quantity: "" });
-    setError("");
-    facilitySelect.deselectAll();
-    onClose();
+    if (!isSubmitting) onClose();
   };
 
   const handleSubmit = () => {
-    if (isNaN(Number(formData.quantity)) || Number(formData.quantity) <= 0) {
-      setError("Please enter a valid quantity");
+    const displayName = itemName.trim();
+    const key = toItemKey(displayName);
+    if (!key) {
+      setError(`Enter the ${config.nameLabel.toLowerCase()}.`);
       return;
     }
-
+    if (excludeKeys?.includes(key)) {
+      setError(
+        `${displayName} is already recorded here — edit it from the table instead.`,
+      );
+      return;
+    }
+    const parsed = parseConditionDraft(counts);
+    if (!parsed) {
+      setError("Counts must be whole numbers, 0 or more.");
+      return;
+    }
     if (showFacilitySelector && facilitySelect.selectedIds.length === 0) {
       setError("Please select at least one facility");
       return;
     }
 
+    setError("");
     onSubmit?.({
-      ...formData,
+      name: key,
+      displayName,
+      ...parsed,
       facilityIds: showFacilitySelector
         ? facilitySelect.selectedIds
         : undefined,
     });
   };
-
-  if (!isOpen) return null;
 
   return (
     <>
@@ -146,6 +181,7 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             <button
               onClick={handleClose}
               disabled={isSubmitting}
+              aria-label="Close"
               className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-50"
             >
               <X size={18} />
@@ -190,48 +226,35 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             {/* Name Input */}
             <div>
               <label
-                htmlFor="name"
+                htmlFor="item-name"
                 className="mb-1.5 block text-sm font-medium text-slate-700"
               >
                 {config.nameLabel} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
+                id="item-name"
+                value={itemName}
+                onChange={(e) => {
+                  setItemName(e.target.value);
+                  if (error) setError("");
+                }}
                 placeholder={config.namePlaceholder}
-                required
+                autoComplete="off"
                 disabled={isSubmitting}
                 className="focus:border-primary focus:ring-primary/20 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50"
               />
             </div>
 
-            {/* Quantity Input */}
-            <div>
-              <label
-                htmlFor="quantity"
-                className="mb-1.5 block text-sm font-medium text-slate-700"
-              >
-                {config.quantityLabel} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleInputChange}
-                placeholder="Enter quantity"
-                min="1"
-                required
-                disabled={isSubmitting}
-                className={`w-full rounded-xl border ${
-                  error ? "border-red-500" : "border-slate-300"
-                } focus:border-primary focus:ring-primary/20 bg-white px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50`}
-              />
-              {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
-            </div>
+            <ConditionCountFields
+              value={counts}
+              onChange={(next) => {
+                setCounts(next);
+                if (error) setError("");
+              }}
+              disabled={isSubmitting}
+              error={error || undefined}
+            />
           </div>
         </div>
 
@@ -254,13 +277,12 @@ const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             {isSubmitting ? (
               <>
                 <Loader2 size={15} className="animate-spin" />
-                {config.loadingText}
+                Adding…
               </>
             ) : showFacilitySelector && facilitySelect.selectedCount > 1 ? (
               <>
                 <Check size={15} />
-                {config.buttonText} to {facilitySelect.selectedCount}{" "}
-                facilities
+                {config.buttonText} to {facilitySelect.selectedCount} facilities
               </>
             ) : (
               <>
