@@ -211,21 +211,20 @@ export default function FacilityInventoryView({
         ? [typeFilter as InventoryType]
         : (["equipment", "infrastructure"] as const)
       ).map((type) => (
+        // Same primary button as the inventory page's other "New …" actions.
         <Button
           key={type}
           size="lg"
-          variant={isFacilityAdmin ? "default" : "outline"}
           disabled={!facilityId}
           onClick={() =>
             type === "equipment"
               ? actions.setIsEquipmentModalOpen(true)
               : actions.setIsInfrastructureModalOpen(true)
           }
-          className="gap-1.5 text-lg"
+          className="flex shrink-0 items-center gap-2 text-sm sm:text-lg"
         >
-          <Plus size={14} />
-          {isFacilityAdmin ? "New " : ""}
-          {type === "equipment" ? "Equipment" : "Infrastructure"}
+          <Plus size={18} />
+          New {type === "equipment" ? "Equipment" : "Infrastructure"}
         </Button>
       ))}
     </div>
