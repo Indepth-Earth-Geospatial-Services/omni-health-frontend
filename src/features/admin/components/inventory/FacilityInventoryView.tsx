@@ -176,7 +176,7 @@ export default function FacilityInventoryView({
       ).map((type) => (
         <Button
           key={type}
-          size="sm"
+          size="lg"
           variant={isFacilityAdmin ? "default" : "outline"}
           disabled={!facilityId}
           onClick={() =>
@@ -184,7 +184,7 @@ export default function FacilityInventoryView({
               ? actions.setIsEquipmentModalOpen(true)
               : actions.setIsInfrastructureModalOpen(true)
           }
-          className="gap-1.5"
+          className="gap-1.5 text-lg"
         >
           <Plus size={14} />
           {isFacilityAdmin ? "New " : ""}
@@ -350,6 +350,7 @@ export default function FacilityInventoryView({
             key={`${facilityId}-${typeFilter}`}
             rows={typedRows}
             facilityName={facilityName}
+            showItemId={!isFacilityAdmin}
             onEdit={(row) => actions.handleEdit(row.type, row)}
             onDelete={(row) => actions.handleDeleteClick(row, row.type)}
             onSaveStockTake={handleSaveStockTake}
