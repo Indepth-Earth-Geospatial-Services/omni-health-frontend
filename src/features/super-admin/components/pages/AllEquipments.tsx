@@ -10,6 +10,7 @@ import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
 import { useFacilityOptions } from "../../hooks/useFacilityOptions";
 import { useBatchAddInventoryItem } from "../../hooks/useFacilitiesByInventory";
 import UniqueInventoryList from "../layouts/UniqueInventoryList";
+import FacilityInventoryView from "../layouts/FacilityInventoryView";
 import InventoryItemModal, {
   type InventoryFormData,
 } from "../../../admin/components/modals/InventoryItemModal";
@@ -17,7 +18,8 @@ import { toast } from "sonner";
 
 export default function EquipmentPage() {
   // ========== TAB STATE ==========
-  // Tracks which tab is currently active (Equipment or Infrastructure)
+  // Tracks which tab is currently active (Equipment, Infrastructure, or one
+  // facility's inventory)
   const [activeTab, setActiveTab] = useState("equipment");
 
   // ========== MODAL STATE ==========
@@ -51,10 +53,12 @@ export default function EquipmentPage() {
   const batchAddMutation = useBatchAddInventoryItem();
 
   // ========== TAB CONFIGURATION ==========
-  // Define available tabs (Equipment and Infrastructure only)
+  // Equipment and Infrastructure list items across every facility; By
+  // Facility drills into one facility's counts.
   const tabs = [
     { label: "Equipment", value: "equipment" },
     { label: "Infrastructure", value: "infrastructure" },
+    { label: "By Facility", value: "by-facility" },
   ];
 
   // ========== KPI METRICS CALCULATION ==========
@@ -179,7 +183,7 @@ export default function EquipmentPage() {
             tabs={tabs}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            size="lg"
+            size="xl"
           />
         </div>
 
@@ -247,6 +251,13 @@ export default function EquipmentPage() {
               />
             )}
           </>
+        )}
+
+        {/* By Facility Tab - one facility's counts as a chart and a table */}
+        {activeTab === "by-facility" && (
+          <div className="pb-8">
+            <FacilityInventoryView />
+          </div>
         )}
       </main>
 
