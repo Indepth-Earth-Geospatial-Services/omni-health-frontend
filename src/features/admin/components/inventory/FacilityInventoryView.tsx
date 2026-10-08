@@ -259,7 +259,7 @@ export default function FacilityInventoryView({
 
       {/* Admin: the facility's KPIs lead the page, before any control. */}
       {isFacilityAdmin && !isError && (isLoading || isSurveyed) && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile
             label="Equipment held"
             value={isLoading ? "—" : facilityStats.equipment.items}
