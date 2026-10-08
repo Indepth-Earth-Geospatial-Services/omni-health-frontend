@@ -1,23 +1,10 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import {
-  AlertCircle,
-  Building2,
-  Check,
-  Hospital,
-  Loader2,
-  Package,
-  X,
-} from "lucide-react";
+import React, { useState } from "react";
+import { Building2, Check, Hospital, Loader2, Package, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { MultiSelectDropdown } from "@/features/super-admin/components/ui/MultiSelectDropdown";
-import { SearchableSelect } from "@/features/super-admin/components/ui/SearchableSelect";
 import { useMultiSelect } from "@/features/super-admin/hooks/use-multi-select";
-import {
-  useInventoryCatalogue,
-  type CatalogueItem,
-} from "@/features/super-admin/hooks/useInventoryCatalogue";
 import type { InventoryType } from "@/services/admin.service";
 import {
   ConditionCountFields,
@@ -36,7 +23,8 @@ interface InventoryItemModalProps {
   onSubmit?: (data: InventoryFormData) => void;
   isSubmitting?: boolean;
   type: InventoryType;
-  /** Catalogue keys already recorded at this facility — left out of the picker. */
+  /** Item keys already recorded at this facility. Adding one again would
+   *  overwrite its counts (the endpoint upserts), so it is refused here. */
   excludeKeys?: string[];
   // Optional facility selection for super-admin — lets the same item be added
   // to several facilities at once instead of one modal round-trip each.
@@ -46,7 +34,7 @@ interface InventoryItemModalProps {
 }
 
 export interface InventoryFormData {
-  /** Catalogue key. */
+  /** Item key derived from the typed name, e.g. "adult_weighing_scale". */
   name: string;
   displayName: string;
   functional: number;
@@ -57,21 +45,39 @@ export interface InventoryFormData {
 const typeConfig = {
   equipment: {
     title: "New Equipment",
-    description: "Pick an item from the catalogue and record its condition",
-    nameLabel: "Equipment",
+    description: "Provide details about the equipment",
+    nameLabel: "Equipment Name",
+    namePlaceholder: "e.g. Adult Weighing Scale",
     buttonText: "Add Equipment",
     icon: Package,
   },
   infrastructure: {
     title: "New Infrastructure",
-    description: "Pick an item from the catalogue and record its condition",
-    nameLabel: "Infrastructure",
+    description: "Provide details about the facility infrastructure",
+    nameLabel: "Infrastructure Name",
+    namePlaceholder: "e.g. Baby Cots",
     buttonText: "Add Infrastructure",
     icon: Hospital,
   },
 };
 
 const EMPTY_DRAFT: ConditionDraft = { functional: "", notFunctional: "" };
+
+/**
+ * A typed name in the backend's key form: "Aluminium Pot & Utensils" ->
+ * "aluminium_pot_and_utensils", "Artery Forceps (Medium)" ->
+ * "artery_forceps_medium". The backend only accepts its own catalogue keys
+ * and answers anything else with a 409 naming the problem, which the actions
+ * hook shows as a toast.
+ */
+export function toItemKey(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 /**
  * Mounted only while open, so every opening starts from an empty form rather
@@ -90,18 +96,9 @@ const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
   facilities = [],
   isLoadingFacilities = false,
 }) => {
-  const [itemKey, setItemKey] = useState<string | null>(null);
+  const [itemName, setItemName] = useState("");
   const [counts, setCounts] = useState<ConditionDraft>(EMPTY_DRAFT);
   const [error, setError] = useState("");
-
-  const catalogue = useInventoryCatalogue();
-
-  const options = useMemo(() => {
-    const excluded = new Set(excludeKeys);
-    return (catalogue.data?.items ?? []).filter(
-      (item) => item.type === type && !excluded.has(item.item_name),
-    );
-  }, [catalogue.data, type, excludeKeys]);
 
   const facilitySelect = useMultiSelect({
     items: facilities,
@@ -117,9 +114,16 @@ const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
   };
 
   const handleSubmit = () => {
-    const item = options.find((o) => o.item_name === itemKey);
-    if (!item) {
-      setError(`Choose the ${config.nameLabel.toLowerCase()} to record.`);
+    const displayName = itemName.trim();
+    const key = toItemKey(displayName);
+    if (!key) {
+      setError(`Enter the ${config.nameLabel.toLowerCase()}.`);
+      return;
+    }
+    if (excludeKeys?.includes(key)) {
+      setError(
+        `${displayName} is already recorded here — edit it from the table instead.`,
+      );
       return;
     }
     const parsed = parseConditionDraft(counts);
@@ -134,8 +138,8 @@ const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
 
     setError("");
     onSubmit?.({
-      name: item.item_name,
-      displayName: item.name,
+      name: key,
+      displayName,
       ...parsed,
       facilityIds: showFacilitySelector
         ? facilitySelect.selectedIds
@@ -219,41 +223,28 @@ const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
               />
             )}
 
-            {/* Item picker — the catalogue is fixed, so free text would only
-                produce 409s. */}
-            {catalogue.isError ? (
-              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                <span>
-                  The item catalogue could not be loaded, so items can&apos;t
-                  be added right now. Please try again later.
-                </span>
-              </div>
-            ) : (
-              <SearchableSelect<CatalogueItem>
-                items={options}
-                value={itemKey}
-                onChange={(key) => {
-                  setItemKey(key);
+            {/* Name Input */}
+            <div>
+              <label
+                htmlFor="item-name"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                {config.nameLabel} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="item-name"
+                value={itemName}
+                onChange={(e) => {
+                  setItemName(e.target.value);
                   if (error) setError("");
                 }}
-                getItemId={(item) => item.item_name}
-                getItemLabel={(item) => item.name}
-                label={config.nameLabel}
-                required
-                placeholder={`Select ${config.nameLabel.toLowerCase()}`}
-                searchPlaceholder="Search the catalogue…"
-                emptyText={
-                  excludeKeys?.length
-                    ? "Every catalogue item is already recorded"
-                    : "No matching items"
-                }
+                placeholder={config.namePlaceholder}
+                autoComplete="off"
                 disabled={isSubmitting}
-                isLoading={catalogue.isLoading}
-                loadingText="Loading catalogue…"
-                icon={<Icon size={15} className="text-slate-400" />}
+                className="focus:border-primary focus:ring-primary/20 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-400 focus:ring-2 focus:outline-none disabled:opacity-50"
               />
-            )}
+            </div>
 
             <ConditionCountFields
               value={counts}
@@ -279,9 +270,7 @@ const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
           <Button
             onClick={handleSubmit}
             disabled={
-              isSubmitting ||
-              catalogue.isError ||
-              (showFacilitySelector && isLoadingFacilities)
+              isSubmitting || (showFacilitySelector && isLoadingFacilities)
             }
             className="gap-2"
           >
@@ -293,8 +282,7 @@ const InventoryItemForm: React.FC<InventoryItemModalProps> = ({
             ) : showFacilitySelector && facilitySelect.selectedCount > 1 ? (
               <>
                 <Check size={15} />
-                {config.buttonText} to {facilitySelect.selectedCount}{" "}
-                facilities
+                {config.buttonText} to {facilitySelect.selectedCount} facilities
               </>
             ) : (
               <>
