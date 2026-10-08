@@ -86,20 +86,34 @@ interface FacilityInventoryViewProps {
    * Omitted for a super admin: the view leads with a facility picker.
    */
   facilityId?: string;
+  /**
+   * Super admin only: the picked facility, owned by the page so its KPI row
+   * can describe the same facility. Uncontrolled when omitted.
+   */
+  selectedFacilityId?: string | null;
+  onSelectFacility?: (facilityId: string) => void;
 }
 
 /**
- * One facility's inventory: summary tiles, functional vs non-functional per
+ * One facility's inventory: summary tiles (facility admin; the super admin
+ * page has its own KPI row), functional vs non-functional per
  * item as a chart, and the same rows as a table with edit, delete and stock
  * take. Shared by the facility admin's inventory page and the super admin's
  * By Facility tab, so the two can't drift apart.
  */
 export default function FacilityInventoryView({
   facilityId: fixedFacilityId,
+  selectedFacilityId,
+  onSelectFacility,
 }: FacilityInventoryViewProps) {
   const isFacilityAdmin = !!fixedFacilityId;
 
-  const [pickedFacilityId, setPickedFacilityId] = useState<string | null>(null);
+  const [ownPickedFacilityId, setOwnPickedFacilityId] = useState<string | null>(
+    null,
+  );
+  const pickedFacilityId =
+    selectedFacilityId !== undefined ? selectedFacilityId : ownPickedFacilityId;
+  const setPickedFacilityId = onSelectFacility ?? setOwnPickedFacilityId;
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(
     isFacilityAdmin ? "equipment" : "all",
   );
@@ -163,7 +177,6 @@ export default function FacilityInventoryView({
     [allRows, typeFilter],
   );
 
-  const stats = useMemo(() => summarize(typedRows), [typedRows]);
   // Facility-wide, for the admin header: it sits above the tabs, so it must
   // not change with them.
   const facilityStats = useMemo(
@@ -385,26 +398,6 @@ export default function FacilityInventoryView({
         </div>
       ) : (
         <>
-          {!isFacilityAdmin && (
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatTile
-                label="Items held"
-                value={stats.items}
-                hint={`of ${stats.recorded} recorded`}
-              />
-              <StatTile label="Total units" value={stats.units} />
-              <StatTile
-                label="Functional"
-                value={stats.functionalShare}
-                hint="of units with a recorded condition"
-              />
-              <StatTile
-                label="Non-functional units"
-                value={stats.notFunctional}
-              />
-            </div>
-          )}
-
           {/* Keyed so a tab or facility change also leaves stock-take mode. */}
           <InventoryTable
             key={`${facilityId}-${typeFilter}`}
