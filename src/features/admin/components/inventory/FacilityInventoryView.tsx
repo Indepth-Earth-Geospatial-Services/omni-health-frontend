@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from "react";
-import { AlertCircle, Building2, ClipboardX, Loader2, Plus } from "lucide-react";
+import {
+  AlertCircle,
+  Building2,
+  ClipboardX,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/features/admin/components/ui/button";
 import InventoryItemModal from "@/features/admin/components/modals/InventoryItemModal";
@@ -58,6 +64,21 @@ function StatTile({
   );
 }
 
+function summarize(rows: InventoryRow[]) {
+  const units = rows.reduce((s, r) => s + r.total, 0);
+  const functional = rows.reduce((s, r) => s + r.functional, 0);
+  const notFunctional = rows.reduce((s, r) => s + r.notFunctional, 0);
+  const counted = functional + notFunctional;
+  return {
+    items: rows.filter((r) => r.total > 0).length,
+    recorded: rows.length,
+    units,
+    notFunctional,
+    functionalShare:
+      counted > 0 ? `${Math.round((functional / counted) * 100)}%` : "—",
+  };
+}
+
 interface FacilityInventoryViewProps {
   /**
    * The facility to show. Set for a facility admin, whose facility is fixed
@@ -96,7 +117,10 @@ export default function FacilityInventoryView({
     if (opening) {
       // After the chart has rendered below the table.
       requestAnimationFrame(() =>
-        chartRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+        chartRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        }),
       );
     }
   };
@@ -139,19 +163,19 @@ export default function FacilityInventoryView({
     [allRows, typeFilter],
   );
 
-  const stats = useMemo(() => {
-    const units = typedRows.reduce((s, r) => s + r.total, 0);
-    const functional = typedRows.reduce((s, r) => s + r.functional, 0);
-    const notFunctional = typedRows.reduce((s, r) => s + r.notFunctional, 0);
-    const counted = functional + notFunctional;
-    return {
-      items: typedRows.filter((r) => r.total > 0).length,
-      units,
-      notFunctional,
-      functionalShare:
-        counted > 0 ? `${Math.round((functional / counted) * 100)}%` : "—",
-    };
-  }, [typedRows]);
+  const stats = useMemo(() => summarize(typedRows), [typedRows]);
+  // Facility-wide, for the admin header: it sits above the tabs, so it must
+  // not change with them.
+  const facilityStats = useMemo(
+    () => ({
+      all: summarize(allRows),
+      equipment: summarize(allRows.filter((r) => r.type === "equipment")),
+      infrastructure: summarize(
+        allRows.filter((r) => r.type === "infrastructure"),
+      ),
+    }),
+    [allRows],
+  );
 
   // A facility the survey never reached returns two empty maps — "we don't
   // know", not "this facility has nothing".
@@ -232,6 +256,37 @@ export default function FacilityInventoryView({
         }
         itemType={actions.deleteType}
       />
+
+      {/* Admin: the facility's KPIs lead the page, before any control. */}
+      {isFacilityAdmin && !isError && (isLoading || isSurveyed) && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatTile
+            label="Equipment held"
+            value={isLoading ? "—" : facilityStats.equipment.items}
+            hint={
+              isLoading ? undefined : `${facilityStats.equipment.units} units`
+            }
+          />
+          <StatTile
+            label="Infrastructure held"
+            value={isLoading ? "—" : facilityStats.infrastructure.items}
+            hint={
+              isLoading
+                ? undefined
+                : `${facilityStats.infrastructure.units} units`
+            }
+          />
+          <StatTile
+            label="Functional"
+            value={isLoading ? "—" : facilityStats.all.functionalShare}
+            hint="of units with a recorded condition"
+          />
+          <StatTile
+            label="Non-functional units"
+            value={isLoading ? "—" : facilityStats.all.notFunctional}
+          />
+        </div>
+      )}
 
       {/* Toolbar — every control in one row above the views. */}
       {isFacilityAdmin ? (
@@ -330,20 +385,25 @@ export default function FacilityInventoryView({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile
-              label="Items held"
-              value={stats.items}
-              hint={`of ${typedRows.length} recorded`}
-            />
-            <StatTile label="Total units" value={stats.units} />
-            <StatTile
-              label="Functional"
-              value={stats.functionalShare}
-              hint="of units with a recorded condition"
-            />
-            <StatTile label="Non-functional units" value={stats.notFunctional} />
-          </div>
+          {!isFacilityAdmin && (
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatTile
+                label="Items held"
+                value={stats.items}
+                hint={`of ${stats.recorded} recorded`}
+              />
+              <StatTile label="Total units" value={stats.units} />
+              <StatTile
+                label="Functional"
+                value={stats.functionalShare}
+                hint="of units with a recorded condition"
+              />
+              <StatTile
+                label="Non-functional units"
+                value={stats.notFunctional}
+              />
+            </div>
+          )}
 
           {/* Keyed so a tab or facility change also leaves stock-take mode. */}
           <InventoryTable
