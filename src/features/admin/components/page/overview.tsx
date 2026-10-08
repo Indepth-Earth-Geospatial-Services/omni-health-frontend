@@ -97,14 +97,12 @@ export default function Overview() {
           <KPIStatsCards
             title="Equipment"
             value={isLoading ? "-" : kpiMetrics.equipment.items}
-            subtitle={isLoading ? undefined : `${kpiMetrics.equipment.units} units held`}
             icon={<Package size={24} />}
             detailsHref="/admin/equipments"
           />
           <KPIStatsCards
             title="Infrastructure"
             value={isLoading ? "-" : kpiMetrics.infrastructure.items}
-            subtitle={isLoading ? undefined : `${kpiMetrics.infrastructure.units} units held`}
             icon={<Hospital size={24} />}
             detailsHref="/admin/equipments"
           />
