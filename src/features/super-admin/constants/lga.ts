@@ -56,7 +56,7 @@ export const LGA_FILTER_OPTIONS = [
 export const FACILITY_TYPES = [
   "Health Post",
   "Health Clinic",
-  "Model Primary Health Center",
+  "Model Primary Health Centre",
 ];
 
 // Nigerian states (limited for now)

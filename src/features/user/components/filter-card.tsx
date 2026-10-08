@@ -10,7 +10,7 @@ const filters = [
   "All Types",
   "Health Post (HP)",
   "Health Clinic (HC)",
-  "Model Primary Health Center (MPHC)",
+  "Model Primary Health Centre (MPHC)",
 ] as const;
 
 function FilterCard() {

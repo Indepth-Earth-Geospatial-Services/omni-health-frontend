@@ -15,18 +15,11 @@ interface ExploreMapProps {
   allFacilities?: Facility[];
 }
 
+// Keyed by the three facility_category values the API returns.
 const facilityColors = {
-  "Primary Health Center": "#2ECC71", // fresh green – community-level care
-  Primary: "#27AE60", // deeper green – same tier, slight contrast
-
-  "Health Post": "#1ABC9C", // teal – basic outreach facilities
-  "Primary Health Clinic": "#16A085", // darker teal – related but distinct
-
-  "Secondary Health Care Centre": "#3498DB", // blue – mid-level care
-  Secondary: "#2980B9", // deeper blue – same tier
-
-  "General Hospital": "#9B59B6", // purple – advanced/general care
-  "Cottage Hospital": "#8E44AD", // deeper purple – related category
+  "Model Primary Health Centre": "#2ECC71", // green – the fullest tier
+  "Health Clinic": "#3498DB", // blue – mid-level care
+  "Health Post": "#9B59B6", // purple – basic outreach facilities
 };
 
 function ExploreMap({ allFacilities = [] }: ExploreMapProps) {

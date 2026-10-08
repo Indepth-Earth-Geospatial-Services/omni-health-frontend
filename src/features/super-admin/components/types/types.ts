@@ -43,8 +43,8 @@ export const CATEGORY_OPTIONS = [
   // has to match what facility_category actually stores or the filter returns
   // nothing.
   {
-    value: "Model Primary Health Center",
-    label: "Model Primary Health Center",
+    value: "Model Primary Health Centre",
+    label: "Model Primary Health Centre",
   },
 ];
 
