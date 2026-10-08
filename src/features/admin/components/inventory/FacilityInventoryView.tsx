@@ -1,15 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from "react";
-import {
-  AlertCircle,
-  BarChart3,
-  Building2,
-  ChevronDown,
-  ClipboardX,
-  Loader2,
-  Plus,
-} from "lucide-react";
+import { AlertCircle, Building2, ClipboardX, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/features/admin/components/ui/button";
 import InventoryItemModal from "@/features/admin/components/modals/InventoryItemModal";
@@ -361,26 +353,21 @@ export default function FacilityInventoryView({
             onEdit={(row) => actions.handleEdit(row.type, row)}
             onDelete={(row) => actions.handleDeleteClick(row, row.type)}
             onSaveStockTake={handleSaveStockTake}
-            footer={
-              <button
-                type="button"
-                onClick={toggleChart}
-                aria-expanded={isChartOpen}
-                aria-controls="inventory-condition-chart"
-                className="text-primary flex items-center gap-1.5 text-xs font-medium hover:underline"
-              >
-                <BarChart3 size={14} />
-                {isChartOpen ? "Hide condition chart" : "View condition chart"}
-                <ChevronDown
-                  size={14}
-                  className={cn(
-                    "transition-transform",
-                    isChartOpen && "rotate-180",
-                  )}
-                />
-              </button>
-            }
           />
+
+          {/* A quiet text link under the table, in the manner of an
+              "Advanced options" disclosure — present, never in the way. */}
+          <div className="-mt-1 px-1">
+            <button
+              type="button"
+              onClick={toggleChart}
+              aria-expanded={isChartOpen}
+              aria-controls="inventory-condition-chart"
+              className="text-primary text-sm font-medium underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+            >
+              {isChartOpen ? "Hide condition chart" : "View condition chart"}
+            </button>
+          </div>
 
           {isChartOpen && (
             <section
