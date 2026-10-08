@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { AlertCircle, Building2, ClipboardX, Loader2, Plus } from "lucide-react";
+import React, { useMemo, useRef, useState } from "react";
+import {
+  AlertCircle,
+  BarChart3,
+  Building2,
+  ChevronDown,
+  ClipboardX,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/features/admin/components/ui/button";
 import InventoryItemModal from "@/features/admin/components/modals/InventoryItemModal";
@@ -84,6 +92,22 @@ export default function FacilityInventoryView({
   );
 
   const facilityId = fixedFacilityId ?? pickedFacilityId;
+
+  // The page is for managing stock, not analysis — the chart is there when
+  // wanted, out of the way when not.
+  const [isChartOpen, setIsChartOpen] = useState(false);
+  const chartRef = useRef<HTMLElement>(null);
+
+  const toggleChart = () => {
+    const opening = !isChartOpen;
+    setIsChartOpen(opening);
+    if (opening) {
+      // After the chart has rendered below the table.
+      requestAnimationFrame(() =>
+        chartRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      );
+    }
+  };
 
   // The picker's list; not needed when the facility is fixed.
   const { data: facilities = [], isLoading: isLoadingFacilities } =
@@ -329,25 +353,6 @@ export default function FacilityInventoryView({
             <StatTile label="Non-functional units" value={stats.notFunctional} />
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-            <h3 className="text-base font-semibold text-slate-800">
-              Condition by item
-            </h3>
-            <p className="mt-0.5 mb-4 text-xs text-slate-500">
-              {facilityName ? `${facilityName} · ` : ""}sorted by total held
-            </p>
-            <FacilityConditionBars
-              key={`${facilityId}-${typeFilter}`}
-              data={typedRows.map((r) => ({
-                key: `${r.type}:${r.name}`,
-                name: r.displayName,
-                functional: r.functional,
-                notFunctional: r.notFunctional,
-                total: r.total,
-              }))}
-            />
-          </section>
-
           {/* Keyed so a tab or facility change also leaves stock-take mode. */}
           <InventoryTable
             key={`${facilityId}-${typeFilter}`}
@@ -356,7 +361,51 @@ export default function FacilityInventoryView({
             onEdit={(row) => actions.handleEdit(row.type, row)}
             onDelete={(row) => actions.handleDeleteClick(row, row.type)}
             onSaveStockTake={handleSaveStockTake}
+            footer={
+              <button
+                type="button"
+                onClick={toggleChart}
+                aria-expanded={isChartOpen}
+                aria-controls="inventory-condition-chart"
+                className="text-primary flex items-center gap-1.5 text-xs font-medium hover:underline"
+              >
+                <BarChart3 size={14} />
+                {isChartOpen ? "Hide condition chart" : "View condition chart"}
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    "transition-transform",
+                    isChartOpen && "rotate-180",
+                  )}
+                />
+              </button>
+            }
           />
+
+          {isChartOpen && (
+            <section
+              id="inventory-condition-chart"
+              ref={chartRef}
+              className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
+            >
+              <h3 className="text-base font-semibold text-slate-800">
+                Condition by item
+              </h3>
+              <p className="mt-0.5 mb-4 text-xs text-slate-500">
+                {facilityName ? `${facilityName} · ` : ""}sorted by total held
+              </p>
+              <FacilityConditionBars
+                key={`${facilityId}-${typeFilter}`}
+                data={typedRows.map((r) => ({
+                  key: `${r.type}:${r.name}`,
+                  name: r.displayName,
+                  functional: r.functional,
+                  notFunctional: r.notFunctional,
+                  total: r.total,
+                }))}
+              />
+            </section>
+          )}
         </>
       )}
     </div>

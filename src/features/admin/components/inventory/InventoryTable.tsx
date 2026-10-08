@@ -31,6 +31,8 @@ interface InventoryTableProps {
   onEdit: (row: InventoryRow) => void;
   onDelete: (row: InventoryRow) => void;
   onSaveStockTake: (changes: StockTakeChange[]) => Promise<void>;
+  /** Rendered at the foot of the table card, e.g. the chart toggle. */
+  footer?: React.ReactNode;
 }
 
 const rowKey = (r: InventoryRow) => `${r.type}:${r.name}`;
@@ -56,6 +58,7 @@ export function InventoryTable({
   onEdit,
   onDelete,
   onSaveStockTake,
+  footer,
 }: InventoryTableProps) {
   const [search, setSearch] = useState("");
   const [isStockTake, setIsStockTake] = useState(false);
@@ -373,6 +376,12 @@ export function InventoryTable({
               `Save ${changes.length} change${changes.length === 1 ? "" : "s"}`
             )}
           </Button>
+        </div>
+      )}
+
+      {footer && !isStockTake && (
+        <div className="border-t border-slate-100 px-4 py-2.5 sm:px-5">
+          {footer}
         </div>
       )}
     </section>
