@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/features/admin/components/ui/button";
+import { formatPhones } from "@/lib/utils";
 
 export default function Map() {
   const searchParams = useSearchParams();
@@ -345,13 +346,13 @@ export default function Map() {
 
                 {/* Contact Info */}
                 <div className="space-y-2">
-                  {selectedFacility.contact_info?.phone && (
+                  {formatPhones(selectedFacility.contact_info?.phone) && (
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-50">
                         <Phone size={12} className="text-green-600" />
                       </div>
                       <span className="text-xs text-slate-600">
-                        {selectedFacility.contact_info.phone}
+                        {formatPhones(selectedFacility.contact_info?.phone)}
                       </span>
                     </div>
                   )}

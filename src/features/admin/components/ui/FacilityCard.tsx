@@ -1,6 +1,7 @@
 import { Facility } from "@/types/api-response";
 import { MapPin, Phone, Mail, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatPhones } from "@/lib/utils";
 
 interface FacilityCardProps {
   facility: Facility;
@@ -51,10 +52,10 @@ export default function FacilityCard({
 
       {/* Contact info */}
       <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-600">
-        {facility.contact_info?.phone && (
+        {formatPhones(facility.contact_info?.phone) && (
           <div className="flex items-center gap-1.5">
             <Phone size={14} className="text-slate-400" />
-            <span>{facility.contact_info.phone}</span>
+            <span>{formatPhones(facility.contact_info?.phone)}</span>
           </div>
         )}
         {facility.contact_info?.email && (

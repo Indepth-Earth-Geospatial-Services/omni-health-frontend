@@ -171,6 +171,20 @@ export const getInitials = (name: string): string => {
 };
 
 /**
+ * Phone numbers as a clean list. The API sends a list of 11-digit numbers that
+ * already carry their leading zero; older records and the profile form use a
+ * plain (possibly comma-separated) string, and "N/A" means none.
+ */
+export const toPhoneList = (phone?: string | string[] | null): string[] =>
+  (Array.isArray(phone) ? phone : (phone ?? "").split(","))
+    .map((p) => p.trim())
+    .filter((p) => p !== "" && p.toUpperCase() !== "N/A");
+
+/** "08012345678, 08098765432" — or "" when there is no number. */
+export const formatPhones = (phone?: string | string[] | null): string =>
+  toPhoneList(phone).join(", ");
+
+/**
  * Factory function to normalize Facility data.
  * Ensures all nested objects and arrays are initialized to prevent runtime errors.
  */
@@ -196,26 +210,6 @@ export const getFacilityDefaults = (facility?: Partial<Facility>): Facility => {
     image_urls: facility?.image_urls ?? [],
 
     // Complex Objects
-    inventory: {
-      equipment: {
-        sphygmomanometer: facility?.inventory?.equipment?.sphygmomanometer ?? 0,
-        stethoscope_littman:
-          facility?.inventory?.equipment?.stethoscope_littman ?? 0,
-        baby_cots: facility?.inventory?.equipment?.baby_cots ?? 0,
-
-        delivery_bed: facility?.inventory?.equipment?.delivery_bed ?? 0,
-
-        inpatient_beds_with_mattress:
-          facility?.inventory?.equipment?.inpatient_beds_with_mattress ?? 0,
-
-        work_surface_for_resuscitation_of_newborn_paediatric_resuscitation_bed_with_radiant_warmer:
-          facility?.inventory?.equipment
-            ?.work_surface_for_resuscitation_of_newborn_paediatric_resuscitation_bed_with_radiant_warmer ??
-          0,
-      },
-      infrastructure: {},
-    },
-
     contact_info: {
       email: facility?.contact_info?.email ?? "N/A",
       phone: facility?.contact_info?.phone ?? "N/A",

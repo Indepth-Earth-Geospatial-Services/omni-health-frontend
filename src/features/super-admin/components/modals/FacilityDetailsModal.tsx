@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { superAdminService } from "@/features/super-admin/services/super-admin.service";
-import type { StaffMember } from "@/services/admin.service";
+import type { InventoryCounts, StaffMember } from "@/services/admin.service";
+import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
 import { Button } from "@/features/admin/components/ui/button";
+import { formatPhones } from "@/lib/utils";
 import {
   Building2,
   Phone,
@@ -34,12 +36,8 @@ interface FacilityDetailsModalProps {
     lat?: number;
     lon?: number;
     contact_info?: {
-      phone?: string;
+      phone?: string | string[];
       email?: string;
-    };
-    inventory?: {
-      equipment?: Record<string, unknown>;
-      infrastructure?: Record<string, unknown>;
     };
     specialists?: string[];
     services_list?: string[];
@@ -51,6 +49,10 @@ interface FacilityDetailsModalProps {
 }
 
 type TabType = "overview" | "Staff" | "working_hours";
+
+/** Items the facility actually holds — a recorded count of zero is not one. */
+const heldItemCount = (counts: InventoryCounts | undefined) =>
+  Object.values(counts ?? {}).filter((c) => c.total > 0).length;
 
 export default function FacilityDetailsModal({
   isOpen,
@@ -64,6 +66,17 @@ export default function FacilityDetailsModal({
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
+
+  // Inventory is no longer carried on the facility record — fetch it.
+  const { data: inventoryData, isLoading: inventoryLoading } =
+    useFacilityInventory(isOpen ? (facility?.facility_id ?? "") : "");
+  const inventory = inventoryData?.inventory;
+  // An unsurveyed facility returns two empty maps (314 of 342 today).
+  const isSurveyed =
+    Object.keys(inventory?.equipment ?? {}).length > 0 ||
+    Object.keys(inventory?.infrastructure ?? {}).length > 0;
+  const inventoryValue = (counts: InventoryCounts | undefined) =>
+    inventoryLoading ? "—" : isSurveyed ? heldItemCount(counts) : "—";
 
   useEffect(() => {
     if (!isOpen || !facility?.facility_id) return;
@@ -290,10 +303,12 @@ export default function FacilityDetailsModal({
                       </p>
                     </div>
                     <p className="text-xl font-medium text-slate-900">
-                      {Object.keys(facility.inventory?.equipment ?? {}).length}
+                      {inventoryValue(inventory?.equipment)}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Total Equipment
+                      {inventoryLoading || isSurveyed
+                        ? "Equipment items held"
+                        : "Not surveyed"}
                     </p>
                   </div>
                 </div>
@@ -310,13 +325,12 @@ export default function FacilityDetailsModal({
                       </p>
                     </div>
                     <p className="text-xl font-medium text-slate-900">
-                      {
-                        Object.keys(facility.inventory?.infrastructure ?? {})
-                          .length
-                      }
+                      {inventoryValue(inventory?.infrastructure)}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Total Infrastructure
+                      {inventoryLoading || isSurveyed
+                        ? "Infrastructure items held"
+                        : "Not surveyed"}
                     </p>
                   </div>
                 </div>
@@ -437,11 +451,11 @@ export default function FacilityDetailsModal({
                   Contact Information
                 </h3>
                 <div className="space-y-3">
-                  {facility.contact_info?.phone && (
+                  {formatPhones(facility.contact_info?.phone) && (
                     <div className="flex items-center gap-2 rounded bg-[#E2E4E9] px-4 py-2">
                       <Phone size={16} className="text-slate-400" />
                       <p className="text-sm text-[#868C98]">
-                        +234 {facility.contact_info.phone}
+                        {formatPhones(facility.contact_info?.phone)}
                       </p>
                     </div>
                   )}
@@ -453,7 +467,7 @@ export default function FacilityDetailsModal({
                       </p>
                     </div>
                   )}
-                  {!facility.contact_info?.phone &&
+                  {!formatPhones(facility.contact_info?.phone) &&
                     !facility.contact_info?.email && (
                       <p className="text-sm text-slate-500">
                         No contact information available

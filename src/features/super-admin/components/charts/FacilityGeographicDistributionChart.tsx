@@ -16,7 +16,7 @@ import {
 const FacilityGeographicDistributionChart = ({
   title = "Facility Geographic Distribution",
   data = [
-    { name: "Abua/Odual", value: 76 },
+    { name: "Abua-Odual", value: 76 },
     { name: "Ahoada East", value: 56 }, // Special Teal Color
     { name: "Ahoada West", value: 76 },
     { name: "Akuku-Toru", value: 37 },

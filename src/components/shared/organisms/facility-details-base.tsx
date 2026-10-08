@@ -5,6 +5,7 @@ import { useUserStore } from "@/features/user/store/user-store";
 import { Facility } from "@/features/user/types";
 import {
   formatDate,
+  formatPhones,
   getFacilityDefaults,
   getWorkingHoursForDisplay,
 } from "@/lib/utils";
@@ -60,14 +61,15 @@ function FacilityDetailsBase({
   } = facilityData;
 
   const email = contact_info?.email || "";
-  const phone = contact_info?.phone || "";
+  const phone = formatPhones(contact_info?.phone);
 
   const formattedLastUpdated = formatDate(last_updated);
   const workingHoursText = getWorkingHoursForDisplay(working_hours);
 
   const handleCallFacility = () => {
     if (phone) {
-      window.open(`tel:0${phone}`);
+      // Numbers already carry their leading zero; dial the first one.
+      window.open(`tel:${phone.split(",")[0].trim()}`);
     }
   };
 

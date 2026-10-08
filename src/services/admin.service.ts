@@ -54,17 +54,28 @@ export interface StaffSearchParams {
 export type CreateStaffData = Record<string, any>;
 
 // Inventory Types
-export interface EquipmentInventory {
-  [equipmentName: string]: number;
+export type InventoryType = "equipment" | "infrastructure";
+
+/**
+ * One item's count at one facility. `total` is what the survey recorded and is
+ * kept separate on purpose — it usually equals functional + not_functional,
+ * but a future count may disagree with its own breakdown.
+ */
+export interface InventoryCount {
+  total: number;
+  functional: number;
+  not_functional: number;
 }
 
-export interface InfrastructureInventory {
-  [infrastructureName: string]: number;
-}
+/**
+ * Keyed by catalogue item_name. An absent key means the survey recorded
+ * nothing for that item — not the same as a count of zero.
+ */
+export type InventoryCounts = Record<string, InventoryCount>;
 
 export interface FacilityInventory {
-  equipment: EquipmentInventory;
-  infrastructure: InfrastructureInventory;
+  equipment: InventoryCounts;
+  infrastructure: InventoryCounts;
 }
 
 export interface GetFacilityInventoryResponse {
@@ -73,31 +84,27 @@ export interface GetFacilityInventoryResponse {
   inventory: FacilityInventory;
 }
 
-// Add Equipment/Infrastructure Request & Response Types
-export interface AddEquipmentRequest {
+/**
+ * Body for POST .../inventory/equipment and .../inventory/infrastructure.
+ * Both conditions default to 0 server-side; `total` defaults to their sum and
+ * is only worth sending when the facility holds more than they account for.
+ * An item_name outside the catalogue is rejected with 409.
+ */
+export interface InventoryWriteRequest {
   item_name: string;
-  quantity: number;
+  functional?: number;
+  not_functional?: number;
+  total?: number;
 }
 
-export interface AddInfrastructureRequest {
-  item_name: string;
-  quantity: number;
-}
-
-export interface AddEquipmentResponse {
+export interface InventoryWriteResponse {
   facility_id: string;
   facility_name: string;
   item_name: string;
-  quantity: number;
-  updated_inventory: EquipmentInventory;
-}
-
-export interface AddInfrastructureResponse {
-  facility_id: string;
-  facility_name: string;
-  item_name: string;
-  quantity: number;
-  updated_inventory: InfrastructureInventory;
+  name: string;
+  type: InventoryType;
+  count: InventoryCount;
+  action: "added" | "updated";
 }
 
 // --- Add these new interfaces ---
@@ -306,8 +313,8 @@ class AdminService {
     data,
   }: {
     facilityId: string;
-    data: AddEquipmentRequest;
-  }): Promise<AddEquipmentResponse> {
+    data: InventoryWriteRequest;
+  }): Promise<InventoryWriteResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment`,
       data,
@@ -324,8 +331,8 @@ class AdminService {
     data,
   }: {
     facilityId: string;
-    data: AddInfrastructureRequest;
-  }): Promise<AddInfrastructureResponse> {
+    data: InventoryWriteRequest;
+  }): Promise<InventoryWriteResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
       data,
@@ -376,8 +383,8 @@ class AdminService {
     data,
   }: {
     facilityId: string;
-    data: AddEquipmentRequest;
-  }): Promise<AddEquipmentResponse> {
+    data: InventoryWriteRequest;
+  }): Promise<InventoryWriteResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/equipment`,
       data,
@@ -394,8 +401,8 @@ class AdminService {
     data,
   }: {
     facilityId: string;
-    data: AddInfrastructureRequest;
-  }): Promise<AddInfrastructureResponse> {
+    data: InventoryWriteRequest;
+  }): Promise<InventoryWriteResponse> {
     const response = await apiClient.post(
       `${this.ENDPOINTS.FACILITY}/${facilityId}/inventory/infrastructure`,
       data,

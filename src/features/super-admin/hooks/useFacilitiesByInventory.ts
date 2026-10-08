@@ -1,15 +1,17 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { superAdminService } from "../services/super-admin.service";
 import { adminService } from "@/services/admin.service";
+import { inventoryCatalogueKeys } from "./useInventoryCatalogue";
+import { AdminInventoryKeys } from "@/features/admin/hooks/useAdminStaff";
 
 export type InventoryItemType = "equipment" | "infrastructure";
 
-/** Just enough to list a facility and act on it — name and per-facility
- *  quantity for display, id to delete by. */
+/** Just enough to list a facility and act on it — name for display, id to
+ *  delete by. Per-facility counts live on the facility inventory endpoint;
+ *  the facility list no longer carries them. */
 export interface FacilitySummary {
   facility_id: string;
   facility_name: string;
-  quantity: number;
 }
 
 export const inventoryFacilitiesKeys = {
@@ -36,10 +38,6 @@ export const inventoryFacilitiesKeys = {
  * revisiting the page — or re-expanding an item — within the window reads
  * from cache instead of refetching, and a failed page surfaces
  * `isError`/`refetch` instead of silently showing an empty list.
- *
- * `select` also pulls one number back out of the inventory map it otherwise
- * discards: `facility.inventory[type][itemName]`, the quantity that specific
- * facility holds — the one piece of that heavy blob actually worth keeping.
  */
 export function useFacilitiesByInventory(
   itemName: string | null,
@@ -61,7 +59,6 @@ export function useFacilitiesByInventory(
         (f): FacilitySummary => ({
           facility_id: f.facility_id,
           facility_name: f.facility_name,
-          quantity: Number(f.inventory?.[type]?.[itemName as string] ?? 0),
         }),
       ),
     }),
@@ -125,7 +122,9 @@ export function useDeleteInventoryItem() {
     onSuccess: (_result, { itemName }) => {
       // The item may no longer exist at any facility, so the top-level
       // unique-items list has to be re-derived server-side.
-      queryClient.invalidateQueries({ queryKey: ["unique-inventory"] });
+      queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
+      // Per-facility inventories touched by the batch (By Facility tab).
+      queryClient.invalidateQueries({ queryKey: AdminInventoryKeys.all });
       queryClient.invalidateQueries({
         queryKey: inventoryFacilitiesKeys.forItem(itemName),
       });
@@ -145,21 +144,31 @@ export function useBatchAddInventoryItem() {
     mutationFn: ({
       facilityIds,
       itemName,
-      quantity,
+      functional,
+      notFunctional,
       type,
     }: {
       facilityIds: string[];
       itemName: string;
-      quantity: number;
+      functional: number;
+      notFunctional: number;
       type: InventoryItemType;
-    }) =>
-      runBatch(facilityIds, (facilityId) =>
+    }) => {
+      const data = {
+        item_name: itemName,
+        functional,
+        not_functional: notFunctional,
+      };
+      return runBatch(facilityIds, (facilityId) =>
         type === "equipment"
-          ? adminService.addEquipment({ facilityId, data: { item_name: itemName, quantity } })
-          : adminService.addInfrastructure({ facilityId, data: { item_name: itemName, quantity } }),
-      ),
+          ? adminService.addEquipment({ facilityId, data })
+          : adminService.addInfrastructure({ facilityId, data }),
+      );
+    },
     onSuccess: (_result, { itemName }) => {
-      queryClient.invalidateQueries({ queryKey: ["unique-inventory"] });
+      queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
+      // Per-facility inventories touched by the batch (By Facility tab).
+      queryClient.invalidateQueries({ queryKey: AdminInventoryKeys.all });
       queryClient.invalidateQueries({
         queryKey: inventoryFacilitiesKeys.forItem(itemName),
       });

@@ -58,7 +58,7 @@ const MostActiveZonesCard = () => {
         width: `${Math.round((healthClinicCount / maxValue) * 100)}%`,
       },
       {
-        name: "Model Primary HealthCentre (MPHC)",
+        name: "Model Primary Health Centre (MPHC)",
         value: mphcCount,
         color: "bg-amber-400",
         width: `${Math.round((mphcCount / maxValue) * 100)}%`,

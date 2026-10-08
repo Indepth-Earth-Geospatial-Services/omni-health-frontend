@@ -1,7 +1,5 @@
 "use client";
 import { useState, useCallback } from "react";
-import KPIStatsCards from "@/features/admin/components/layout/KPICards";
-import { Package, Building2 } from "lucide-react";
 import StaffTableHeader, {
   type FilterState,
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
@@ -10,6 +8,8 @@ import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
 import { useFacilityOptions } from "../../hooks/useFacilityOptions";
 import { useBatchAddInventoryItem } from "../../hooks/useFacilitiesByInventory";
 import UniqueInventoryList from "../layouts/UniqueInventoryList";
+import FacilityInventoryView from "@/features/admin/components/inventory/FacilityInventoryView";
+import InventoryKpis from "../layouts/InventoryKpis";
 import InventoryItemModal, {
   type InventoryFormData,
 } from "../../../admin/components/modals/InventoryItemModal";
@@ -17,8 +17,13 @@ import { toast } from "sonner";
 
 export default function EquipmentPage() {
   // ========== TAB STATE ==========
-  // Tracks which tab is currently active (Equipment or Infrastructure)
+  // Tracks which tab is currently active (Equipment, Infrastructure, or one
+  // facility's inventory)
   const [activeTab, setActiveTab] = useState("equipment");
+
+  // The facility open on the By Facility tab. Held here, not in the tab, so
+  // the page's KPI row describes the same facility.
+  const [byFacilityId, setByFacilityId] = useState<string | null>(null);
 
   // ========== MODAL STATE ==========
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
@@ -51,16 +56,13 @@ export default function EquipmentPage() {
   const batchAddMutation = useBatchAddInventoryItem();
 
   // ========== TAB CONFIGURATION ==========
-  // Define available tabs (Equipment and Infrastructure only)
+  // Equipment and Infrastructure list items across every facility; By
+  // Facility drills into one facility's counts.
   const tabs = [
     { label: "Equipment", value: "equipment" },
     { label: "Infrastructure", value: "infrastructure" },
+    { label: "By Facility", value: "by-facility" },
   ];
-
-  // ========== KPI METRICS CALCULATION ==========
-  // Calculate metrics for display in KPI cards
-  const totalEquipment = inventoryData?.equipment?.length ?? 0;
-  const totalInfrastructure = inventoryData?.infrastructure?.length ?? 0;
 
   // ========== EVENT HANDLERS ==========
   // Handle search query changes
@@ -104,10 +106,11 @@ export default function EquipmentPage() {
         const result = await batchAddMutation.mutateAsync({
           facilityIds: data.facilityIds,
           itemName: data.name,
-          quantity: parseInt(data.quantity, 10),
+          functional: data.functional,
+          notFunctional: data.notFunctional,
           type: "equipment",
         });
-        reportBatchResult(data.name, result);
+        reportBatchResult(data.displayName, result);
         setIsEquipmentModalOpen(false);
       } catch (error: unknown) {
         const err = error as { message?: string };
@@ -128,10 +131,11 @@ export default function EquipmentPage() {
         const result = await batchAddMutation.mutateAsync({
           facilityIds: data.facilityIds,
           itemName: data.name,
-          quantity: parseInt(data.quantity, 10),
+          functional: data.functional,
+          notFunctional: data.notFunctional,
           type: "infrastructure",
         });
-        reportBatchResult(data.name, result);
+        reportBatchResult(data.displayName, result);
         setIsInfrastructureModalOpen(false);
       } catch (error: unknown) {
         const err = error as { message?: string };
@@ -153,23 +157,11 @@ export default function EquipmentPage() {
   return (
     <div className="flex-1 overflow-y-auto bg-white">
       <main className="flex min-h-screen flex-col">
-        {/* KPI Stats Cards - Equipment and Infrastructure Counts */}
-        <div className="mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2">
-          <KPIStatsCards
-            title="Total Equipment Items"
-            value={totalEquipment}
-            subtitle="Unique across all facilities"
-            icon={<Package size={24} />}
-            //trend={{ value: "20%", isPositive: true }}
-          />
-          <KPIStatsCards
-            title="Total Infrastructure Items"
-            value={totalInfrastructure}
-            subtitle="Unique across all facilities"
-            icon={<Building2 size={24} />}
-            // trend={{ value: "2% Decrease", isPositive: false }}
-          />
-        </div>
+        {/* One KPI row for the page: all facilities, or the facility open
+            on the By Facility tab. */}
+        <InventoryKpis
+          facilityId={activeTab === "by-facility" ? byFacilityId : null}
+        />
 
         {/* Tabs - Equipment and Infrastructure */}
         <div className="m-6">
@@ -177,7 +169,7 @@ export default function EquipmentPage() {
             tabs={tabs}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            size="lg"
+            size="xl"
           />
         </div>
 
@@ -245,6 +237,16 @@ export default function EquipmentPage() {
               />
             )}
           </>
+        )}
+
+        {/* By Facility Tab - one facility's counts as a chart and a table */}
+        {activeTab === "by-facility" && (
+          <div className="pb-8">
+            <FacilityInventoryView
+              selectedFacilityId={byFacilityId}
+              onSelectFacility={setByFacilityId}
+            />
+          </div>
         )}
       </main>
 
