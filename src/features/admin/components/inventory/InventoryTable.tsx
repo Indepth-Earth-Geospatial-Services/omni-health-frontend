@@ -28,9 +28,6 @@ interface InventoryTableProps {
   /** Shown as a Facility column when set — the super-admin view, where the
    *  facility is a choice rather than the login's own. */
   facilityName?: string;
-  /** The catalogue key column — useful to a super admin cross-referencing
-   *  data, noise to a facility admin counting stock. */
-  showItemId?: boolean;
   onEdit: (row: InventoryRow) => void;
   onDelete: (row: InventoryRow) => void;
   onSaveStockTake: (changes: StockTakeChange[]) => Promise<void>;
@@ -48,7 +45,7 @@ const surplusOf = (r: InventoryRow) =>
   Math.max(0, r.total - r.functional - r.notFunctional);
 
 /**
- * Inventory rows as a table — item, catalogue ID, counts, actions — with a
+ * Inventory rows as a table — item, counts, actions — with a
  * stock-take mode that turns the two condition columns into inputs so a
  * whole count can be entered in one pass. Also serves as the condition
  * chart's table view.
@@ -56,7 +53,6 @@ const surplusOf = (r: InventoryRow) =>
 export function InventoryTable({
   rows,
   facilityName,
-  showItemId = true,
   onEdit,
   onDelete,
   onSaveStockTake,
@@ -133,7 +129,7 @@ export function InventoryTable({
   const countInputClass =
     "focus:border-primary focus:ring-primary/20 w-20 rounded-md border border-slate-300 px-2 py-1 text-right text-sm tabular-nums focus:ring-2 focus:outline-none disabled:opacity-50";
 
-  const columnCount = 5 + (showItemId ? 1 : 0) + (facilityName ? 1 : 0);
+  const columnCount = facilityName ? 6 : 5;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -193,17 +189,12 @@ export function InventoryTable({
         <table
           className={cn(
             "w-full text-sm",
-            facilityName
-              ? "min-w-[52rem]"
-              : showItemId
-                ? "min-w-[44rem]"
-                : "min-w-[36rem]",
+            facilityName ? "min-w-[44rem]" : "min-w-[36rem]",
           )}
         >
           <thead className="sticky top-0 z-[1] bg-slate-50 text-left text-xs font-medium text-slate-500">
             <tr>
               <th className="px-4 py-2.5 sm:px-5">Item</th>
-              {showItemId && <th className="px-4 py-2.5">Item ID</th>}
               {facilityName && <th className="px-4 py-2.5">Facility</th>}
               <th className="px-4 py-2.5 text-right">Total</th>
               <th className="px-4 py-2.5 text-right">Functional</th>
@@ -257,16 +248,6 @@ export function InventoryTable({
                         </span>
                       </div>
                     </td>
-                    {showItemId && (
-                      <td className="max-w-[14rem] px-4 py-2.5">
-                        <code
-                          className="block truncate text-xs text-slate-500"
-                          title={r.name}
-                        >
-                          {r.name}
-                        </code>
-                      </td>
-                    )}
                     {facilityName && (
                       <td className="max-w-[12rem] px-4 py-2.5">
                         <span

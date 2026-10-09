@@ -402,7 +402,6 @@ export default function FacilityInventoryView({
             key={`${facilityId}-${typeFilter}`}
             rows={typedRows}
             facilityName={facilityName}
-            showItemId={!isFacilityAdmin}
             onEdit={(row) => actions.handleEdit(row.type, row)}
             onDelete={(row) => actions.handleDeleteClick(row, row.type)}
             onSaveStockTake={handleSaveStockTake}
