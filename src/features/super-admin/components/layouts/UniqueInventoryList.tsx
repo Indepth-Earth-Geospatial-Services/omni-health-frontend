@@ -5,7 +5,6 @@ import {
   Building2,
   Check,
   ChevronDown,
-  Loader2,
   RotateCcw,
   Trash2,
 } from "lucide-react";
@@ -19,9 +18,11 @@ import {
   type InventoryItemType,
 } from "../../hooks/useFacilitiesByInventory";
 import { StaffPagination } from "./Staff.Pagination";
+import type { InventorySummaryItem } from "../../services/super-admin.service";
 
 interface UniqueInventoryListProps {
-  items: string[];
+  /** This tab's catalogue items, from /admin/inventory/summary. */
+  items: InventorySummaryItem[];
   searchQuery?: string;
   type: InventoryItemType;
   emptyMessage: string;
@@ -55,11 +56,6 @@ const THEME: Record<
 
 type Theme = (typeof THEME)[InventoryItemType];
 
-/** "operating_theatre" -> "Operating Theatre" */
-function formatName(name: string) {
-  return name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-}
-
 /**
  * Unique equipment/infrastructure items across every facility, with a
  * drill-down into which facilities carry a given item and a way to remove
@@ -67,6 +63,9 @@ function formatName(name: string) {
  * super-admin inventory page — equipment and infrastructure only differ by
  * accent color and copy, so they used to be ~300 lines of duplicated code
  * each; now it's one generic list plus a `type` prop.
+ *
+ * Names and facility counts come with the list itself (one summary request);
+ * the facilities behind an item load only when that item is opened.
  */
 export default function UniqueInventoryList({
   items,
@@ -79,9 +78,15 @@ export default function UniqueInventoryList({
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
-    const q = searchQuery.toLowerCase();
-    return items.filter((item) => item.toLowerCase().includes(q));
+    const q = searchQuery.trim().toLowerCase();
+    return items
+      .filter(
+        (item) =>
+          !q ||
+          item.name.toLowerCase().includes(q) ||
+          item.item_name.includes(q),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [items, searchQuery]);
 
   const toggleExpand = (itemName: string) => {
@@ -111,14 +116,14 @@ export default function UniqueInventoryList({
             <p className="text-gray-500">{emptyMessage}</p>
           </div>
         ) : (
-          filteredItems.map((itemName) => (
+          filteredItems.map((item) => (
             <InventoryRow
-              key={itemName}
-              itemName={itemName}
+              key={item.item_name}
+              item={item}
               type={type}
               theme={theme}
-              isExpanded={expandedItems.has(itemName)}
-              onToggle={() => toggleExpand(itemName)}
+              isExpanded={expandedItems.has(item.item_name)}
+              onToggle={() => toggleExpand(item.item_name)}
             />
           ))
         )}
@@ -154,36 +159,46 @@ function Checkbox({
       aria-pressed={checked}
       className={cn(
         "flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border transition-colors",
-        checked ? theme.checkbox : partial ? cn(theme.checkbox, "opacity-50") : "border-gray-300 bg-white",
+        checked
+          ? theme.checkbox
+          : partial
+            ? cn(theme.checkbox, "opacity-50")
+            : "border-gray-300 bg-white",
       )}
     >
       {checked && <Check size={11} className="text-white" />}
-      {!checked && partial && <div className="h-1.5 w-1.5 rounded-sm bg-white" />}
+      {!checked && partial && (
+        <div className="h-1.5 w-1.5 rounded-sm bg-white" />
+      )}
     </button>
   );
 }
 
 function InventoryRow({
-  itemName,
+  item,
   type,
   theme,
   isExpanded,
   onToggle,
 }: {
-  itemName: string;
+  item: InventorySummaryItem;
   type: InventoryItemType;
   theme: Theme;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
+  const itemName = item.item_name;
+  const label = item.name;
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [deleteTarget, setDeleteTarget] = useState<FacilitySummary[] | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FacilitySummary[] | null>(
+    null,
+  );
 
-  // Fetched eagerly (not gated on `isExpanded`) so the facility count next to
-  // the chevron is there as soon as the list renders, not only after a click.
+  // Only once opened: the count beside the chevron already comes from the
+  // summary, so the list no longer fires one request per item on load.
   const { data, isLoading, isFetching, isError, refetch } =
-    useFacilitiesByInventory(itemName, type, page, 10);
+    useFacilitiesByInventory(isExpanded ? itemName : null, type, page, 10);
   const deleteMutation = useDeleteInventoryItem();
 
   const facilities = data?.facilities ?? [];
@@ -226,7 +241,6 @@ function InventoryRow({
       },
       {
         onSuccess: (result) => {
-          const label = formatName(itemName);
           if (result.failed === 0) {
             toast.success(
               result.succeeded === 1
@@ -254,8 +268,10 @@ function InventoryRow({
   };
 
   const selectedCount = selectedIds.size;
-  const isAllSelected = facilities.length > 0 && selectedCount === facilities.length;
-  const isPartiallySelected = selectedCount > 0 && selectedCount < facilities.length;
+  const isAllSelected =
+    facilities.length > 0 && selectedCount === facilities.length;
+  const isPartiallySelected =
+    selectedCount > 0 && selectedCount < facilities.length;
 
   return (
     <div>
@@ -276,16 +292,24 @@ function InventoryRow({
               isExpanded && "rotate-180",
             )}
           />
-          <span className="font-semibold text-gray-900">{formatName(itemName)}</span>
+          <div className="min-w-0">
+            <span
+              className="block truncate font-semibold text-gray-900"
+              title={label}
+            >
+              {label}
+            </span>
+            <span className="block text-xs text-gray-500 tabular-nums">
+              {item.total_quantity.toLocaleString()} units ·{" "}
+              {item.total_functional.toLocaleString()} functional
+              {item.total_not_functional > 0 &&
+                ` · ${item.total_not_functional.toLocaleString()} non-functional`}
+            </span>
+          </div>
         </div>
-        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
-          {isLoading ? (
-            <Loader2 size={13} className="animate-spin text-gray-400" />
-          ) : isError ? (
-            "—"
-          ) : (
-            `${totalRecords} facilit${totalRecords !== 1 ? "ies" : "y"}`
-          )}
+        <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600 tabular-nums">
+          {item.facilities_with_item} facilit
+          {item.facilities_with_item !== 1 ? "ies" : "y"}
         </span>
       </button>
 
@@ -296,7 +320,9 @@ function InventoryRow({
         style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className={cn("border-t px-4 py-3", theme.border, theme.panelBg)}>
+          <div
+            className={cn("border-t px-4 py-3", theme.border, theme.panelBg)}
+          >
             {isLoading ? (
               <div className="space-y-2 py-1">
                 {[0, 1, 2].map((i) => (
@@ -347,7 +373,9 @@ function InventoryRow({
                       type="button"
                       onClick={() =>
                         setDeleteTarget(
-                          facilities.filter((f) => selectedIds.has(f.facility_id)),
+                          facilities.filter((f) =>
+                            selectedIds.has(f.facility_id),
+                          ),
                         )
                       }
                       className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
@@ -376,7 +404,10 @@ function InventoryRow({
                           onClick={() => toggleSelected(facility.facility_id)}
                           ariaLabel={`Select ${facility.facility_name}`}
                         />
-                        <Building2 size={15} className="shrink-0 text-gray-400" />
+                        <Building2
+                          size={15}
+                          className="shrink-0 text-gray-400"
+                        />
                         <span className="truncate text-sm text-gray-800">
                           {facility.facility_name}
                         </span>
@@ -385,7 +416,7 @@ function InventoryRow({
                         <button
                           type="button"
                           onClick={() => setDeleteTarget([facility])}
-                          aria-label={`Remove ${formatName(itemName)} from ${facility.facility_name}`}
+                          aria-label={`Remove ${label} from ${facility.facility_name}`}
                           className="rounded-md p-1.5 text-gray-400 opacity-60 transition-colors group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 size={15} />
@@ -396,13 +427,15 @@ function InventoryRow({
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="-mx-4 -mb-3 mt-2">
+                  <div className="-mx-4 mt-2 -mb-3">
                     <StaffPagination
                       page={currentPage}
                       totalPages={totalPages}
                       totalRecords={totalRecords}
                       onPrevPage={() => goToPage(Math.max(1, currentPage - 1))}
-                      onNextPage={() => goToPage(Math.min(totalPages, currentPage + 1))}
+                      onNextPage={() =>
+                        goToPage(Math.min(totalPages, currentPage + 1))
+                      }
                     />
                   </div>
                 )}
@@ -420,8 +453,8 @@ function InventoryRow({
         itemName={
           deleteTarget
             ? deleteTarget.length === 1
-              ? `${formatName(itemName)} — ${deleteTarget[0].facility_name}`
-              : `${formatName(itemName)} — ${deleteTarget.length} facilities`
+              ? `${label} — ${deleteTarget[0].facility_name}`
+              : `${label} — ${deleteTarget.length} facilities`
             : ""
         }
         itemType={type}

@@ -247,7 +247,8 @@ export interface InventorySummaryParams {
   lga_id?: number;
   sort_by?: "name" | "facilities" | "quantity";
   order?: "asc" | "desc";
-  skip?: number;
+  page?: number;
+  /** Up to 500. */
   limit?: number;
 }
 
@@ -311,6 +312,13 @@ export interface SearchFacilitiesByInventoryResponse {
     limit: number;
   };
   facilities: Facility[];
+}
+
+/** GET /admin/lgas — every LGA with its id and how many facilities it has. */
+export interface LgaListItem {
+  lga_id: number;
+  lga_name: string;
+  facility_count: number;
 }
 
 export interface UnassignedLga {
@@ -379,6 +387,7 @@ class SuperAdminService {
     NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
     EXPORT_FACILITIES: "/admin/export/facilities", // Export facilities to CSV or Excel
     BULK_DELETE_FACILITIES: "/admin/facilities/bulk-delete", // DELETE bulk facilities
+    LGAS: "/admin/lgas", // GET every LGA with lga_id and facility_count
     UNASSIGNED_LGAS: "/admin/lgas/unassigned",
     UNASSIGN_LGA: "/admin/users",
   };
@@ -814,22 +823,19 @@ class SuperAdminService {
   }
 
   /**
-   * Every summary item across all pages. The endpoint pages (default 50) and
-   * the catalogue is 84 items, so this asks for 100 at a time and keeps going
-   * only if the server caps the page lower than that.
+   * Every summary item. The endpoint pages by `page` (limit up to 500); the
+   * catalogue is under that, so this is normally one request, and it only
+   * keeps paging if the catalogue ever outgrows a page.
    */
   async getAllInventorySummary(
-    params: Omit<InventorySummaryParams, "skip" | "limit"> = {},
+    params: Omit<InventorySummaryParams, "page" | "limit"> = {},
   ): Promise<InventorySummaryItem[]> {
-    const limit = 100;
+    const limit = 500;
     const items: InventorySummaryItem[] = [];
-    for (let skip = 0; ; skip += limit) {
-      const page = await this.getInventorySummary({ ...params, skip, limit });
-      items.push(...page.items);
-      if (
-        page.items.length === 0 ||
-        items.length >= page.pagination.total_records
-      ) {
+    for (let page = 1; ; page++) {
+      const res = await this.getInventorySummary({ ...params, page, limit });
+      items.push(...res.items);
+      if (page >= res.pagination.total_pages || res.items.length === 0) {
         return items;
       }
     }
@@ -972,6 +978,15 @@ class SuperAdminService {
    * Get all LGAs that have no facilities assigned to any user/admin
    * GET /api/v1/admin/lgas/unassigned
    */
+  /**
+   * Every LGA with its id and facility count
+   * GET /api/v1/admin/lgas (admin or super admin)
+   */
+  async getLgas(): Promise<LgaListItem[]> {
+    const response = await apiClient.get(this.ENDPOINTS.LGAS);
+    return response.data;
+  }
+
   async getUnassignedLgas(): Promise<UnassignedLga[]> {
     const response = await apiClient.get(this.ENDPOINTS.UNASSIGNED_LGAS);
     return response.data;

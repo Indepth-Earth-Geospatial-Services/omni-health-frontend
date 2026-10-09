@@ -13,6 +13,10 @@ interface KPICardProps {
   };
   showViewDetails?: boolean;
   detailsHref?: string;
+  /** First load: a shimmer in place of the value instead of a dash. */
+  isLoading?: boolean;
+  /** Refreshing: the current value stays, dimmed, with a small note. */
+  isUpdating?: boolean;
 }
 
 export default function KPICard({
@@ -23,12 +27,21 @@ export default function KPICard({
   trend,
   showViewDetails = true,
   detailsHref,
+  isLoading = false,
+  isUpdating = false,
 }: KPICardProps) {
   return (
     <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white transition-all hover:border-gray-300">
       {/* Trend and View Details bar — always present for consistent height */}
       <div className="flex min-h-[48px] items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
-        {trend ? (
+        {isUpdating ? (
+          <span
+            className="text-xs font-medium text-gray-400"
+            aria-live="polite"
+          >
+            Updating…
+          </span>
+        ) : trend ? (
           <div
             className={`flex items-center gap-1 text-sm font-medium ${
               trend.isPositive ? "text-green-600" : "text-red-600"
@@ -59,10 +72,26 @@ export default function KPICard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-2 text-sm font-medium text-gray-600">{title}</div>
-          <div className="text-3xl font-bold text-gray-900">{value}</div>
-          {subtitle && (
-            <div className="mt-1 text-sm text-gray-500">{subtitle}</div>
+          {isLoading ? (
+            <div
+              aria-label="Loading"
+              className="my-1 h-7 w-20 animate-pulse rounded-md bg-gray-200"
+            />
+          ) : (
+            <div
+              className={`text-3xl font-bold text-gray-900 transition-opacity ${
+                isUpdating ? "opacity-50" : ""
+              }`}
+            >
+              {value}
+            </div>
           )}
+          {subtitle &&
+            (isLoading ? (
+              <div className="mt-2 h-3.5 w-32 animate-pulse rounded bg-gray-100" />
+            ) : (
+              <div className="mt-1 text-sm text-gray-500">{subtitle}</div>
+            ))}
         </div>
       </div>
     </div>
