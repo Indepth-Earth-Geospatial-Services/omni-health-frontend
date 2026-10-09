@@ -24,6 +24,8 @@ export default function EquipmentPage() {
   // The facility open on the By Facility tab. Held here, not in the tab, so
   // the page's KPI row describes the same facility.
   const [byFacilityId, setByFacilityId] = useState<string | null>(null);
+  // The LGA narrowing the By Facility tab, held here for the same reason.
+  const [byLga, setByLga] = useState<string | null>(null);
 
   // ========== MODAL STATE ==========
   const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
@@ -167,6 +169,11 @@ export default function EquipmentPage() {
         <InventoryKpis
           facilityId={activeTab === "by-facility" ? byFacilityId : null}
           onClearFacility={() => setByFacilityId(null)}
+          lgaName={activeTab === "by-facility" ? byLga : null}
+          onClearLga={() => {
+            setByLga(null);
+            setByFacilityId(null);
+          }}
         />
 
         {/* Tabs - Equipment and Infrastructure */}
@@ -251,6 +258,8 @@ export default function EquipmentPage() {
             <FacilityInventoryView
               selectedFacilityId={byFacilityId}
               onSelectFacility={setByFacilityId}
+              selectedLga={byLga}
+              onSelectLga={setByLga}
             />
           </div>
         )}

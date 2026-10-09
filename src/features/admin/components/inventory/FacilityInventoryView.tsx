@@ -2,6 +2,7 @@
 
 import React, { useMemo, useRef, useState } from "react";
 import {
+  MapPin,
   AlertCircle,
   Building2,
   ClipboardX,
@@ -26,6 +27,9 @@ import {
   type FacilityOption,
 } from "@/features/super-admin/hooks/useFacilityOptions";
 import { useInventoryCatalogue } from "@/features/super-admin/hooks/useInventoryCatalogue";
+import { useLgaInventory } from "@/features/super-admin/hooks/useLgaInventory";
+import { LGA_OPTIONS } from "@/features/super-admin/constants/lga";
+import LgaInventoryOverview from "@/features/super-admin/components/layouts/LgaInventoryOverview";
 import { FacilityConditionBars } from "./FacilityConditionBars";
 import {
   InventoryTable,
@@ -91,8 +95,21 @@ interface FacilityInventoryViewProps {
    * can describe the same facility. Uncontrolled when omitted.
    */
   selectedFacilityId?: string | null;
-  onSelectFacility?: (facilityId: string) => void;
+  onSelectFacility?: (facilityId: string | null) => void;
+  /**
+   * Super admin only: the LGA narrowing the facility picker. With no facility
+   * chosen, the view shows that LGA's facilities instead. Uncontrolled when
+   * omitted.
+   */
+  selectedLga?: string | null;
+  onSelectLga?: (lga: string | null) => void;
 }
+
+const ALL_LGAS = "all";
+const LGA_ITEMS = [
+  { id: ALL_LGAS, label: "All LGAs" },
+  ...LGA_OPTIONS.map((name) => ({ id: name, label: name })),
+];
 
 /**
  * One facility's inventory: summary tiles (facility admin; the super admin
@@ -105,6 +122,8 @@ export default function FacilityInventoryView({
   facilityId: fixedFacilityId,
   selectedFacilityId,
   onSelectFacility,
+  selectedLga,
+  onSelectLga,
 }: FacilityInventoryViewProps) {
   const isFacilityAdmin = !!fixedFacilityId;
 
@@ -114,6 +133,14 @@ export default function FacilityInventoryView({
   const pickedFacilityId =
     selectedFacilityId !== undefined ? selectedFacilityId : ownPickedFacilityId;
   const setPickedFacilityId = onSelectFacility ?? setOwnPickedFacilityId;
+
+  const [ownLga, setOwnLga] = useState<string | null>(null);
+  const lga = selectedLga !== undefined ? selectedLga : ownLga;
+  // A new LGA clears the facility: the picker now lists another LGA's.
+  const changeLga = (next: string | null) => {
+    (onSelectLga ?? setOwnLga)(next);
+    setPickedFacilityId(null);
+  };
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(
     isFacilityAdmin ? "equipment" : "all",
   );
@@ -140,8 +167,21 @@ export default function FacilityInventoryView({
   };
 
   // The picker's list; not needed when the facility is fixed.
-  const { data: facilities = [], isLoading: isLoadingFacilities } =
+  const { data: allFacilities = [], isLoading: isLoadingAllFacilities } =
     useFacilityOptions(!isFacilityAdmin);
+  // With an LGA chosen, the picker lists only its facilities (cached, and
+  // shared with the LGA overview and KPI row).
+  const lgaInventory = useLgaInventory(isFacilityAdmin ? null : lga);
+  const facilities: FacilityOption[] = lga
+    ? lgaInventory.rows.map((r) => ({
+        facility_id: r.facility_id,
+        facility_name: r.facility_name,
+        staff_count: 0,
+      }))
+    : allFacilities;
+  const isLoadingFacilities = lga
+    ? lgaInventory.isLoadingFacilities
+    : isLoadingAllFacilities;
   const { data: catalogue } = useInventoryCatalogue();
   const {
     data: inventoryData,
@@ -313,13 +353,27 @@ export default function FacilityInventoryView({
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
+          <SearchableSelect<{ id: string; label: string }>
+            items={LGA_ITEMS}
+            value={lga ?? ALL_LGAS}
+            onChange={(id) => changeLga(id === ALL_LGAS ? null : id)}
+            getItemId={(o) => o.id}
+            getItemLabel={(o) => o.label}
+            searchPlaceholder="Search LGAs…"
+            icon={<MapPin size={15} className="text-primary" />}
+            size="sm"
+            className="w-full sm:w-52"
+          />
+
           <SearchableSelect<FacilityOption>
             items={facilities}
             value={pickedFacilityId}
             onChange={setPickedFacilityId}
             getItemId={(f) => f.facility_id}
             getItemLabel={(f) => f.facility_name}
-            placeholder="Choose a facility"
+            placeholder={
+              lga ? `Choose a facility in ${lga}` : "Choose a facility"
+            }
             searchPlaceholder="Search facilities…"
             emptyText="No facilities found"
             isLoading={isLoadingFacilities}
@@ -357,11 +411,16 @@ export default function FacilityInventoryView({
         </div>
       )}
 
-      {!facilityId ? (
+      {!facilityId && lga ? (
+        <LgaInventoryOverview
+          lgaName={lga}
+          onOpenFacility={setPickedFacilityId}
+        />
+      ) : !facilityId ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 px-6 py-16 text-center">
           <Building2 size={28} className="text-slate-300" />
           <p className="text-sm font-medium text-slate-700">
-            Choose a facility to see its inventory
+            Choose an LGA or a facility to see its inventory
           </p>
           <p className="max-w-md text-xs text-slate-500">
             Only 28 facilities have been surveyed so far — in Abua-Odual,

@@ -14,13 +14,18 @@ import type { InventoryCounts } from "@/services/admin.service";
 import { useInventorySummary } from "../../hooks/useInventoryCatalogue";
 import { useFacilityOptions } from "../../hooks/useFacilityOptions";
 import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
+import { useLgaInventory } from "../../hooks/useLgaInventory";
 
 interface InventoryKpisProps {
   /** Set when one facility is in view (By Facility tab); otherwise the row
    *  describes every facility. */
   facilityId: string | null;
-  /** Clears the facility, returning the row to all facilities. */
+  /** Clears the facility, returning the row to the LGA, or to all. */
   onClearFacility?: () => void;
+  /** Set when an LGA is chosen; the scope sits between all and one facility. */
+  lgaName?: string | null;
+  /** Clears the LGA (and facility), returning the row to all facilities. */
+  onClearLga?: () => void;
 }
 
 const pct = (part: number, whole: number) =>
@@ -53,7 +58,11 @@ const ROW = "mb-4 grid w-full grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4";
 export default function InventoryKpis({
   facilityId,
   onClearFacility,
+  lgaName = null,
+  onClearLga,
 }: InventoryKpisProps) {
+  // Cached and shared with the LGA overview, so this costs nothing extra.
+  const lga = useLgaInventory(lgaName);
   const { data: catalogueKeys, isLoading: isLoadingCatalogue } =
     useUniqueInventory();
   const { data: summary, isLoading: isLoadingSummary } = useInventorySummary();
@@ -93,24 +102,44 @@ export default function InventoryKpis({
 
   // Says what the numbers describe, so a facility change reads as a change of
   // scope rather than numbers jumping.
+  const link = (label: string, onClick?: () => void) =>
+    onClick && (
+      <>
+        {" · "}
+        <button
+          type="button"
+          onClick={onClick}
+          className="text-primary font-medium hover:underline"
+        >
+          {label}
+        </button>
+      </>
+    );
+
   const scopeLine = (
     <p className="mb-3 text-sm text-slate-500">
       Showing:{" "}
       <span className="font-semibold text-slate-800">
-        {facilityId ? (facilityName ?? "Selected facility") : "All facilities"}
+        {facilityId
+          ? (facilityName ?? "Selected facility")
+          : lgaName
+            ? `${lgaName} LGA`
+            : "All facilities"}
       </span>
-      {facilityId && onClearFacility && (
-        <>
+      {facilityId && lgaName && <> in {lgaName}</>}
+      {!facilityId && lgaName && !lga.isComplete && (
+        <span aria-live="polite">
           {" · "}
-          <button
-            type="button"
-            onClick={onClearFacility}
-            className="text-primary font-medium hover:underline"
-          >
-            Back to all facilities
-          </button>
-        </>
+          {lga.isLoadingFacilities
+            ? "loading facilities…"
+            : `loading ${lga.loaded} of ${lga.total} facilities…`}
+        </span>
       )}
+      {facilityId
+        ? lgaName
+          ? link(`Back to ${lgaName}`, onClearFacility)
+          : link("Back to all facilities", onClearFacility)
+        : lgaName && link("Back to all facilities", onClearLga)}
     </p>
   );
 
@@ -172,6 +201,53 @@ export default function InventoryKpis({
                 ? `${notFunctional} non-functional`
                 : "Not surveyed yet"
             }
+            icon={<Activity size={24} />}
+            {...state}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (lgaName) {
+    // Totals grow as each facility's inventory lands; dimmed until all have.
+    const state = {
+      isLoading: lga.isLoadingFacilities || (lga.total > 0 && lga.loaded === 0),
+      isUpdating: !lga.isComplete,
+    };
+    return (
+      <div>
+        {scopeLine}
+        <div className={ROW}>
+          <KPIStatsCards
+            title="Facilities surveyed"
+            value={lga.surveyed}
+            subtitle={`of ${lga.total} facilities in ${lgaName}`}
+            icon={<ClipboardCheck size={24} />}
+            {...state}
+          />
+          <KPIStatsCards
+            title="Equipment types held"
+            value={lga.equipmentTypesHeld}
+            subtitle={
+              equipmentTypes !== undefined
+                ? `of ${equipmentTypes} equipment types`
+                : undefined
+            }
+            icon={<Package size={24} />}
+            {...state}
+          />
+          <KPIStatsCards
+            title="Total units"
+            value={lga.units.toLocaleString()}
+            subtitle={`across ${lga.surveyed} surveyed facilities`}
+            icon={<Boxes size={24} />}
+            {...state}
+          />
+          <KPIStatsCards
+            title="Functional units"
+            value={pct(lga.functional, lga.functional + lga.notFunctional)}
+            subtitle={`${lga.notFunctional.toLocaleString()} non-functional`}
             icon={<Activity size={24} />}
             {...state}
           />
