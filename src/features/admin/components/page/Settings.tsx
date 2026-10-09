@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Lock, Hospital, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useAuthStore, useCurrentFacilityId } from "@/features/auth/auth-store";
 import { useRouter } from "next/navigation";
 import { useMultipleFacilities } from "@/hooks/use-facilities";
-import FacilityCard from "../ui/FacilityCard";
+import FacilityBrowser from "../facilities/FacilityBrowser";
+import type { Facility } from "@/types/api-response";
 import { toast } from "sonner";
 import ResetPasswordModal from "@/features/profile/pages/ResetPasswordModal";
 import DeleteAccountModal from "@/features/profile/pages/DeleteAccountModal";
@@ -31,6 +32,13 @@ export default function Settings() {
   const facilityQueries = useMultipleFacilities(facilityIds ?? []);
 
   const isLoadingFacilities = facilityQueries.some((q) => q.isLoading);
+  const facilities = useMemo(
+    () =>
+      facilityQueries
+        .map((q) => q.data?.facility)
+        .filter((f): f is Facility => !!f),
+    [facilityQueries],
+  );
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
@@ -87,31 +95,22 @@ export default function Settings() {
             </div>
 
             {/* Content */}
-            <div className="scrollbar-hide max-h-140 overflow-y-auto px-6 py-5">
+            <div className="px-6 py-5">
               {isLoadingFacilities ? (
                 <div className="flex h-40 items-center justify-center">
                   <Loader2 className="text-primary h-6 w-6 animate-spin" />
                 </div>
-              ) : facilityQueries.length === 0 ? (
+              ) : facilities.length === 0 ? (
                 <div className="flex h-40 flex-col items-center justify-center gap-2 text-slate-400">
                   <Hospital size={32} className="opacity-40" />
                   <p className="text-sm">No facilities assigned yet</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {facilityQueries.map((query) => {
-                    const facility = query.data?.facility;
-                    if (!facility) return null;
-                    return (
-                      <FacilityCard
-                        key={facility.facility_id}
-                        facility={facility}
-                        isActive={facility.facility_id === currentFacilityId}
-                        onExplore={handleExploreFacility}
-                      />
-                    );
-                  })}
-                </div>
+                <FacilityBrowser
+                  facilities={facilities}
+                  currentFacilityId={currentFacilityId}
+                  onExplore={handleExploreFacility}
+                />
               )}
             </div>
           </div>
