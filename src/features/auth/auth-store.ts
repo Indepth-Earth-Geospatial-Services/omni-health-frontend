@@ -49,6 +49,13 @@ function scheduleTokenRefresh(token: string, refreshFn: () => Promise<void>) {
 
 export type UserRole = "admin" | "super_admin" | "user";
 
+/** How each role is named in the UI, e.g. the page headers' "Admin / …". */
+export const ROLE_LABEL: Record<UserRole, string> = {
+  admin: "Admin",
+  super_admin: "Super Admin",
+  user: "User",
+};
+
 export interface User {
   user_id: number;
   email: string;
