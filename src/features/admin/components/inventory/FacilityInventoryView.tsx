@@ -8,13 +8,19 @@ import {
   ClipboardX,
   Loader2,
   Plus,
+  RefreshCw,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/features/admin/components/ui/button";
 import InventoryItemModal from "@/features/admin/components/modals/InventoryItemModal";
 import EditInventoryItemModal from "@/features/admin/components/modals/EditInventoryItemModal";
 import DeleteConfirmationModal from "@/features/admin/components/modals/DeleteConfirmationModal";
-import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
+import {
+  refreshInventoryQueries,
+  useFacilityInventory,
+} from "@/features/admin/hooks/useAdminStaff";
+import { lgaFacilityKeys } from "@/features/super-admin/hooks/useLgaInventory";
 import {
   toInventoryItems,
   useEquipmentActions,
@@ -267,8 +273,39 @@ export default function FacilityInventoryView({
     }
   };
 
+  // Manual refresh: re-download everything inventory-related that is on
+  // screen (facility items, totals, catalogue, facility lists). Anything not
+  // on screen is only marked stale and refetches when next shown.
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refreshInventoryQueries(queryClient, { catalogueChanged: true }),
+        queryClient.invalidateQueries({ queryKey: lgaFacilityKeys.all }),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const refreshButton = (
+    <button
+      type="button"
+      onClick={refreshAll}
+      disabled={isRefreshing}
+      aria-label="Refresh inventory"
+      title="Refresh inventory"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 disabled:cursor-wait"
+    >
+      <RefreshCw size={16} className={cn(isRefreshing && "animate-spin")} />
+    </button>
+  );
+
   const addButtons = (
-    <div className="flex gap-2 sm:ml-auto">
+    <div className="flex items-center gap-2 sm:ml-auto">
+      {refreshButton}
       {(isFacilityAdmin
         ? [typeFilter as InventoryType]
         : (["equipment", "infrastructure"] as const)

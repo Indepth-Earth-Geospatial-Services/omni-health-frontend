@@ -133,7 +133,10 @@ export function useDeleteInventoryItem() {
           : adminService.deleteInfrastructure({ facilityId, itemName }),
       ),
     // Every facility the batch touched, the totals and the per-item lists.
-    onSuccess: () => refreshInventoryQueries(queryClient),
+    // Not awaited: the mutation settles on the write, not on the refetch.
+    onSuccess: () => {
+      void refreshInventoryQueries(queryClient);
+    },
   });
 }
 
@@ -172,7 +175,8 @@ export function useBatchAddInventoryItem() {
     },
     // As above, plus the catalogue: a typed name may be new to it, and the
     // batch result does not carry each response's item_created flag.
-    onSuccess: () =>
-      refreshInventoryQueries(queryClient, { catalogueChanged: true }),
+    onSuccess: () => {
+      void refreshInventoryQueries(queryClient, { catalogueChanged: true });
+    },
   });
 }

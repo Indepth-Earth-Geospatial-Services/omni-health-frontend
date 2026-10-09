@@ -257,23 +257,30 @@ export const refreshInventoryQueries = (
     facilityId?: string;
     catalogueChanged?: boolean;
   } = {},
-) => {
-  queryClient.invalidateQueries({
-    queryKey: facilityId
-      ? AdminInventoryKeys.facility(facilityId)
-      : AdminInventoryKeys.all,
-  });
-  queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
-  queryClient.invalidateQueries({
-    queryKey: inventoryCatalogueKeys.facilitiesByItem,
-  });
-  if (catalogueChanged) {
-    queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.unique });
+): Promise<unknown> =>
+  // Resolves once the on-screen queries have refetched, for callers that
+  // show progress (the refresh button); writes don't need to wait on it.
+  Promise.all([
     queryClient.invalidateQueries({
-      queryKey: inventoryCatalogueKeys.catalogue,
-    });
-  }
-};
+      queryKey: facilityId
+        ? AdminInventoryKeys.facility(facilityId)
+        : AdminInventoryKeys.all,
+    }),
+    queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary }),
+    queryClient.invalidateQueries({
+      queryKey: inventoryCatalogueKeys.facilitiesByItem,
+    }),
+    ...(catalogueChanged
+      ? [
+          queryClient.invalidateQueries({
+            queryKey: inventoryCatalogueKeys.unique,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: inventoryCatalogueKeys.catalogue,
+          }),
+        ]
+      : []),
+  ]);
 
 /** Add and update are the same upsert endpoint; one hook body for all four. */
 const useInventoryWrite = (
