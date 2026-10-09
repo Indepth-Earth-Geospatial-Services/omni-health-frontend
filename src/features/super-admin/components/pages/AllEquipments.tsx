@@ -19,7 +19,7 @@ export default function EquipmentPage() {
   // ========== TAB STATE ==========
   // Tracks which tab is currently active (Equipment, Infrastructure, or one
   // facility's inventory)
-  const [activeTab, setActiveTab] = useState("equipment");
+  const [activeTab, setActiveTab] = useState("by-facility");
 
   // The facility open on the By Facility tab. Held here, not in the tab, so
   // the page's KPI row describes the same facility.
@@ -59,9 +59,9 @@ export default function EquipmentPage() {
   // Equipment and Infrastructure list items across every facility; By
   // Facility drills into one facility's counts.
   const tabs = [
+    { label: "By Facility", value: "by-facility" },
     { label: "Equipment", value: "equipment" },
     { label: "Infrastructure", value: "infrastructure" },
-    { label: "By Facility", value: "by-facility" },
   ];
 
   // ========== EVENT HANDLERS ==========
