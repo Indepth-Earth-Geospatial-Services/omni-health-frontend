@@ -314,6 +314,13 @@ export interface SearchFacilitiesByInventoryResponse {
   facilities: Facility[];
 }
 
+/** GET /admin/lgas — every LGA with its id and how many facilities it has. */
+export interface LgaListItem {
+  lga_id: number;
+  lga_name: string;
+  facility_count: number;
+}
+
 export interface UnassignedLga {
   lga_id: number;
   lga_name: string;
@@ -380,6 +387,7 @@ class SuperAdminService {
     NOTIFICATIONS: "/admin/notifications", // GET notifications for a user
     EXPORT_FACILITIES: "/admin/export/facilities", // Export facilities to CSV or Excel
     BULK_DELETE_FACILITIES: "/admin/facilities/bulk-delete", // DELETE bulk facilities
+    LGAS: "/admin/lgas", // GET every LGA with lga_id and facility_count
     UNASSIGNED_LGAS: "/admin/lgas/unassigned",
     UNASSIGN_LGA: "/admin/users",
   };
@@ -970,6 +978,15 @@ class SuperAdminService {
    * Get all LGAs that have no facilities assigned to any user/admin
    * GET /api/v1/admin/lgas/unassigned
    */
+  /**
+   * Every LGA with its id and facility count
+   * GET /api/v1/admin/lgas (admin or super admin)
+   */
+  async getLgas(): Promise<LgaListItem[]> {
+    const response = await apiClient.get(this.ENDPOINTS.LGAS);
+    return response.data;
+  }
+
   async getUnassignedLgas(): Promise<UnassignedLga[]> {
     const response = await apiClient.get(this.ENDPOINTS.UNASSIGNED_LGAS);
     return response.data;

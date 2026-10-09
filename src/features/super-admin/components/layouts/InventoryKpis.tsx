@@ -11,7 +11,11 @@ import {
 import KPIStatsCards from "@/features/admin/components/layout/KPICards";
 import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
 import type { InventoryCounts } from "@/services/admin.service";
-import { useInventorySummary } from "../../hooks/useInventoryCatalogue";
+import {
+  useInventorySummary,
+  useLgaInventorySummary,
+} from "../../hooks/useInventoryCatalogue";
+import { useLgaList } from "../../hooks/useLgas";
 import { useFacilityOptions } from "../../hooks/useFacilityOptions";
 import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
 import { useLgaInventory } from "../../hooks/useLgaInventory";
@@ -63,6 +67,55 @@ export default function InventoryKpis({
 }: InventoryKpisProps) {
   // Cached and shared with the LGA overview, so this costs nothing extra.
   const lga = useLgaInventory(lgaName);
+
+  // With the LGA's real id (GET /admin/lgas), its totals come from one
+  // /summary?lga_id= request. Without it — the endpoint is not deployed
+  // everywhere yet — they are added up facility by facility instead.
+  const { data: lgaList } = useLgaList();
+  const lgaEntry = lgaName
+    ? lgaList?.find((l) => l.lga_name === lgaName)
+    : undefined;
+  const {
+    data: lgaSummary,
+    isLoading: isLoadingLgaSummary,
+    isError: lgaSummaryFailed,
+  } = useLgaInventorySummary(lgaEntry?.lga_id ?? null);
+  const hasLgaSummary = !!lgaEntry && !lgaSummaryFailed;
+
+  const lgaStats = useMemo(() => {
+    if (hasLgaSummary) {
+      const items = lgaSummary ?? [];
+      const functional = items.reduce((s, i) => s + i.total_functional, 0);
+      return {
+        isLoading: isLoadingLgaSummary,
+        isUpdating: false,
+        progress: null as string | null,
+        surveyed: Math.max(0, ...items.map((i) => i.facilities_listing_item)),
+        total: lgaEntry?.facility_count ?? lga.total,
+        equipmentTypesHeld: items.filter(
+          (i) => i.type === "equipment" && i.facilities_with_item > 0,
+        ).length,
+        units: items.reduce((s, i) => s + i.total_quantity, 0),
+        functional,
+        notFunctional: items.reduce((s, i) => s + i.total_not_functional, 0),
+      };
+    }
+    return {
+      isLoading: lga.isLoadingFacilities || (lga.total > 0 && lga.loaded === 0),
+      isUpdating: !lga.isComplete,
+      progress: lga.isComplete
+        ? null
+        : lga.isLoadingFacilities
+          ? "loading facilities…"
+          : `loading ${lga.loaded} of ${lga.total} facilities…`,
+      surveyed: lga.surveyed,
+      total: lga.total,
+      equipmentTypesHeld: lga.equipmentTypesHeld,
+      units: lga.units,
+      functional: lga.functional,
+      notFunctional: lga.notFunctional,
+    };
+  }, [hasLgaSummary, lgaSummary, isLoadingLgaSummary, lgaEntry, lga]);
   const { data: catalogueKeys, isLoading: isLoadingCatalogue } =
     useUniqueInventory();
   const { data: summary, isLoading: isLoadingSummary } = useInventorySummary();
@@ -127,12 +180,10 @@ export default function InventoryKpis({
             : "All facilities"}
       </span>
       {facilityId && lgaName && <> in {lgaName}</>}
-      {!facilityId && lgaName && !lga.isComplete && (
+      {!facilityId && lgaName && lgaStats.progress && (
         <span aria-live="polite">
           {" · "}
-          {lga.isLoadingFacilities
-            ? "loading facilities…"
-            : `loading ${lga.loaded} of ${lga.total} facilities…`}
+          {lgaStats.progress}
         </span>
       )}
       {facilityId
@@ -210,10 +261,11 @@ export default function InventoryKpis({
   }
 
   if (lgaName) {
-    // Totals grow as each facility's inventory lands; dimmed until all have.
+    // One summary request, or totals growing facility by facility (dimmed
+    // until all have landed) — see lgaStats.
     const state = {
-      isLoading: lga.isLoadingFacilities || (lga.total > 0 && lga.loaded === 0),
-      isUpdating: !lga.isComplete,
+      isLoading: lgaStats.isLoading,
+      isUpdating: lgaStats.isUpdating,
     };
     return (
       <div>
@@ -221,14 +273,14 @@ export default function InventoryKpis({
         <div className={ROW}>
           <KPIStatsCards
             title="Facilities surveyed"
-            value={lga.surveyed}
-            subtitle={`of ${lga.total} facilities in ${lgaName}`}
+            value={lgaStats.surveyed}
+            subtitle={`of ${lgaStats.total} facilities in ${lgaName}`}
             icon={<ClipboardCheck size={24} />}
             {...state}
           />
           <KPIStatsCards
             title="Equipment types held"
-            value={lga.equipmentTypesHeld}
+            value={lgaStats.equipmentTypesHeld}
             subtitle={
               equipmentTypes !== undefined
                 ? `of ${equipmentTypes} equipment types`
@@ -239,15 +291,18 @@ export default function InventoryKpis({
           />
           <KPIStatsCards
             title="Total units"
-            value={lga.units.toLocaleString()}
-            subtitle={`across ${lga.surveyed} surveyed facilities`}
+            value={lgaStats.units.toLocaleString()}
+            subtitle={`across ${lgaStats.surveyed} surveyed facilities`}
             icon={<Boxes size={24} />}
             {...state}
           />
           <KPIStatsCards
             title="Functional units"
-            value={pct(lga.functional, lga.functional + lga.notFunctional)}
-            subtitle={`${lga.notFunctional.toLocaleString()} non-functional`}
+            value={pct(
+              lgaStats.functional,
+              lgaStats.functional + lgaStats.notFunctional,
+            )}
+            subtitle={`${lgaStats.notFunctional.toLocaleString()} non-functional`}
             icon={<Activity size={24} />}
             {...state}
           />

@@ -60,6 +60,22 @@ export function useInventorySummary() {
 }
 
 /**
+ * The summary for one LGA (/admin/inventory/summary?lga_id=): every item with
+ * totals counted only across that LGA's facilities — one request for the
+ * LGA's KPIs. Under the summary key, so inventory writes refresh it too.
+ */
+export function useLgaInventorySummary(lgaId: number | null) {
+  return useQuery<InventorySummaryItem[]>({
+    queryKey: [...inventoryCatalogueKeys.summary, "lga", lgaId],
+    queryFn: () =>
+      superAdminService.getAllInventorySummary({ lga_id: lgaId ?? undefined }),
+    enabled: lgaId !== null,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+}
+
+/**
  * The fixed 84-item catalogue with display names — the only valid item_names
  * for the write endpoints. Names come from /summary (sharing its cache with
  * useInventorySummary). If that is refused, e.g. for a role the backend has

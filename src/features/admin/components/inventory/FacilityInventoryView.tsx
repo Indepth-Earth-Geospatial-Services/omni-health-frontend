@@ -29,6 +29,7 @@ import {
 import { useInventoryCatalogue } from "@/features/super-admin/hooks/useInventoryCatalogue";
 import { useLgaInventory } from "@/features/super-admin/hooks/useLgaInventory";
 import { LGA_OPTIONS } from "@/features/super-admin/constants/lga";
+import { useLgaList } from "@/features/super-admin/hooks/useLgas";
 import LgaInventoryOverview from "@/features/super-admin/components/layouts/LgaInventoryOverview";
 import { FacilityConditionBars } from "./FacilityConditionBars";
 import {
@@ -106,10 +107,19 @@ interface FacilityInventoryViewProps {
 }
 
 const ALL_LGAS = "all";
-const LGA_ITEMS = [
-  { id: ALL_LGAS, label: "All LGAs" },
-  ...LGA_OPTIONS.map((name) => ({ id: name, label: name })),
-];
+
+interface LgaItem {
+  id: string;
+  label: string;
+  /** Facilities in the LGA, when the LGA list endpoint is available. */
+  count?: number;
+}
+
+// Used until GET /admin/lgas answers (or where it isn't deployed yet).
+const FALLBACK_LGA_ITEMS: LgaItem[] = LGA_OPTIONS.map((name) => ({
+  id: name,
+  label: name,
+}));
 
 /**
  * One facility's inventory: summary tiles (facility admin; the super admin
@@ -133,6 +143,18 @@ export default function FacilityInventoryView({
   const pickedFacilityId =
     selectedFacilityId !== undefined ? selectedFacilityId : ownPickedFacilityId;
   const setPickedFacilityId = onSelectFacility ?? setOwnPickedFacilityId;
+
+  const { data: lgaList } = useLgaList();
+  const lgaItems: LgaItem[] = [
+    { id: ALL_LGAS, label: "All LGAs" },
+    ...(lgaList
+      ? lgaList.map((l) => ({
+          id: l.lga_name,
+          label: l.lga_name,
+          count: l.facility_count,
+        }))
+      : FALLBACK_LGA_ITEMS),
+  ];
 
   const [ownLga, setOwnLga] = useState<string | null>(null);
   const lga = selectedLga !== undefined ? selectedLga : ownLga;
@@ -353,12 +375,13 @@ export default function FacilityInventoryView({
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <SearchableSelect<{ id: string; label: string }>
-            items={LGA_ITEMS}
+          <SearchableSelect<LgaItem>
+            items={lgaItems}
             value={lga ?? ALL_LGAS}
             onChange={(id) => changeLga(id === ALL_LGAS ? null : id)}
             getItemId={(o) => o.id}
             getItemLabel={(o) => o.label}
+            getItemMeta={(o) => o.count}
             searchPlaceholder="Search LGAs…"
             icon={<MapPin size={15} className="text-primary" />}
             size="sm"
