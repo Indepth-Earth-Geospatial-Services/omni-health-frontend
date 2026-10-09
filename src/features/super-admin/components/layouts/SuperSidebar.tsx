@@ -27,7 +27,8 @@ interface MenuItem {
   href: string;
 }
 
-const adminMenuItems: MenuItem[] = [
+// Exported so the top header names the page with the same label as the menu.
+export const adminMenuItems: MenuItem[] = [
   {
     label: "Dashboard",
     icon: Hospital,

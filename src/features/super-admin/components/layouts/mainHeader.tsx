@@ -2,11 +2,29 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Bell, Check } from "lucide-react";
-import { useAuthStore } from "@/features/auth/auth-store";
+import { usePathname } from "next/navigation";
+import { ROLE_LABEL, useAuthStore } from "@/features/auth/auth-store";
+import { adminMenuItems } from "./SuperSidebar";
 
 interface HeaderProps {
   name?: string;
   className?: string;
+}
+
+/**
+ * The page name for a route: the sidebar's own label where the route is in
+ * the menu, otherwise its last path segment ("analytics" -> "Analytics").
+ */
+function pageNameFor(pathname: string) {
+  const item = adminMenuItems.find(
+    (i) => pathname === i.href || pathname.startsWith(`${i.href}/`),
+  );
+  if (item) return item.label;
+  const segment = pathname.split("/").filter(Boolean).pop() ?? "";
+  return segment
+    .replace(/[-_]/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/w/g, (c) => c.toUpperCase());
 }
 
 interface Notification {
@@ -20,6 +38,8 @@ interface Notification {
 export default function Header({ name, className }: HeaderProps) {
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role === "super_admin";
+  const pathname = usePathname();
+  const pageName = name ?? pageNameFor(pathname ?? "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLGADropdownOpen, setIsLGADropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -106,10 +126,26 @@ export default function Header({ name, className }: HeaderProps) {
     <header
       className={cn(
         "sticky top-0 z-10 h-16 w-full border-b border-gray-200 bg-white",
-        "flex items-center justify-end px-6",
+        "flex items-center justify-between px-6",
         className,
       )}
     >
+      {/* Breadcrumb-style "Super Admin / Facility Registry", matching the
+          admin header. */}
+      <h2 className="flex min-w-0 items-center gap-2 text-xl font-semibold">
+        {user?.role && (
+          <>
+            <span className="shrink-0 text-gray-700">
+              {ROLE_LABEL[user.role] ?? user.role}
+            </span>
+            <span aria-hidden className="shrink-0 text-gray-700">
+              /
+            </span>
+          </>
+        )}
+        <span className="truncate text-gray-700">{pageName}</span>
+      </h2>
+
       {/* Right Section: Notifications */}
       <div className="flex items-center gap-4">
         {/* Notification Bell */}
