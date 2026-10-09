@@ -3,9 +3,9 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Bell, Check } from "lucide-react";
 import {
+  ROLE_LABEL,
   useAuthStore,
   useCurrentFacilityId,
-  type UserRole,
 } from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import FacilityImageButton from "@/features/admin/components/ui/proifleImage";
@@ -14,12 +14,6 @@ interface HeaderProps {
   name: string;
   className?: string;
 }
-
-const ROLE_LABEL: Record<UserRole, string> = {
-  admin: "Admin",
-  super_admin: "Super Admin",
-  user: "User",
-};
 
 interface Notification {
   id: number;
@@ -112,15 +106,15 @@ export default function Header({ name, className }: HeaderProps) {
       <h2 className="flex min-w-0 items-center gap-2 text-xl font-semibold">
         {role && (
           <>
-            <span className="shrink-0 text-gray-400">
+            <span className="shrink-0 text-gray-700">
               {ROLE_LABEL[role] ?? role}
             </span>
-            <span aria-hidden className="shrink-0 text-gray-300">
+            <span aria-hidden className="shrink-0 text-gray-700">
               /
             </span>
           </>
         )}
-        <span className="truncate text-gray-900">{name}</span>
+        <span className="truncate text-gray-700">{name}</span>
       </h2>
       <div>
         <div className="flex items-center gap-4">
