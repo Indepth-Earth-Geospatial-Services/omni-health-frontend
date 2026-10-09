@@ -24,7 +24,7 @@ function pageNameFor(pathname: string) {
   return segment
     .replace(/[-_]/g, " ")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/w/g, (c) => c.toUpperCase());
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 interface Notification {
