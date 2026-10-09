@@ -49,6 +49,22 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+/**
+ * The LGAs an admin manages. `managed_lga` ({ lga_id: lga_name }) is the
+ * API's own answer; deriving them from managed_facilities is the fallback
+ * for records without it, as in UnassignLgaModal.
+ */
+function getManagedLgas(user: User): string[] {
+  const fromApi = Object.values(user.managed_lga ?? {}).filter(Boolean);
+  const names =
+    fromApi.length > 0
+      ? fromApi
+      : (user.managed_facilities ?? [])
+          .map((f) => f.facility_lga)
+          .filter((lga): lga is string => !!lga);
+  return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
+}
+
 function getRoleBadge(role: string) {
   if (role === "super_admin")
     return "bg-purple-100 text-purple-700 border-purple-200";
@@ -253,31 +269,28 @@ export default function AssignFacilityModal({
             </span>
           </div>
 
-          {/* Currently assigned LGAs */}
-          {user.managed_facilities && user.managed_facilities.length > 0 && (
-            <div className="mb-5">
-              <p className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                Currently Managing
-              </p>
+          {/* Currently assigned LGAs — shown as gray badges, so they read as
+              existing state rather than as choices being made below. */}
+          <div className="mb-5">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+              Currently Managing
+            </p>
+            {getManagedLgas(user).length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
-                {Array.from(
-                  new Set(
-                    user.managed_facilities
-                      .map((f: any) => f.facility_lga)
-                      .filter(Boolean),
-                  ),
-                ).map((lga) => (
+                {getManagedLgas(user).map((lga) => (
                   <span
-                    key={lga as string}
-                    className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700"
+                    key={lga}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
                   >
-                    <MapPin size={10} />
-                    {lga as string}
+                    <MapPin size={11} className="text-slate-500" />
+                    {lga}
                   </span>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-slate-500">No LGA assigned yet</p>
+            )}
+          </div>
 
           {/* LGA selector */}
           <div className="mb-5">
