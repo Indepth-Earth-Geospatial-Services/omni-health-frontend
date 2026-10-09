@@ -105,6 +105,8 @@ export interface InventoryWriteResponse {
   type: InventoryType;
   count: InventoryCount;
   action: "added" | "updated";
+  /** True when the name was new and the backend added it to the catalogue. */
+  item_created?: boolean;
 }
 
 // --- Add these new interfaces ---

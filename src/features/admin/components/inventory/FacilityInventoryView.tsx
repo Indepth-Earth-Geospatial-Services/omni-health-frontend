@@ -2,18 +2,25 @@
 
 import React, { useMemo, useRef, useState } from "react";
 import {
+  MapPin,
   AlertCircle,
   Building2,
   ClipboardX,
   Loader2,
   Plus,
+  RefreshCw,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/features/admin/components/ui/button";
 import InventoryItemModal from "@/features/admin/components/modals/InventoryItemModal";
 import EditInventoryItemModal from "@/features/admin/components/modals/EditInventoryItemModal";
 import DeleteConfirmationModal from "@/features/admin/components/modals/DeleteConfirmationModal";
-import { useFacilityInventory } from "@/features/admin/hooks/useAdminStaff";
+import {
+  refreshInventoryQueries,
+  useFacilityInventory,
+} from "@/features/admin/hooks/useAdminStaff";
+import { lgaFacilityKeys } from "@/features/super-admin/hooks/useLgaInventory";
 import {
   toInventoryItems,
   useEquipmentActions,
@@ -26,6 +33,10 @@ import {
   type FacilityOption,
 } from "@/features/super-admin/hooks/useFacilityOptions";
 import { useInventoryCatalogue } from "@/features/super-admin/hooks/useInventoryCatalogue";
+import { useLgaInventory } from "@/features/super-admin/hooks/useLgaInventory";
+import { LGA_OPTIONS } from "@/features/super-admin/constants/lga";
+import { useLgaList } from "@/features/super-admin/hooks/useLgas";
+import FacilityCountsTable from "@/features/super-admin/components/layouts/FacilityCountsTable";
 import { FacilityConditionBars } from "./FacilityConditionBars";
 import {
   InventoryTable,
@@ -91,8 +102,30 @@ interface FacilityInventoryViewProps {
    * can describe the same facility. Uncontrolled when omitted.
    */
   selectedFacilityId?: string | null;
-  onSelectFacility?: (facilityId: string) => void;
+  onSelectFacility?: (facilityId: string | null) => void;
+  /**
+   * Super admin only: the LGA narrowing the facility picker. With no facility
+   * chosen, the view shows that LGA's facilities instead. Uncontrolled when
+   * omitted.
+   */
+  selectedLga?: string | null;
+  onSelectLga?: (lga: string | null) => void;
 }
+
+const ALL_LGAS = "all";
+
+interface LgaItem {
+  id: string;
+  label: string;
+  /** Facilities in the LGA, when the LGA list endpoint is available. */
+  count?: number;
+}
+
+// Used until GET /admin/lgas answers (or where it isn't deployed yet).
+const FALLBACK_LGA_ITEMS: LgaItem[] = LGA_OPTIONS.map((name) => ({
+  id: name,
+  label: name,
+}));
 
 /**
  * One facility's inventory: summary tiles (facility admin; the super admin
@@ -105,6 +138,8 @@ export default function FacilityInventoryView({
   facilityId: fixedFacilityId,
   selectedFacilityId,
   onSelectFacility,
+  selectedLga,
+  onSelectLga,
 }: FacilityInventoryViewProps) {
   const isFacilityAdmin = !!fixedFacilityId;
 
@@ -114,6 +149,26 @@ export default function FacilityInventoryView({
   const pickedFacilityId =
     selectedFacilityId !== undefined ? selectedFacilityId : ownPickedFacilityId;
   const setPickedFacilityId = onSelectFacility ?? setOwnPickedFacilityId;
+
+  const { data: lgaList } = useLgaList();
+  const lgaItems: LgaItem[] = [
+    { id: ALL_LGAS, label: "All LGAs" },
+    ...(lgaList
+      ? lgaList.map((l) => ({
+          id: l.lga_name,
+          label: l.lga_name,
+          count: l.facility_count,
+        }))
+      : FALLBACK_LGA_ITEMS),
+  ];
+
+  const [ownLga, setOwnLga] = useState<string | null>(null);
+  const lga = selectedLga !== undefined ? selectedLga : ownLga;
+  // A new LGA clears the facility: the picker now lists another LGA's.
+  const changeLga = (next: string | null) => {
+    (onSelectLga ?? setOwnLga)(next);
+    setPickedFacilityId(null);
+  };
   const [typeFilter, setTypeFilter] = useState<TypeFilter>(
     isFacilityAdmin ? "equipment" : "all",
   );
@@ -140,8 +195,21 @@ export default function FacilityInventoryView({
   };
 
   // The picker's list; not needed when the facility is fixed.
-  const { data: facilities = [], isLoading: isLoadingFacilities } =
+  const { data: allFacilities = [], isLoading: isLoadingAllFacilities } =
     useFacilityOptions(!isFacilityAdmin);
+  // With an LGA chosen, the picker lists only its facilities (cached, and
+  // shared with the LGA overview and KPI row).
+  const lgaInventory = useLgaInventory(isFacilityAdmin ? null : lga);
+  const facilities: FacilityOption[] = lga
+    ? lgaInventory.rows.map((r) => ({
+        facility_id: r.facility_id,
+        facility_name: r.facility_name,
+        staff_count: 0,
+      }))
+    : allFacilities;
+  const isLoadingFacilities = lga
+    ? lgaInventory.isLoadingFacilities
+    : isLoadingAllFacilities;
   const { data: catalogue } = useInventoryCatalogue();
   const {
     data: inventoryData,
@@ -205,8 +273,39 @@ export default function FacilityInventoryView({
     }
   };
 
+  // Manual refresh: re-download everything inventory-related that is on
+  // screen (facility items, totals, catalogue, facility lists). Anything not
+  // on screen is only marked stale and refetches when next shown.
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refreshInventoryQueries(queryClient, { catalogueChanged: true }),
+        queryClient.invalidateQueries({ queryKey: lgaFacilityKeys.all }),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const refreshButton = (
+    <button
+      type="button"
+      onClick={refreshAll}
+      disabled={isRefreshing}
+      aria-label="Refresh inventory"
+      title="Refresh inventory"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 disabled:cursor-wait"
+    >
+      <RefreshCw size={16} className={cn(isRefreshing && "animate-spin")} />
+    </button>
+  );
+
   const addButtons = (
-    <div className="flex gap-2 sm:ml-auto">
+    <div className="flex items-center gap-2 sm:ml-auto">
+      {refreshButton}
       {(isFacilityAdmin
         ? [typeFilter as InventoryType]
         : (["equipment", "infrastructure"] as const)
@@ -313,13 +412,28 @@ export default function FacilityInventoryView({
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
+          <SearchableSelect<LgaItem>
+            items={lgaItems}
+            value={lga ?? ALL_LGAS}
+            onChange={(id) => changeLga(id === ALL_LGAS ? null : id)}
+            getItemId={(o) => o.id}
+            getItemLabel={(o) => o.label}
+            getItemMeta={(o) => o.count}
+            searchPlaceholder="Search LGAs…"
+            icon={<MapPin size={15} className="text-primary" />}
+            size="sm"
+            className="w-full sm:w-52"
+          />
+
           <SearchableSelect<FacilityOption>
             items={facilities}
             value={pickedFacilityId}
             onChange={setPickedFacilityId}
             getItemId={(f) => f.facility_id}
             getItemLabel={(f) => f.facility_name}
-            placeholder="Choose a facility"
+            placeholder={
+              lga ? `Choose a facility in ${lga}` : "Choose a facility"
+            }
             searchPlaceholder="Search facilities…"
             emptyText="No facilities found"
             isLoading={isLoadingFacilities}
@@ -358,16 +472,12 @@ export default function FacilityInventoryView({
       )}
 
       {!facilityId ? (
-        <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 px-6 py-16 text-center">
-          <Building2 size={28} className="text-slate-300" />
-          <p className="text-sm font-medium text-slate-700">
-            Choose a facility to see its inventory
-          </p>
-          <p className="max-w-md text-xs text-slate-500">
-            Only 28 facilities have been surveyed so far — in Abua-Odual,
-            Akuku-Toru, Degema, Ikwerre, Emohua and Etche.
-          </p>
-        </div>
+        // Super admin with no facility open: every facility (or one LGA's)
+        // with its functional / non-functional counts; Open drills in.
+        <FacilityCountsTable
+          lgaName={lga}
+          onOpenFacility={setPickedFacilityId}
+        />
       ) : isLoading ? (
         <div className="flex items-center justify-center gap-3 py-16 text-sm text-slate-600">
           <Loader2 className="text-primary h-6 w-6 animate-spin" />

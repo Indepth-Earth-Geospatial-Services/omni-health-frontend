@@ -18,9 +18,17 @@ export interface InventoryCatalogue {
   hasDisplayNames: boolean;
 }
 
+/**
+ * Every inventory query key outside the per-facility one, in one place so a
+ * write can refresh all of them without import cycles between hook files.
+ */
 export const inventoryCatalogueKeys = {
   summary: ["inventory-summary"] as const,
   catalogue: ["inventory-catalogue"] as const,
+  /** GET /admin/inventory/unique — see useUniqueInventory. */
+  unique: ["unique-inventory"] as const,
+  /** Facilities holding a given item — see useFacilitiesByInventory. */
+  facilitiesByItem: ["facilities-by-inventory"] as const,
 };
 
 /** "adult_weighing_scale" -> "Adult Weighing Scale". Fallback only. */
@@ -46,6 +54,22 @@ export function useInventorySummary() {
   return useQuery<InventorySummaryItem[]>({
     queryKey: inventoryCatalogueKeys.summary,
     queryFn: fetchSummary,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+}
+
+/**
+ * The summary for one LGA (/admin/inventory/summary?lga_id=): every item with
+ * totals counted only across that LGA's facilities — one request for the
+ * LGA's KPIs. Under the summary key, so inventory writes refresh it too.
+ */
+export function useLgaInventorySummary(lgaId: number | null) {
+  return useQuery<InventorySummaryItem[]>({
+    queryKey: [...inventoryCatalogueKeys.summary, "lga", lgaId],
+    queryFn: () =>
+      superAdminService.getAllInventorySummary({ lga_id: lgaId ?? undefined }),
+    enabled: lgaId !== null,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
@@ -101,9 +125,9 @@ export function useInventoryCatalogue() {
         hasDisplayNames,
       };
     },
-    // The catalogue is fixed server-side; there is no reason to refetch it
-    // within a session.
-    staleTime: Infinity,
+    // Grows only when someone adds a new item name, and that write refreshes
+    // it directly; the timer just picks up other people's additions.
+    staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     retry: 1,
   });

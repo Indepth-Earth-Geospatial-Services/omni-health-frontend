@@ -1,8 +1,13 @@
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { superAdminService } from "../services/super-admin.service";
 import { adminService } from "@/services/admin.service";
 import { inventoryCatalogueKeys } from "./useInventoryCatalogue";
-import { AdminInventoryKeys } from "@/features/admin/hooks/useAdminStaff";
+import { refreshInventoryQueries } from "@/features/admin/hooks/useAdminStaff";
 
 export type InventoryItemType = "equipment" | "infrastructure";
 
@@ -15,10 +20,16 @@ export interface FacilitySummary {
 }
 
 export const inventoryFacilitiesKeys = {
-  all: ["facilities-by-inventory"] as const,
+  all: inventoryCatalogueKeys.facilitiesByItem,
   /** Every page/limit for one item — the prefix invalidated after a delete. */
-  forItem: (itemName: string) => [...inventoryFacilitiesKeys.all, itemName] as const,
-  item: (itemName: string, type: InventoryItemType, page: number, limit: number) =>
+  forItem: (itemName: string) =>
+    [...inventoryFacilitiesKeys.all, itemName] as const,
+  item: (
+    itemName: string,
+    type: InventoryItemType,
+    page: number,
+    limit: number,
+  ) =>
     [...inventoryFacilitiesKeys.forItem(itemName), type, page, limit] as const,
 };
 
@@ -55,12 +66,10 @@ export function useFacilitiesByInventory(
       }),
     select: (data) => ({
       pagination: data.pagination,
-      facilities: data.facilities.map(
-        (f): FacilitySummary => ({
-          facility_id: f.facility_id,
-          facility_name: f.facility_name,
-        }),
-      ),
+      facilities: data.facilities.map((f): FacilitySummary => ({
+        facility_id: f.facility_id,
+        facility_name: f.facility_name,
+      })),
     }),
     enabled: !!itemName,
     placeholderData: keepPreviousData,
@@ -90,7 +99,11 @@ async function runBatch(
 ): Promise<BatchResult> {
   const results = await Promise.allSettled(facilityIds.map(run));
   const failed = results.filter((r) => r.status === "rejected").length;
-  return { total: facilityIds.length, succeeded: facilityIds.length - failed, failed };
+  return {
+    total: facilityIds.length,
+    succeeded: facilityIds.length - failed,
+    failed,
+  };
 }
 
 /**
@@ -119,15 +132,10 @@ export function useDeleteInventoryItem() {
           ? adminService.deleteEquipment({ facilityId, itemName })
           : adminService.deleteInfrastructure({ facilityId, itemName }),
       ),
-    onSuccess: (_result, { itemName }) => {
-      // The item may no longer exist at any facility, so the top-level
-      // unique-items list has to be re-derived server-side.
-      queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
-      // Per-facility inventories touched by the batch (By Facility tab).
-      queryClient.invalidateQueries({ queryKey: AdminInventoryKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: inventoryFacilitiesKeys.forItem(itemName),
-      });
+    // Every facility the batch touched, the totals and the per-item lists.
+    // Not awaited: the mutation settles on the write, not on the refetch.
+    onSuccess: () => {
+      void refreshInventoryQueries(queryClient);
     },
   });
 }
@@ -165,13 +173,10 @@ export function useBatchAddInventoryItem() {
           : adminService.addInfrastructure({ facilityId, data }),
       );
     },
-    onSuccess: (_result, { itemName }) => {
-      queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
-      // Per-facility inventories touched by the batch (By Facility tab).
-      queryClient.invalidateQueries({ queryKey: AdminInventoryKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: inventoryFacilitiesKeys.forItem(itemName),
-      });
+    // As above, plus the catalogue: a typed name may be new to it, and the
+    // batch result does not carry each response's item_created flag.
+    onSuccess: () => {
+      void refreshInventoryQueries(queryClient, { catalogueChanged: true });
     },
   });
 }
