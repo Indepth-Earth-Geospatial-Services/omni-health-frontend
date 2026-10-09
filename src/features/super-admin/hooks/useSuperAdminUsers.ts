@@ -10,6 +10,7 @@ import {
   type GetUniqueEquipmentParams,
   type UniqueEquipmentItem,
 } from "../services/super-admin.service";
+import { inventoryCatalogueKeys } from "./useInventoryCatalogue";
 
 /**
  * Hook to fetch all users (Super Admin only)
@@ -34,9 +35,11 @@ export function useSuperAdminUsers(params: GetUsersParams = {}) {
  */
 export function useUniqueInventory() {
   return useQuery<UniqueEquipmentItem>({
-    queryKey: ["unique-inventory"],
+    queryKey: inventoryCatalogueKeys.unique,
     queryFn: () => superAdminService.getUniqueInventory(),
-    staleTime: 1000 * 60 * 5, // 5 minutes - cache for 5 minutes
+    // The catalogue only grows when an item is added, and that write
+    // refreshes this query directly (item_created).
+    staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 30, // 30 minutes garbage collection
   });
 }

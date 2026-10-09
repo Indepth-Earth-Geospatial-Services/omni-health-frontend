@@ -5,7 +5,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // 5 minutes
+      // Refetch on every mount unless a query sets its own staleTime. The
+      // inventory hooks do, and rely on invalidation after writes instead.
+      staleTime: 0,
       gcTime: 30 * 60 * 1000, // 30 minutes cache
     },
   },

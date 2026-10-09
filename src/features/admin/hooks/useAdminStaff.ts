@@ -12,6 +12,8 @@ import {
   type StaffMember,
   type CreateStaffData,
   type GetStaffResponse,
+  type GetFacilityInventoryResponse,
+  type InventoryType,
   type InventoryWriteRequest,
   type InventoryWriteResponse,
   type StaffSearchParams,
@@ -171,97 +173,175 @@ export const AdminInventoryKeys = {
     [...AdminInventoryKeys.all, facilityId] as const,
 };
 
-export const useFacilityInventory = (facilityId: string) => {
+export const useFacilityInventory = (
+  facilityId: string,
+  options: {
+    /**
+     * Keep showing the previous facility's data while a newly chosen one
+     * loads — for the KPI row, where numbers dimming beats a blank "—". Leave
+     * off for tables, which must never show one facility's rows under
+     * another's name.
+     */
+    keepPrevious?: boolean;
+  } = {},
+) => {
   return useQuery({
     queryKey: AdminInventoryKeys.facility(facilityId),
     queryFn: () => adminService.getFacilityInventory(facilityId),
     enabled: !!facilityId,
-    staleTime: 1 * 60 * 1000,
+    // Writes update this cache directly (see below), so a longer window only
+    // spares re-downloading on revisit; it never hides your own changes.
+    staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: 2,
+    placeholderData: options.keepPrevious ? keepPreviousData : undefined,
   });
 };
+
+type FacilityInventoryCache = GetFacilityInventoryResponse | undefined;
 
 /**
- * After any inventory write: the facility's own counts, and the cross-facility
- * totals the super-admin inventory page shows.
+ * Write a confirmed count straight into the facility's cached inventory, so
+ * the table and KPIs change the moment the server accepts the write rather
+ * than after a re-download.
  */
-const invalidateInventory = (queryClient: QueryClient, facilityId: string) => {
+const applyWrite = (
+  queryClient: QueryClient,
+  facilityId: string,
+  res: InventoryWriteResponse,
+) =>
+  queryClient.setQueryData<FacilityInventoryCache>(
+    AdminInventoryKeys.facility(facilityId),
+    (old) =>
+      old && {
+        ...old,
+        inventory: {
+          ...old.inventory,
+          [res.type]: {
+            ...old.inventory[res.type],
+            [res.item_name]: res.count,
+          },
+        },
+      },
+  );
+
+const applyDelete = (
+  queryClient: QueryClient,
+  facilityId: string,
+  type: InventoryType,
+  itemName: string,
+) =>
+  queryClient.setQueryData<FacilityInventoryCache>(
+    AdminInventoryKeys.facility(facilityId),
+    (old) => {
+      if (!old) return old;
+      const rest = { ...old.inventory[type] };
+      delete rest[itemName];
+      return { ...old, inventory: { ...old.inventory, [type]: rest } };
+    },
+  );
+
+/**
+ * After any inventory write, mark everything derived from it stale: this
+ * facility (reconciling the direct update above), the cross-facility totals,
+ * and the per-item facility lists. When a write added a brand-new name to
+ * the catalogue, the catalogue too — the backend's own instruction for
+ * item_created.
+ */
+export const refreshInventoryQueries = (
+  queryClient: QueryClient,
+  {
+    facilityId,
+    catalogueChanged = false,
+  }: {
+    facilityId?: string;
+    catalogueChanged?: boolean;
+  } = {},
+) => {
   queryClient.invalidateQueries({
-    queryKey: AdminInventoryKeys.facility(facilityId),
+    queryKey: facilityId
+      ? AdminInventoryKeys.facility(facilityId)
+      : AdminInventoryKeys.all,
   });
   queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.summary });
+  queryClient.invalidateQueries({
+    queryKey: inventoryCatalogueKeys.facilitiesByItem,
+  });
+  if (catalogueChanged) {
+    queryClient.invalidateQueries({ queryKey: inventoryCatalogueKeys.unique });
+    queryClient.invalidateQueries({
+      queryKey: inventoryCatalogueKeys.catalogue,
+    });
+  }
 };
 
-export const useAddEquipment = (facilityId: string) => {
+/** Add and update are the same upsert endpoint; one hook body for all four. */
+const useInventoryWrite = (
+  facilityId: string,
+  write: (args: {
+    facilityId: string;
+    data: InventoryWriteRequest;
+  }) => Promise<InventoryWriteResponse>,
+  label: string,
+) => {
   const queryClient = useQueryClient();
   return useMutation<InventoryWriteResponse, Error, InventoryWriteRequest>({
-    mutationFn: (data: InventoryWriteRequest) =>
-      adminService.addEquipment({ facilityId, data }),
-    onSuccess: () => invalidateInventory(queryClient, facilityId),
-    onError: (error) => console.error("Failed to add equipment:", error),
+    mutationFn: (data) => write({ facilityId, data }),
+    onSuccess: (res) => {
+      applyWrite(queryClient, facilityId, res);
+      refreshInventoryQueries(queryClient, {
+        facilityId,
+        catalogueChanged: !!res.item_created,
+      });
+    },
+    onError: (error) => console.error(`Failed to ${label}:`, error),
   });
 };
 
-export const useAddInfrastructure = (facilityId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    InventoryWriteResponse,
-    Error,
-    InventoryWriteRequest
-  >({
-    mutationFn: (data: InventoryWriteRequest) =>
-      adminService.addInfrastructure({ facilityId, data }),
-    onSuccess: () => invalidateInventory(queryClient, facilityId),
-    onError: (error) => console.error("Failed to add infrastructure:", error),
-  });
-};
-
-export const useDeleteEquipment = (facilityId: string) => {
+const useInventoryDelete = (facilityId: string, type: InventoryType) => {
   const queryClient = useQueryClient();
   return useMutation<void, Error, string>({
-    mutationFn: (itemName: string) =>
-      adminService.deleteEquipment({ facilityId, itemName }),
-    onSuccess: () => invalidateInventory(queryClient, facilityId),
-    onError: (error) => console.error("Failed to delete equipment:", error),
+    mutationFn: (itemName) =>
+      type === "equipment"
+        ? adminService.deleteEquipment({ facilityId, itemName })
+        : adminService.deleteInfrastructure({ facilityId, itemName }),
+    onSuccess: (_res, itemName) => {
+      applyDelete(queryClient, facilityId, type, itemName);
+      refreshInventoryQueries(queryClient, { facilityId });
+    },
+    onError: (error) => console.error(`Failed to delete ${type}:`, error),
   });
 };
 
-export const useDeleteInfrastructure = (facilityId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation<void, Error, string>({
-    mutationFn: (itemName: string) =>
-      adminService.deleteInfrastructure({ facilityId, itemName }),
-    onSuccess: () => invalidateInventory(queryClient, facilityId),
-    onError: (error) =>
-      console.error("Failed to delete infrastructure:", error),
-  });
-};
+export const useAddEquipment = (facilityId: string) =>
+  useInventoryWrite(facilityId, adminService.addEquipment, "add equipment");
 
-export const useUpdateEquipment = (facilityId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation<InventoryWriteResponse, Error, InventoryWriteRequest>({
-    mutationFn: (data: InventoryWriteRequest) =>
-      adminService.updateEquipment({ facilityId, data }),
-    onSuccess: () => invalidateInventory(queryClient, facilityId),
-    onError: (error) => console.error("Failed to update equipment:", error),
-  });
-};
+export const useAddInfrastructure = (facilityId: string) =>
+  useInventoryWrite(
+    facilityId,
+    adminService.addInfrastructure,
+    "add infrastructure",
+  );
 
-export const useUpdateInfrastructure = (facilityId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    InventoryWriteResponse,
-    Error,
-    InventoryWriteRequest
-  >({
-    mutationFn: (data: InventoryWriteRequest) =>
-      adminService.updateInfrastructure({ facilityId, data }),
-    onSuccess: () => invalidateInventory(queryClient, facilityId),
-    onError: (error) =>
-      console.error("Failed to update infrastructure:", error),
-  });
-};
+export const useUpdateEquipment = (facilityId: string) =>
+  useInventoryWrite(
+    facilityId,
+    adminService.updateEquipment,
+    "update equipment",
+  );
+
+export const useUpdateInfrastructure = (facilityId: string) =>
+  useInventoryWrite(
+    facilityId,
+    adminService.updateInfrastructure,
+    "update infrastructure",
+  );
+
+export const useDeleteEquipment = (facilityId: string) =>
+  useInventoryDelete(facilityId, "equipment");
+
+export const useDeleteInfrastructure = (facilityId: string) =>
+  useInventoryDelete(facilityId, "infrastructure");
 
 // ==================== IMAGE UPLOAD HOOKS (UPDATED) ====================
 
@@ -341,7 +421,9 @@ export const useUpdateFacilityProfile = () => {
         queryKey: FACILITY_KEYS.facility(variables.facilityId),
       });
       // Also invalidate all facilities list
-      queryClient.invalidateQueries({ queryKey: FACILITY_KEYS.allFacilities() });
+      queryClient.invalidateQueries({
+        queryKey: FACILITY_KEYS.allFacilities(),
+      });
 
       toast.success("Facility profile updated successfully");
     },
