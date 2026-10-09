@@ -107,15 +107,21 @@ export default function Header({ name, className }: HeaderProps) {
         className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-3">
-        {/* Who is looking, before what they are looking at. */}
+      {/* Breadcrumb-style "Admin / Overview": the role in the title's own
+          type, muted so the page name still leads. */}
+      <h2 className="flex min-w-0 items-center gap-2 text-xl font-semibold">
         {role && (
-          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold">
-            {ROLE_LABEL[role] ?? role}
-          </span>
+          <>
+            <span className="shrink-0 text-gray-400">
+              {ROLE_LABEL[role] ?? role}
+            </span>
+            <span aria-hidden className="shrink-0 text-gray-300">
+              /
+            </span>
+          </>
         )}
-        <h2 className="truncate text-xl font-semibold text-gray-900">{name}</h2>
-      </div>
+        <span className="truncate text-gray-900">{name}</span>
+      </h2>
       <div>
         <div className="flex items-center gap-4">
           {/* Facility Image */}
