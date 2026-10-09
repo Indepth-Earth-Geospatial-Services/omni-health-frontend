@@ -4,7 +4,7 @@ import StaffTableHeader, {
   type FilterState,
 } from "@/features/super-admin/components/layouts/StaffTableHeader";
 import Tabs from "@/features/super-admin/components/ui/Tabs";
-import { useUniqueInventory } from "../../hooks/useSuperAdminUsers";
+import { useInventorySummary } from "../../hooks/useInventoryCatalogue";
 import { useFacilityOptions } from "../../hooks/useFacilityOptions";
 import { useBatchAddInventoryItem } from "../../hooks/useFacilitiesByInventory";
 import UniqueInventoryList from "../layouts/UniqueInventoryList";
@@ -41,9 +41,14 @@ export default function EquipmentPage() {
   });
 
   // ========== DATA FETCHING ==========
-  // Fetch unique equipment and infrastructure items
-  const { data: inventoryData, isLoading: isLoadingInventory } =
-    useUniqueInventory();
+  // One request: every catalogue item with its name, facility count and
+  // totals. Shared (cached) with the KPI row above.
+  const { data: summaryItems, isLoading: isLoadingInventory } =
+    useInventorySummary();
+  const equipmentItems =
+    summaryItems?.filter((i) => i.type === "equipment") ?? [];
+  const infrastructureItems =
+    summaryItems?.filter((i) => i.type === "infrastructure") ?? [];
 
   // Fetch facilities for the dropdown — the lightweight analytics-backed list
   // (name + id only), not the full facility payload with inventory attached.
@@ -161,6 +166,7 @@ export default function EquipmentPage() {
             on the By Facility tab. */}
         <InventoryKpis
           facilityId={activeTab === "by-facility" ? byFacilityId : null}
+          onClearFacility={() => setByFacilityId(null)}
         />
 
         {/* Tabs - Equipment and Infrastructure */}
@@ -197,7 +203,7 @@ export default function EquipmentPage() {
             ) : (
               <UniqueInventoryList
                 type="equipment"
-                items={inventoryData?.equipment || []}
+                items={equipmentItems}
                 searchQuery={filters.searchQuery}
                 emptyMessage="No equipment items found"
               />
@@ -231,7 +237,7 @@ export default function EquipmentPage() {
             ) : (
               <UniqueInventoryList
                 type="infrastructure"
-                items={inventoryData?.infrastructure || []}
+                items={infrastructureItems}
                 searchQuery={filters.searchQuery}
                 emptyMessage="No infrastructure items found"
               />
