@@ -2,7 +2,11 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Bell, Check } from "lucide-react";
-import { useCurrentFacilityId } from "@/features/auth/auth-store";
+import {
+  useAuthStore,
+  useCurrentFacilityId,
+  type UserRole,
+} from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import FacilityImageButton from "@/features/admin/components/ui/proifleImage";
 
@@ -10,6 +14,12 @@ interface HeaderProps {
   name: string;
   className?: string;
 }
+
+const ROLE_LABEL: Record<UserRole, string> = {
+  admin: "Admin",
+  super_admin: "Super Admin",
+  user: "User",
+};
 
 interface Notification {
   id: number;
@@ -23,6 +33,7 @@ export default function Header({ name, className }: HeaderProps) {
   const facilityId = useCurrentFacilityId();
   const { data: facilityData } = useFacility(facilityId);
   const facility = facilityData?.facility;
+  const role = useAuthStore((s) => s.user?.role);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -96,8 +107,14 @@ export default function Header({ name, className }: HeaderProps) {
         className,
       )}
     >
-      <div className="flex items-center">
-        <h2 className="text-xl font-semibold text-gray-900">{name}</h2>
+      <div className="flex min-w-0 items-center gap-3">
+        {/* Who is looking, before what they are looking at. */}
+        {role && (
+          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold">
+            {ROLE_LABEL[role] ?? role}
+          </span>
+        )}
+        <h2 className="truncate text-xl font-semibold text-gray-900">{name}</h2>
       </div>
       <div>
         <div className="flex items-center gap-4">
