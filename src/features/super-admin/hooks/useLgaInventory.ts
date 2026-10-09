@@ -7,11 +7,65 @@ import {
 } from "@/services/admin.service";
 import { AdminInventoryKeys } from "@/features/admin/hooks/useAdminStaff";
 import { superAdminService } from "../services/super-admin.service";
+import { LGA_OPTIONS } from "../constants/lga";
+import { useLgaList } from "./useLgas";
 
 export const lgaFacilityKeys = {
   all: ["lga-facilities"] as const,
   lga: (lgaName: string) => [...lgaFacilityKeys.all, lgaName] as const,
 };
+
+/** One LGA's facilities — shared by the LGA view and the all-LGAs table. */
+const fetchLgaFacilities = (lgaName: string) =>
+  superAdminService.searchFacilities({
+    lga_name: lgaName,
+    page: 1,
+    limit: 100,
+  });
+
+export interface FacilityListRow {
+  facility_id: string;
+  facility_name: string;
+  facility_category: string;
+  facility_lga: string;
+}
+
+/**
+ * Every facility, gathered one LGA at a time: 23 small requests in parallel,
+ * so rows appear LGA by LGA rather than after one large download. The same
+ * cache entries as useLgaInventory's facility lists.
+ */
+export function useAllLgaFacilities(enabled = true) {
+  const { data: lgaList } = useLgaList();
+  const names = lgaList?.map((l) => l.lga_name) ?? LGA_OPTIONS;
+
+  const queries = useQueries({
+    queries: names.map((name) => ({
+      queryKey: lgaFacilityKeys.lga(name),
+      queryFn: () => fetchLgaFacilities(name),
+      enabled,
+      staleTime: 10 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+    })),
+  });
+
+  const rows: FacilityListRow[] = queries.flatMap(
+    (q) =>
+      q.data?.facilities.map((f) => ({
+        facility_id: f.facility_id,
+        facility_name: f.facility_name,
+        facility_category: f.facility_category,
+        facility_lga: f.facility_lga,
+      })) ?? [],
+  );
+
+  return {
+    rows,
+    lgasLoaded: queries.filter((q) => !q.isLoading).length,
+    lgasTotal: names.length,
+    isLoading: queries.length > 0 && queries.every((q) => q.isLoading),
+  };
+}
 
 export interface LgaFacilityRow {
   facility_id: string;
@@ -52,12 +106,7 @@ function tally(counts: InventoryCounts | undefined) {
 export function useLgaInventory(lgaName: string | null) {
   const facilitiesQuery = useQuery({
     queryKey: lgaFacilityKeys.lga(lgaName ?? ""),
-    queryFn: () =>
-      superAdminService.searchFacilities({
-        lga_name: lgaName ?? undefined,
-        page: 1,
-        limit: 100,
-      }),
+    queryFn: () => fetchLgaFacilities(lgaName ?? ""),
     enabled: !!lgaName,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,

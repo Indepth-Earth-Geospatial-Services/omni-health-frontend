@@ -30,7 +30,7 @@ import { useInventoryCatalogue } from "@/features/super-admin/hooks/useInventory
 import { useLgaInventory } from "@/features/super-admin/hooks/useLgaInventory";
 import { LGA_OPTIONS } from "@/features/super-admin/constants/lga";
 import { useLgaList } from "@/features/super-admin/hooks/useLgas";
-import LgaInventoryOverview from "@/features/super-admin/components/layouts/LgaInventoryOverview";
+import FacilityCountsTable from "@/features/super-admin/components/layouts/FacilityCountsTable";
 import { FacilityConditionBars } from "./FacilityConditionBars";
 import {
   InventoryTable,
@@ -434,22 +434,13 @@ export default function FacilityInventoryView({
         </div>
       )}
 
-      {!facilityId && lga ? (
-        <LgaInventoryOverview
+      {!facilityId ? (
+        // Super admin with no facility open: every facility (or one LGA's)
+        // with its functional / non-functional counts; Open drills in.
+        <FacilityCountsTable
           lgaName={lga}
           onOpenFacility={setPickedFacilityId}
         />
-      ) : !facilityId ? (
-        <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 px-6 py-16 text-center">
-          <Building2 size={28} className="text-slate-300" />
-          <p className="text-sm font-medium text-slate-700">
-            Choose an LGA or a facility to see its inventory
-          </p>
-          <p className="max-w-md text-xs text-slate-500">
-            Only 28 facilities have been surveyed so far — in Abua-Odual,
-            Akuku-Toru, Degema, Ikwerre, Emohua and Etche.
-          </p>
-        </div>
       ) : isLoading ? (
         <div className="flex items-center justify-center gap-3 py-16 text-sm text-slate-600">
           <Loader2 className="text-primary h-6 w-6 animate-spin" />
