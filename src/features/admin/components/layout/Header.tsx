@@ -2,7 +2,11 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Bell, Check } from "lucide-react";
-import { useCurrentFacilityId } from "@/features/auth/auth-store";
+import {
+  ROLE_LABEL,
+  useAuthStore,
+  useCurrentFacilityId,
+} from "@/features/auth/auth-store";
 import { useFacility } from "@/hooks/use-facilities";
 import FacilityImageButton from "@/features/admin/components/ui/proifleImage";
 
@@ -23,6 +27,7 @@ export default function Header({ name, className }: HeaderProps) {
   const facilityId = useCurrentFacilityId();
   const { data: facilityData } = useFacility(facilityId);
   const facility = facilityData?.facility;
+  const role = useAuthStore((s) => s.user?.role);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -96,9 +101,21 @@ export default function Header({ name, className }: HeaderProps) {
         className,
       )}
     >
-      <div className="flex items-center">
-        <h2 className="text-xl font-semibold text-gray-900">{name}</h2>
-      </div>
+      {/* Breadcrumb-style "Admin / Overview": the role in the title's own
+          type, muted so the page name still leads. */}
+      <h2 className="flex min-w-0 items-center gap-2 text-xl font-semibold">
+        {role && (
+          <>
+            <span className="shrink-0 text-gray-700">
+              {ROLE_LABEL[role] ?? role}
+            </span>
+            <span aria-hidden className="shrink-0 text-gray-700">
+              /
+            </span>
+          </>
+        )}
+        <span className="truncate text-gray-700">{name}</span>
+      </h2>
       <div>
         <div className="flex items-center gap-4">
           {/* Facility Image */}
